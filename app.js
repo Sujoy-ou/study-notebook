@@ -73,6 +73,11 @@ function typesetMath(...els) {
   MJQ = MJQ.then(() => { if (M.typesetClear) M.typesetClear(els); return M.typesetPromise(els); }).then(() => fitMath(els)).catch(e => console.warn("MathJax", e));
 }
 let MJQ = Promise.resolve();
+/* Equation-in-words visual: the equation large, colour-coded with labelled braces, then an optional SVG figure. */
+function eqWords(fig, tex, figure, note) {
+  fig.innerHTML = `<div class="eqbig">\\[${tex}\\]</div>${figure || ""}${note ? `<p class="note">${note}</p>` : ""}`;
+  typesetMath(fig);
+}
 /* Shrink display equations that are wider than their box (down to 70 %), so nothing is cut off. */
 function fitMath(els) {
   els.forEach(el => el.querySelectorAll('mjx-container[display="true"]').forEach(c => {
@@ -133,9 +138,9 @@ function lesson(id) {
   const f = findLesson(id); if (!f) { home(); return; }
   document.body.classList.add("wide");
   const { s, g, l } = f, rd = getRead();
-  const all = g.lessons, ix = all.indexOf(l), prev = all[ix - 1], next = all[ix + 1];
+  const all = g.lessons, ix = all.indexOf(l), prev = all[ix - 1], next = all[ix + 1], base = all[0] && all[0].zero ? 0 : 1;
   $("view").innerHTML = `<p class="crumb"><a href="#">Library</a> / ${s.title} / ${g.title}</p>
-  <h1>Lesson ${ix + 1}: ${l.title}</h1>
+  <h1>Lesson ${ix + base}: ${l.title}</h1>
   <p class="sec">Big picture</p><p class="big">${l.big}</p>
   ${l.bridge ? `<p class="src" style="max-width:80ch">${l.bridge}</p>` : ""}
   <div class="meta"><label><input type="checkbox" id="rd" ${rd[l.id] ? "checked" : ""}> I've read this lesson</label><span>${l.cards.length} cards, then summary and equation sheet</span></div>
@@ -144,9 +149,9 @@ function lesson(id) {
     <div class="vis"><h3 id="ct"></h3><div class="fig" id="fig"></div><div id="ctl"></div>
       <div class="nav2"><button id="cp">Previous card</button><button id="cn">Next card</button></div></div>
     <div class="exp">
-      <p class="sec">What the picture shows</p><p class="txt" id="intu"></p>
+      <p class="sec">${(l.labels && l.labels.intu) || "What the picture shows"}</p><p class="txt" id="intu"></p>
       <p class="sec">Equation</p><div class="eq" id="eq"></div><div class="sym" id="sym"></div>
-      <p class="sec">Where it comes from</p><ol class="st" id="how"></ol>
+      <p class="sec">${(l.labels && l.labels.how) || "Where it comes from"}</p><ol class="st" id="how"></ol>
       <p class="sec">Say it correctly</p><p class="say" id="say"></p>
       <p class="sec">Numbers</p><div class="num" id="num"></div>
       <div id="notewrap"></div>

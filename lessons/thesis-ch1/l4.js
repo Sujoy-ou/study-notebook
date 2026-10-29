@@ -17,7 +17,7 @@ r(fig, ctl) {
     const ph = +$("ph").value; $("phv").textContent = ph + "°";
     const cx = 340, cy = 160, R = 110, a = ph * Math.PI / 180;
     let d = ""; for (let i = 0; i <= 360; i++) { const t = i * Math.PI / 180; const rel = t - a; const r = R * Math.pow(Math.sin(rel), 2); const x = cx + r * Math.sin(t), y = cy - r * Math.cos(t); d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }
-    const dx = Math.sin(a) * 40, dy = Math.cos(a) * 40, up = Math.pow(Math.cos(a), 2);
+    const dx = Math.sin(a) * 40, dy = Math.cos(a) * 40, up = Math.pow(Math.sin(a), 2);
     fig.innerHTML = svg(300, `<path d="${d}Z" fill="#EF9F27" fill-opacity="0.25" stroke="#BA7517" stroke-width="1.5"/><line x1="${cx-dx}" y1="${cy+dy}" x2="${cx+dx}" y2="${cy-dy}" stroke="#854F0B" stroke-width="4" marker-start="url(#ar)" marker-end="url(#ar)"/><circle cx="${cx}" cy="${cy}" r="5" fill="#854F0B"/><g class="c-gray"><rect x="${cx-40}" y="10" width="80" height="22" rx="4" stroke-width="0.5"/></g><text class="ts" x="${cx}" y="25" text-anchor="middle">camera (top)</text><line x1="${cx}" y1="34" x2="${cx}" y2="${cy-8}" stroke="var(--p)" stroke-dasharray="3 3"/>${axes(60, 280)}<text class="ts" x="${cx}" y="292" text-anchor="middle">orange: radiation pattern, sin²θ</text>`);
     $("ro").innerHTML = `<div><span>relative intensity straight up</span><b>${up.toFixed(2)}</b></div><div><span>dipole is</span><b>${ph === 0 ? "along z" : ph === 90 ? "in-plane" : "tilted"}</b></div>`;
   };
