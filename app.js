@@ -149,6 +149,7 @@ function lesson(id) {
       <p class="sec">Where it comes from</p><ol class="st" id="how"></ol>
       <p class="sec">Say it correctly</p><p class="say" id="say"></p>
       <p class="sec">Numbers</p><div class="num" id="num"></div>
+      <div id="notewrap"></div>
     </div>
   </div>
   <h2>30-second summary</h2><p class="big">${l.summary}</p>
@@ -167,8 +168,9 @@ function lesson(id) {
     $("sym").innerHTML = c.sym.map(([a, b]) => `<b>${a}</b><span>${b}</span>`).join("");
     $("how").innerHTML = c.how.map(h => `<li>${h}</li>`).join("");
     $("say").innerHTML = c.say; $("num").innerHTML = c.num;
+    $("notewrap").innerHTML = c.note ? `<p class="sec">Note for the defense</p><div class="dnote">${c.note}</div>` : "";
     $("fig").innerHTML = ""; $("ctl").innerHTML = "";
-    typesetMath($("ct"), $("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"));
+    typesetMath($("ct"), $("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"), $("notewrap"));
     c.r($("fig"), $("ctl"));
     $("cp").disabled = cardIdx === 0; $("cn").disabled = cardIdx === l.cards.length - 1;
   };
