@@ -6,26 +6,28 @@
 <title>Sujoy's Study Notebook</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: lab-notebook library. Left index tree, right reading column. Stacks on phones. */
+/* Layout: lab-notebook library. Left index tree, reading area on the right.
+   Lesson cards split into a sticky visual column and a scrolling explanation column. */
 :root{
   --bg:#f6f7f9; --panel:#ffffff; --sunk:#eceff4; --fg:#1b2230; --muted:#5a6578; --line:#d6dbe4;
-  --accent:#2f5d8a; --accent-bg:#e3ecf5; --ok:#2e7d5b;
+  --accent:#2f5d8a; --accent-bg:#e3ecf5; --ok:#2e7d5b; --bad:#b3412a;
   --t:#1b2230; --p:#3a4558; --b:#c9d0dc;
   --blue:#2f78c4; --blue-bg:#dbe9f7; --coral:#c9562e; --coral-bg:#f7e2d9; --gray-bg:#e6e9ee;
   --purple:#6b62c9; --purple-bg:#e8e6f8; --teal:#1c8a6c; --teal-bg:#d9f0e8;
   --display:"Literata", Georgia, "Times New Roman", serif;
   --body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#12161d; --panel:#1a2029; --sunk:#222a35; --fg:#e4e8ef; --muted:#9aa6b8; --line:#2f3946;
-  --accent:#8db8e3; --accent-bg:#1f3347; --ok:#6fcca3;
+  --accent:#8db8e3; --accent-bg:#1f3347; --ok:#6fcca3; --bad:#ec8a72;
   --t:#e4e8ef; --p:#b7c1d1; --b:#3c4757;
   --blue:#6aa9e8; --blue-bg:#1d3349; --coral:#e8845e; --coral-bg:#3d261d; --gray-bg:#262e3a;
   --purple:#a39bf0; --purple-bg:#2a2747; --teal:#55c4a2; --teal-bg:#173a31; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12161d; --panel:#1a2029; --sunk:#222a35; --fg:#e4e8ef; --muted:#9aa6b8; --line:#2f3946;
-  --accent:#8db8e3; --accent-bg:#1f3347; --ok:#6fcca3;
+  --accent:#8db8e3; --accent-bg:#1f3347; --ok:#6fcca3; --bad:#ec8a72;
   --t:#e4e8ef; --p:#b7c1d1; --b:#3c4757;
   --blue:#6aa9e8; --blue-bg:#1d3349; --coral:#e8845e; --coral-bg:#3d261d; --gray-bg:#262e3a;
   --purple:#a39bf0; --purple-bg:#2a2747; --teal:#55c4a2; --teal-bg:#173a31; color-scheme:dark}
@@ -35,59 +37,72 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px
 a{color:var(--accent)}
 button{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
 button:hover{border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
 button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
 select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
-.shell{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100%;padding-left:max(0px, env(safe-area-inset-left,0px));padding-right:max(0px, env(safe-area-inset-right,0px))}
-nav.side{border-right:1px solid var(--line);background:var(--panel);padding-block:24px;padding-inline:20px;position:sticky;top:0;height:100vh;overflow:auto}
-.brand{font-family:var(--display);font-size:20px;font-weight:650;margin:0 0 4px;text-wrap:balance}
+.shell{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100vh}
+nav.side{border-right:1px solid var(--line);background:var(--panel);padding-block:24px;padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:20px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-family:var(--display);font-size:20px;font-weight:650;margin:0 0 4px}
 .brand a{color:var(--fg);text-decoration:none}
 .sub{font-size:13px;color:var(--muted);margin:0 0 20px}
 .tree{list-style:none;margin:0;padding:0;font-size:14px}
-.tree ul{list-style:none;margin:4px 0 8px;padding-left:14px;border-left:1px solid var(--line)}
+.tree ul{list-style:none;margin:4px 0 8px;padding-left:12px;border-left:1px solid var(--line)}
 .tree .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px;font-weight:600}
+.tree .grp{display:block;padding:4px 8px;font-weight:600}
 .tree a{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;border-radius:5px;text-decoration:none;color:var(--fg)}
 .tree a:hover{background:var(--sunk)}
 .tree a.cur{background:var(--accent-bg);color:var(--accent);font-weight:600}
 .tree .soon{color:var(--muted);padding:4px 8px;display:block}
 .chk{color:var(--ok);font-size:12px}
 main{padding-block:32px 64px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));min-width:0}
-.wrap{max-width:860px;margin:0 auto}
+.wrap{max-width:880px;margin:0 auto}
+body.wide .wrap{max-width:1240px}
 .crumb{font-size:13px;color:var(--muted);margin:0 0 8px}
 .crumb a{color:var(--muted)}
 h1{font-family:var(--display);font-weight:650;font-size:32px;line-height:1.2;margin:0 0 12px;text-wrap:balance}
 h2{font-family:var(--display);font-weight:650;font-size:22px;margin:36px 0 10px;text-wrap:balance}
-.big{font-size:17px;line-height:1.7;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:14px 18px;margin:12px 0 8px;max-width:72ch}
+h3.gt{font-family:var(--display);font-size:18px;margin:18px 0 2px}
+.lead{color:var(--muted);max-width:72ch}
+.big{font-size:17px;line-height:1.7;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:14px 18px;margin:12px 0 8px;max-width:80ch}
 .meta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:14px;color:var(--muted);margin:10px 0 0}
 .meta label{display:flex;gap:6px;align-items:center;cursor:pointer}
-.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:16px 0}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:12px 0}
 .libcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;text-decoration:none;color:var(--fg)}
 .libcard:hover{border-color:var(--accent)}
 .libcard .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.libcard .n{font-family:var(--display);font-size:19px;font-weight:650;margin:4px 0}
+.libcard .n{font-family:var(--display);font-size:18px;font-weight:650;margin:4px 0;text-wrap:balance}
 .libcard .d{font-size:14px;color:var(--muted);margin:0}
-.bar{height:6px;background:var(--sunk);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar{height:6px;background:var(--sunk);border-radius:3px;margin-top:6px;overflow:hidden;max-width:320px}
 .bar i{display:block;height:100%;background:var(--ok)}
 .addnote{font-size:14px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:14px 16px}
-.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px;scroll-margin-top:12px}
 .tab{font-size:13px;padding:5px 11px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
-.card h3{font-family:var(--display);font-size:20px;font-weight:650;margin:0 0 8px}
+.card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+.vis{position:sticky;top:12px;min-width:0}
+.exp{min-width:0;border-left:1px solid var(--line);padding-left:24px}
+.card h3{font-family:var(--display);font-size:20px;font-weight:650;margin:0 0 8px;text-wrap:balance}
 .fig{overflow-x:auto}
 .fig svg{display:block;max-width:100%;height:auto}
-.sec{margin:18px 0 4px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-.txt{margin:4px 0;max-width:72ch}
-.eq{font-family:var(--display);font-size:18px;line-height:1.9;background:var(--sunk);border-radius:6px;padding:12px 14px;margin:6px 0;text-align:center;overflow-x:auto}
-.sym{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 14px;font-size:14px;line-height:1.6;margin:8px 0}
+.sec{margin:16px 0 4px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.exp .sec:first-child{margin-top:0}
+.txt{margin:4px 0}
+.eq{font-family:var(--display);font-size:17px;line-height:1.9;background:var(--sunk);border-radius:6px;padding:12px 14px;margin:6px 0;text-align:center;overflow-x:auto}
+.sym{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 14px;font-size:14px;line-height:1.6;margin:8px 0}
 .sym b{font-family:var(--mono);font-weight:500;font-size:13px}
-ol.st{margin:4px 0;padding-left:22px;max-width:72ch}
-ol.st li{margin:2px 0}
+ol.st{margin:4px 0;padding-left:22px}
+ol.st li{margin:3px 0}
 .num{font-size:14px;line-height:1.75;background:var(--sunk);border-radius:6px;padding:12px 14px;margin:6px 0;font-variant-numeric:tabular-nums}
-.say{margin:6px 0;padding:2px 0 2px 12px;border-left:3px solid var(--ok);max-width:72ch}
+.say{margin:6px 0;padding:2px 0 2px 12px;border-left:3px solid var(--ok)}
 .row{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
 .row label{font-size:14px;color:var(--muted);min-width:130px}
 .row input[type=range]{flex:1;min-width:140px}
 .row .v{font-size:14px;font-weight:600;min-width:90px;font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:8px 0}
+.readout div{background:var(--sunk);border-radius:6px;padding:8px 10px}
+.readout span{display:block;font-size:12px;color:var(--muted)}
+.readout b{font-size:16px;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin:6px 0}
 .nav2{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 18px}
 .sheet .r{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:baseline}
@@ -97,7 +112,12 @@ ol.st li{margin:2px 0}
 .sheet .c{font-size:13px;color:var(--muted)}
 .src{font-size:14px;color:var(--muted)}
 .src li{margin:3px 0}
-/* SVG vocabulary used by the figures */
+.quiz p{margin:6px 0}
+.quiz .opts{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.quiz .opts button{text-align:left}
+.quiz .fb{font-size:14px;line-height:1.6;min-height:44px}
+.good{color:var(--ok);font-weight:600}
+.badc{color:var(--bad);font-weight:600}
 svg .ts{font-family:var(--body);font-size:12px;fill:var(--muted)}
 svg .th{font-family:var(--body);font-size:14px;font-weight:600;fill:var(--fg)}
 svg .t{font-family:var(--body);font-size:14px;fill:var(--fg)}
@@ -105,17 +125,24 @@ svg .arr{stroke:var(--p);stroke-width:1.5;fill:none}
 svg .c-blue rect,svg rect.c-blue{fill:var(--blue-bg);stroke:var(--blue)}
 svg .c-gray rect,svg rect.c-gray{fill:var(--gray-bg);stroke:var(--p)}
 svg .c-purple rect,svg rect.c-purple{fill:var(--purple-bg);stroke:var(--purple)}
+svg .c-teal rect,svg rect.c-teal{fill:var(--teal-bg);stroke:var(--teal)}
+svg .c-coral rect,svg rect.c-coral{fill:var(--coral-bg);stroke:var(--coral)}
+@media (max-width:1100px){
+  .card{grid-template-columns:1fr}
+  .vis{position:static}
+  .exp{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:16px}
+}
 @media (max-width:820px){
   .shell{grid-template-columns:1fr}
   nav.side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
   h1{font-size:26px}
-  .sym{grid-template-columns:96px minmax(0,1fr)}
+  .card{padding:14px}
+  .sym{grid-template-columns:92px minmax(0,1fr)}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-
 <div class="shell">
   <nav class="side" aria-label="Study library">
     <p class="brand"><a href="#">Study Notebook</a></p>
@@ -124,253 +151,13 @@ svg .c-purple rect,svg rect.c-purple{fill:var(--purple-bg);stroke:var(--purple)}
   </nav>
   <main><div class="wrap" id="view"></div></main>
 </div>
-
-<script>
-/* ============================================================
-   LIBRARY: every subject lives here. To add a new subject later,
-   add an entry to LIBRARY with its own groups and lessons.
-   ============================================================ */
-const a0=0.0381, Eg=1.519;
-function fw(V0,a,L){let hi=Math.min(V0,a*Math.pow(Math.PI/L,2))-1e-9,lo=1e-9;const f=E=>Math.sqrt(E/a)*Math.tan(Math.sqrt(E/a)*L/2)-Math.sqrt((V0-E)/a);for(let i=0;i<80;i++){const m=(lo+hi)/2;if(f(m)>0)hi=m;else lo=m}return(lo+hi)/2}
-const DEF='<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
-const svg=(h,b)=>`<svg width="680" viewBox="0 0 680 ${h}" role="img">${DEF}${b}</svg>`;
-const sl=(id,lab,mn,mx,st,v)=>`<div class="row"><label for="${id}">${lab}</label><input type="range" id="${id}" min="${mn}" max="${mx}" step="${st}" value="${v}"><span class="v" id="${id}v"></span></div>`;
-const EL=(x,y)=>`<circle cx="${x}" cy="${y}" r="7" fill="#378ADD" stroke="#0C447C"/>`;
-const HO=(x,y)=>`<circle cx="${x}" cy="${y}" r="7" fill="none" stroke="#D85A30" stroke-width="2"/>`;
-const $=id=>document.getElementById(id);
-const axes=(x,y)=>`<line x1="${x}" y1="${y}" x2="${x}" y2="${y-40}" stroke="var(--t)" stroke-width="1" marker-end="url(#ar)"/><line x1="${x}" y1="${y}" x2="${x+40}" y2="${y}" stroke="var(--t)" stroke-width="1" marker-end="url(#ar)"/><line x1="${x}" y1="${y}" x2="${x+24}" y2="${y-18}" stroke="var(--t)" stroke-width="1" marker-end="url(#ar)"/><text class="ts" x="${x-4}" y="${y-46}" text-anchor="middle">z</text><text class="ts" x="${x+46}" y="${y+4}">x</text><text class="ts" x="${x+28}" y="${y-22}">y</text>`;
-const lobe=(cx,cy,dx,dy,rx,ry,rot,col)=>`<ellipse cx="${cx+dx}" cy="${cy+dy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${cx+dx} ${cy+dy})" fill="${col}" fill-opacity="0.35" stroke="${col}" stroke-width="1.2"/><ellipse cx="${cx-dx}" cy="${cy-dy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${cx-dx} ${cy-dy})" fill="${col}" fill-opacity="0.35" stroke="${col}" stroke-width="1.2"/>`;
-const ring=(cx,cy,rx,ry,dir,col)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${col}" stroke-width="4"/><path d="M${cx-rx*0.5} ${cy-ry*0.87-2} Q${cx} ${cy-ry-6} ${cx+rx*0.5} ${cy-ry*0.87-2}" fill="none" stroke="${col}" stroke-width="1.5" ${dir>0?'marker-end':'marker-start'}="url(#ar)"/>`;
-
-/* ---------------- Chapter 1, Lesson 1 ---------------- */
-const L1={
-id:"thesis-ch1-l1", title:"Lesson 1: Bands, electrons, holes and confinement", short:"1. Bands, holes, confinement",
-big:"The dot's photon energy is the GaAs band gap plus the energy it costs to squeeze an electron and a hole into a tiny box. How large that cost is depends on each carrier's effective mass.",
-cards:[
-{s:"1. Gap",t:"Two floors with no stairs: the band gap",
-intu:"Electrons in a solid can't have any energy they like. They live on two floors. The lower floor (valence band) is completely full, so its electrons have no free seat to move into: no current, no light. The upper floor (conduction band) is empty. There are no stairs between the floors, so an electron must receive at least the floor height E_g in one go. A photon can deliver that in a single jump. Drag the slider: below the gap nothing happens. At or above it, one electron goes up and leaves an empty seat downstairs. That empty seat is the hole of card 3.",
-eq:"E<sub>ph</sub> = hc / λ &nbsp;⟹&nbsp; E [eV] = 1239.84 / λ [nm]<br>absorbed only if &nbsp;E<sub>ph</sub> ≥ E<sub>g</sub>",
-sym:[["E_ph","photon energy (eV)"],["h","Planck constant, 6.626 × 10⁻³⁴ J·s"],["c","speed of light, 2.998 × 10⁸ m/s"],["λ","wavelength in vacuum (nm)"],["hc","1239.84 eV·nm, the handy combined constant"],["E_g","band gap: height of the upper floor above the lower one"]],
-how:["Planck: light comes in packets of energy E = hν, where ν is the frequency.","For light, ν = c/λ.","Substitute: E = hc/λ. Short wavelength means large energy.","To lift an electron across the gap in one jump, the packet must carry at least E_g."],
-say:"795 nm is not the GaAs gap. The gap at 4 K is 816 nm. 795 nm is the gap plus confinement.",
-num:"Bulk GaAs at 4 K: E<sub>g</sub> = 1.519 eV, so λ<sub>g</sub> = 1239.84 / 1.519 = <b>816 nm</b>.<br>Your dots: λ = 795 nm, so E = 1239.84 / 795 = <b>1.560 eV</b>.<br>Difference: <b>41 meV</b>, explained by cards 5 and 6.",
-r(fig,ctl){ctl.innerHTML=sl("s","Light wavelength",700,900,1,795);const u=()=>{const l=+$("s").value,E=1239.84/l,ab=E>=Eg;$("sv").textContent=l+" nm";let d="";for(let x=160;x<=520;x+=30)if(!(ab&&x===340))d+=EL(x,203);
-fig.innerHTML=svg(260,`<text class="ts" x="140" y="32">upper floor: conduction band (empty)</text><rect class="c-blue" x="140" y="40" width="400" height="46" rx="4" stroke-width="0.5"/><rect class="c-gray" x="140" y="180" width="400" height="46" rx="4" stroke-width="0.5"/><text class="ts" x="140" y="246">lower floor: valence band (full)</text><line x1="120" y1="90" x2="120" y2="176" stroke="var(--t)" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="40" y="138">E_g</text>${d}${ab?EL(340,63)+HO(340,203)+'<line x1="340" y1="194" x2="340" y2="74" stroke="#378ADD" stroke-dasharray="4 3" marker-end="url(#ar)"/>':""}<text class="th" x="610" y="138" text-anchor="middle">${E.toFixed(3)} eV</text><text class="ts" x="610" y="158" text-anchor="middle">${ab?"absorbed":"passes"}</text>`)};$("s").oninput=u;u()}},
-{s:"2. Mass",t:"Ping-pong ball versus bowling ball: effective mass",
-intu:"Give a ping-pong ball and a bowling ball the same push, so they get the same momentum. The ping-pong ball ends up with far more kinetic energy. Plot energy against momentum and the light ball's curve shoots up steeply while the heavy ball's curve stays flat. In a crystal we know energy against k for every band, so we read the mass off the shape the same way: near the band edge, a steep and narrow curve is light, a flat curve is heavy. The dotted orange line is one fixed k. Drag the mass: lighter mass, higher point on the same line.",
-eq:"E(k) ≈ E<sub>edge</sub> + ħ²k² / 2m* &nbsp;&nbsp; 1/m* = (1/ħ²) × (curvature of E versus k)",
-sym:[["E_edge","energy of the band edge"],["ħ","h/2π = 1.055 × 10⁻³⁴ J·s"],["k","crystal wavevector (nm⁻¹). ħk is the crystal momentum"],["m*","effective mass, as a multiple of m₀"],["m₀","free electron mass, 9.109 × 10⁻³¹ kg"],["ħ²/2m₀","0.0381 eV·nm²"]],
-how:["A free particle has E = p²/2m. With p = ħk (de Broglie) this is E = ħ²k²/2m, a parabola in k. It comes from the Schrödinger equation with a plane wave e^(ikx).","In a crystal the electron is a Bloch wave e^(ikx)u(x), and its band E(k) is not a simple parabola.","Near its edge, though, the band has the same parabola shape. Only the number in the denominator differs.","So keep the free-particle formula and replace m by m*, chosen to match the real band. Larger curvature means smaller m*.","Valid only near the band edge. Far from it the band is not a parabola."],
-say:"Near the band edge, one over the effective mass is proportional to the band curvature. Sharp curve, light carrier. Flat curve, heavy carrier. The electron's real mass does not change.",
-num:"Same k = 0.5 nm⁻¹ for both:<br>electron (0.067 m₀): 0.0381 × 0.25 / 0.067 = <b>142 meV</b><br>heavy hole (0.35 m₀): 0.0381 × 0.25 / 0.35 = <b>27 meV</b><br>Tight-binding toy check: E = E₀ − 2t cos(ka) gives m* = ħ²/(2ta²). Strong hopping t means a light carrier.",
-r(fig,ctl){ctl.innerHTML=sl("m","Effective mass m*/m₀",0.05,0.6,0.01,0.067);const u=()=>{const m=+$("m").value;$("mv").textContent=m.toFixed(3)+" m₀";const X=k=>340+k*220,Y=E=>220-E*450;
-const p=mm=>{const km=Math.min(1,Math.sqrt(0.4*mm/a0));let d="";for(let k=-km;k<=km+1e-9;k+=km/40)d+=(d?"L":"M")+X(k).toFixed(1)+" "+Y(a0/mm*k*k).toFixed(1);return d};
-const E5=a0/m*0.25,yE=Math.max(30,Y(E5));
-fig.innerHTML=svg(250,`<line x1="110" y1="220" x2="575" y2="220" stroke="var(--t)" stroke-width="0.5" marker-end="url(#ar)"/><line x1="340" y1="228" x2="340" y2="24" stroke="var(--t)" stroke-width="0.5" marker-end="url(#ar)"/><text class="ts" x="580" y="224">k</text><text class="ts" x="348" y="32">E</text><path d="${p(0.35)}" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="5 4"/><path d="${p(m)}" fill="none" stroke="#378ADD" stroke-width="2.5"/><line x1="450" y1="220" x2="450" y2="30" stroke="#EF9F27" stroke-width="1" stroke-dasharray="3 3"/><circle cx="450" cy="${yE}" r="5" fill="#EF9F27"/><text class="ts" x="460" y="${yE+4}">${(E5*1000).toFixed(0)} meV</text><text class="ts" x="455" y="238">k = 0.5 nm⁻¹</text><text class="ts" x="120" y="242">dashed: heavy hole 0.35 m₀</text>`)};$("m").oninput=u;u()}},
-{s:"3. Hole",t:"A bubble in water: the hole",
-intu:"In a full band every electron sits in a seat and nothing can move. Take one electron out. A neighbor slides into the empty seat, then the next neighbor into the new empty seat, and so on. The electrons shuffle one way and the empty seat travels the other way, like a bubble rising while the water sinks. Following one empty seat is much easier than following 10²³ electrons, so we treat it as a particle: the hole. It is a missing negative charge, so it acts as a positive charge. Press the button to watch it move.",
-eq:"q<sub>h</sub> = +e &nbsp;&nbsp; k<sub>h</sub> = −k<sub>e</sub> &nbsp;&nbsp; s<sub>h</sub> = −s<sub>e</sub> &nbsp;&nbsp; m<sub>h</sub>* = −m<sub>v</sub>* &gt; 0",
-sym:[["q_h","hole charge, +e = +1.602 × 10⁻¹⁹ C"],["k_e, s_e","wavevector and spin of the missing electron"],["k_h, s_h","wavevector and spin of the hole"],["m_v*","curvature mass of the valence band, negative because the band curves downward"],["m_h*","hole mass, positive"]],
-how:["A full band adds up to zero: total k and total spin are zero, because every k has a partner −k and every spin up has a spin down.","Remove one electron with charge −e, wavevector k_e and spin s_e.","What remains is zero minus that electron: charge +e, wavevector −k_e, spin −s_e.","The valence band curves downward, so its curvature mass is negative. Flipping the sign gives the hole a positive mass."],
-say:"A hole is a quasiparticle that describes a missing electron in the valence band. It is not a positron. When the thesis writes ⇑ or ⇓, that is the hole spin.",
-num:"Rule for Lessons 2 to 5: ⇑ and ⇓ are <b>hole</b> spins, opposite to the missing electron.<br>The hole mass used for your dots is the heavy-hole mass along z, about <b>0.35 m₀</b>.",
-r(fig,ctl){let p=340,n=0;ctl.innerHTML='<div class="row"><button id="mb">Let a neighbor slide into the empty seat</button></div>';const u=()=>{let d="";for(let x=160;x<=520;x+=30)if(x!==p)d+=EL(x,150);
-fig.innerHTML=svg(230,`<rect class="c-gray" x="140" y="125" width="400" height="50" rx="4" stroke-width="0.5"/><text class="ts" x="140" y="200">full band with one missing electron</text>${d}${HO(p,150)}<text class="ts" x="${p}" y="154" text-anchor="middle">+</text>${n?`<text class="ts" x="${p-20}" y="100" text-anchor="end">electron slid left ←</text><text class="ts" x="${p+14}" y="100">→ hole moved right</text>`:""}`)};
-$("mb").onclick=()=>{p=p>=490?340:p+30;n=1;u()};u()}},
-{s:"4. Vertical",t:"An elevator, not an escalator: vertical transitions",
-intu:"A photon at 795 nm carries plenty of energy (1.56 eV) but almost no momentum. So it works like an elevator: it lifts the electron straight up without moving it sideways in k. The orange arrows are always vertical. Raise the photon energy and the arrows move outward to larger k, because the extra energy goes into the motion of the electron and hole. Below the gap no vertical arrow fits between the curves.",
-eq:"ħω = E<sub>c</sub>(k) − E<sub>v</sub>(k) = E<sub>g</sub> + ħ²k²/2m<sub>e</sub>* + ħ²k²/2m<sub>h</sub>* = E<sub>g</sub> + ħ²k²/2μ<br>1/μ = 1/m<sub>e</sub>* + 1/m<sub>h</sub>*",
-sym:[["ħω","photon energy (ω = 2πν)"],["E_c(k)","conduction band: E_g + ħ²k²/2m_e*"],["E_v(k)","valence band: −ħ²k²/2m_h*"],["μ","reduced mass of the electron and hole pair"],["q","photon wavevector inside GaAs, 2πn/λ"],["π/a","Brillouin zone edge, a = 0.565 nm"]],
-how:["Energy is conserved: photon energy equals final minus starting energy of the electron.","Momentum is conserved: k_final = k_start + q. Since q is tiny, k_final ≈ k_start. The arrow is vertical.","Subtract the two parabolas at the same k. The valence one has a minus sign, so the two kinetic terms add.","Combine the two masses into one reduced mass μ."],
-say:"The photon's momentum is tiny compared with the electron's crystal momentum, about 0.5 % of the zone. It is not zero, just negligible.",
-num:"Photon wavevector in GaAs (n ≈ 3.6): q = 2π × 3.6 / 795 nm ≈ <b>0.028 nm⁻¹</b>. Zone edge π/a = <b>5.6 nm⁻¹</b>. Ratio about <b>0.5 %</b>.<br>Electron and heavy hole: 1/μ = 1/0.067 + 1/0.35, so μ ≈ <b>0.056 m₀</b>.",
-r(fig,ctl){ctl.innerHTML=sl("w","Photon energy (eV)",1.45,1.75,0.005,1.56);const aE=a0/0.067,aH=a0/0.35,X=k=>340+k*400,Y=E=>206-E*97;const cv=f=>{let d="";for(let k=-0.6;k<=0.6001;k+=0.02)d+=(d?"L":"M")+X(k).toFixed(1)+" "+Y(f(k)).toFixed(1);return d};
-const u=()=>{const w=+$("w").value;$("wv").textContent=w.toFixed(3)+" eV";const dd=w-Eg;let ar="",k0=0;if(dd>=0){k0=Math.sqrt(dd/(aE+aH));[k0,-k0].forEach(k=>{ar+=`<line x1="${X(k)}" x2="${X(k)}" y1="${Y(-aH*k*k)-3}" y2="${Y(Eg+aE*k*k)+5}" stroke="#EF9F27" stroke-width="2.5" marker-end="url(#ar)"/>`})}
-fig.innerHTML=svg(240,`<line x1="340" y1="230" x2="340" y2="20" stroke="var(--t)" stroke-width="0.5" marker-end="url(#ar)"/><path d="${cv(k=>Eg+aE*k*k)}" fill="none" stroke="#378ADD" stroke-width="2"/><path d="${cv(k=>-aH*k*k)}" fill="none" stroke="#D85A30" stroke-width="2"/>${ar}<text class="ts" x="110" y="36">conduction band</text><text class="ts" x="110" y="228">valence band</text><text class="ts" x="600" y="130" text-anchor="middle">${dd>=0?"k = "+k0.toFixed(2)+" nm⁻¹":"below the gap"}</text><text class="ts" x="600" y="148" text-anchor="middle">${dd>=0?"straight up":"no arrow fits"}</text>`)};$("w").oninput=u;u()}},
-{s:"5. Box",t:"A guitar string: confinement",
-intu:"A guitar string is fixed at both ends, so only waves that fit exactly can exist. A shorter string forces a shorter wavelength, a larger k and a higher note. The dot does the same to the electron and hole along z. Combine with card 2: a larger k costs more energy, and a lighter carrier pays more for the same k. So confinement energy grows when the box shrinks and when the mass drops. Because k enters squared, halving the dot height makes the energy four times larger.",
-eq:"L = nλ/2 &nbsp;⟹&nbsp; k<sub>n</sub> = nπ/L &nbsp;⟹&nbsp; E<sub>n</sub> = ħ²k<sub>n</sub>²/2m* = ħ²π²n²/(2m*L²)",
-sym:[["L","dot height along z (nm)"],["n","1, 2, 3 … number of half wavelengths that fit"],["λ","wavelength of the carrier's standing wave"],["k_n","allowed wavevector, nπ/L"],["E_n","confinement energy above the band edge"],["m*","effective mass (card 2)"]],
-how:["The wave must be zero at both walls, so a whole number of half wavelengths fits: L = nλ/2.","With k = 2π/λ this gives k = nπ/L. Only these k are allowed.","Put that k into the band-edge parabola: E = ħ²k²/2m*.","Result: E ∝ n²/(m*L²). Ground state is n = 1."],
-say:"Confinement energy depends on dot size and carrier mass together, E ∝ 1/(m*L²).",
-num:"Infinite walls, L = 10 nm, n = 1 (ħ²π²/2m₀ = 0.376 eV·nm²):<br>electron: 0.376/(0.067 × 100) = <b>56 meV</b><br>light hole: 0.376/(0.09 × 100) = <b>42 meV</b><br>heavy hole: 0.376/(0.35 × 100) = <b>11 meV</b>. The heavy hole is shifted least.",
-r(fig,ctl){ctl.innerHTML=`<div class="row"><label for="c">Carrier</label><select id="c"><option value="0.067">electron, 0.067 m₀</option><option value="0.09">light hole, 0.09 m₀</option><option value="0.35">heavy hole, 0.35 m₀</option></select></div>`+sl("L","String length L",3,15,0.5,10);
-const u=()=>{const m=+$("c").value,L=+$("L").value;$("Lv").textContent=L+" nm";const E=a0*Math.PI*Math.PI/(m*L*L);const len=L/15*420,x0=320-len/2,x1=320+len/2;let w="";for(let i=0;i<=60;i++){const x=x0+i*len/60;w+=(w?"L":"M")+x.toFixed(1)+" "+(110-30*Math.sin(Math.PI*i/60)).toFixed(1)}
-const bh=Math.min(110,E/0.5*110);
-fig.innerHTML=svg(250,`<line x1="${x0}" y1="70" x2="${x0}" y2="150" stroke="var(--p)" stroke-width="3"/><line x1="${x1}" y1="70" x2="${x1}" y2="150" stroke="var(--p)" stroke-width="3"/><line x1="${x0}" y1="110" x2="${x1}" y2="110" stroke="var(--b)" stroke-width="0.5"/><path d="${w}" fill="none" stroke="#378ADD" stroke-width="2.5"/><text class="ts" x="320" y="175" text-anchor="middle">L = ${L} nm, half a wavelength fits (n = 1)</text><rect x="600" y="${230-bh}" width="30" height="${bh}" fill="#EF9F27" rx="3"/><text class="ts" x="615" y="245" text-anchor="middle">E₁</text><text class="th" x="590" y="${224-bh}" text-anchor="end">${(E*1000).toFixed(0)} meV</text>`)};$("c").onchange=u;$("L").oninput=u;u()}},
-{s:"6. Photon",t:"Paying for the photon: gap + squeeze − discount",
-intu:"When the electron falls into the hole, the photon carries away the full energy of the pair. That bill has three parts: crossing the gap, squeezing the electron into the dot, and squeezing the hole into the dot. There is a small discount because they attract (Coulomb). The AlGaAs walls are not infinitely high, so the wave spills into them, feels a slightly bigger box, and pays less than in card 5.",
-eq:"E<sub>photon</sub> = E<sub>g</sub> + E<sub>e</sub> + E<sub>h</sub> − E<sub>X</sub><br>finite well: &nbsp;k tan(kL/2) = κ, &nbsp; k = √(2m*E)/ħ, &nbsp; κ = √(2m*(V₀ − E))/ħ",
-sym:[["E_g","GaAs gap, 1.519 eV at 4 K"],["E_e","electron confinement energy (finite walls)"],["E_h","hole confinement energy, heavy hole"],["E_X","Coulomb binding, a few meV (Lesson 3)"],["V₀","wall height: about 0.243 eV (electrons) and 0.131 eV (holes) for Al₀.₃Ga₀.₇As, assumed"]],
-how:["Energy conservation: the photon takes exactly the pair's energy.","That energy is the gap plus each carrier's confinement energy.","Subtract the Coulomb binding, because attraction lowers the energy.","Inside the dot the wave is cos(kz), in the barrier it decays as e^(−κ|z|). Matching both at the wall gives k tan(kL/2) = κ, solved numerically."],
-say:"Finite AlGaAs walls let the wave leak out, so the real confinement energy is lower than the infinite-box value.",
-num:"Your dots: 1.560 eV, so E<sub>e</sub> + E<sub>h</sub> − E<sub>X</sub> ≈ <b>41 meV</b>.<br>The slider is a 1D finite well with assumed Al₀.₃Ga₀.₇As walls, ignoring E<sub>X</sub> and lateral confinement. It shows the trend, not your actual dots.",
-r(fig,ctl){ctl.innerHTML=sl("L","Dot height L",3,15,0.5,10);const u=()=>{const L=+$("L").value;$("Lv").textContent=L+" nm";const Ee=fw(0.243,a0/0.067,L),Eh=fw(0.131,a0/0.35,L),Ep=Eg+Ee+Eh;
-const s=1400,we=Ee*s,wh=Eh*s,x0=60,gw=330;
-fig.innerHTML=svg(220,`<g class="c-gray"><rect x="${x0}" y="60" width="${gw}" height="50" rx="4" stroke-width="0.5"/><text class="th" x="${x0+gw/2}" y="85" text-anchor="middle" dominant-baseline="central">E_g = 1.519 eV</text></g><rect x="${x0+gw}" y="60" width="${we}" height="50" fill="#378ADD" opacity="0.85"/><rect x="${x0+gw+we}" y="60" width="${wh}" height="50" fill="#D85A30" opacity="0.85"/><text class="ts" x="${x0+gw+4}" y="130">E_e = ${(Ee*1000).toFixed(0)} meV (blue)</text><text class="ts" x="${x0+gw+4}" y="148">E_hh = ${(Eh*1000).toFixed(0)} meV (coral)</text><text class="th" x="340" y="186" text-anchor="middle">${Ep.toFixed(3)} eV = ${(1239.84/Ep).toFixed(0)} nm</text><text class="ts" x="340" y="206" text-anchor="middle">1D finite well, E_X ignored</text><text class="ts" x="${x0}" y="44">gap bar not to scale</text>`)};$("L").oninput=u;u()}}
-],
-summary:"In GaAs, near the band edges, electrons and holes behave like free particles with effective masses set by the band curvature. A photon only lifts an electron straight up in k, because its momentum is tiny. In the dot, both carriers are squeezed along z, which costs an energy proportional to one over m* L². So the dot emits above the GaAs gap, at 795 nm instead of 816 nm. Because the heavy hole has the larger mass, it is shifted least and becomes the lowest hole state.",
-sheet:[
-["−ħ²/2m · d²ψ/dx² = Eψ, &nbsp;ψ = e<sup>ikx</sup> ⟹ E = ħ²k²/2m, &nbsp;p = ħk","Free electron from the Schrödinger equation"],
-["V(x + a) = V(x) ⟹ ψ<sub>k</sub> = e<sup>ikx</sup> u<sub>k</sub>(x), &nbsp;u<sub>k</sub>(x + a) = u<sub>k</sub>(x)","Bloch theorem"],
-["E [eV] = 1239.84 / λ [nm]","Photon energy. GaAs gap 1.519 eV = 816 nm at 4 K"],
-["E(k) ≈ E<sub>edge</sub> + ħ²k²/2m*, &nbsp; 1/m* = (1/ħ²) d²E/dk²","Effective mass, near the band edge only"],
-["q<sub>h</sub> = +e, &nbsp;k<sub>h</sub> = −k<sub>e</sub>, &nbsp;s<sub>h</sub> = −s<sub>e</sub>","The hole"],
-["ħω = E<sub>g</sub> + ħ²k²/2μ, &nbsp; 1/μ = 1/m<sub>e</sub>* + 1/m<sub>h</sub>*","Vertical transition"],
-["E<sub>n</sub> = ħ²π²n²/(2m*L²)","Infinite well"],
-["k tan(kL/2) = κ, &nbsp; κ = √(2m*(V₀ − E))/ħ","Finite well, ground state"],
-["E<sub>photon</sub> = E<sub>g</sub> + E<sub>e</sub> + E<sub>h</sub> − E<sub>X</sub>","Dot emission energy"]],
-consts:"E<sub>g</sub> = 1.519 eV (GaAs, 4 K), ħ²/2m₀ = 0.0381 eV·nm², m<sub>e</sub>* = 0.067 m₀, m<sub>hh,z</sub> ≈ 0.35 m₀, m<sub>lh,z</sub> ≈ 0.09 m₀, a = 0.565 nm",
-sources:["Kittel, Introduction to Solid State Physics, 8th ed., Ch. 7 and 9 (Bloch theorem, tight binding, effective mass)","Chuang, Physics of Photonic Devices, 2nd ed., Wiley (2009), Ch. 3 and 4 (bands, quantum wells)","Vurgaftman, Meyer and Ram-Mohan, J. Appl. Phys. 89, 5815 (2001) (GaAs parameters)"]
-};
-
-/* ---------------- Chapter 1, Lesson 2 ---------------- */
-const L2={
-id:"thesis-ch1-l2", title:"Lesson 2: Heavy hole and light hole", short:"2. Heavy and light hole",
-big:"The valence band is built from p orbitals that point along x, y and z. Spin–orbit coupling combines them with spin into heavy holes (only X and Y, so in-plane light) and light holes (which contain Z). A flat dot makes the heavy hole the ground state, and a little light-hole mixing gives the weak z-polarized transitions in Fig. 1.1.",
-cards:[
-{s:"1. p orbitals",t:"Three dumbbells: the p orbitals X, Y, Z",
-intu:"The conduction band is s-like (round) and the valence band is p-like. A p orbital looks like a dumbbell, and there are three, pointing along x, y and z: X, Y and Z. Each is a standing wave that points along an axis but does not rotate. Combine X and Y with a quarter-period delay, written X + iY, and the two dumbbells take turns: the shape becomes a ring in the xy plane rotating around z. A rotating ring carries angular momentum around z, +1 for X + iY and −1 for X − iY. Z points along z itself, so it does not rotate around z: angular momentum 0.",
-eq:"l = 1, &nbsp; m<sub>l</sub> = +1, 0, −1<br>|m<sub>l</sub> = ±1⟩ = ∓ (X ± iY)/√2 &nbsp;&nbsp; |m<sub>l</sub> = 0⟩ = Z",
-sym:[["X, Y, Z","p-like orbitals pointing along x, y, z"],["l","orbital angular momentum number. 0 for s, 1 for p"],["m_l","projection on z, in units of ħ"],["i","'X + iY' means Y lags X by a quarter period, making a rotating ring"],["z","growth axis, normal to your membrane"]],
-how:["Valence band states near k = 0 have the symmetry of atomic p orbitals, so they behave like X, Y, Z.","X, Y and Z each point along an axis, but none has a definite angular momentum around z.","X ± iY rotate around z, so they carry m_l = ±1. Z does not, so m_l = 0.","1/√2 keeps the state normalized. The sign is a convention."],
-say:"The valence band near k = 0 is p-like. X ± iY is a ring in the plane with m_l = ±1. Z points along the growth axis with m_l = 0.",
-num:"Conduction band: l = 0, one orbital. Valence band: l = 1, three orbitals.<br>With spin that makes <b>6 valence states</b> at k = 0. Card 2 sorts them.",
-r(fig,ctl){let sel="X";const B=["X","Y","Z","X+iY","X−iY"];ctl.innerHTML=`<div class="row">${B.map(b=>`<button data-b="${b}">${b}</button>`).join("")}</div>`;
-const u=()=>{ctl.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.b===sel));const cx=340,cy=140;let sh="",lab="";
-if(sel==="X"){sh=lobe(cx,cy,48,0,44,22,0,"#7F77DD");lab="X: points along x, m_l not defined"}
-if(sel==="Y"){sh=lobe(cx,cy,30,-22,34,18,-37,"#7F77DD");lab="Y: points along y (into the page), m_l not defined"}
-if(sel==="Z"){sh=lobe(cx,cy,0,-46,22,42,0,"#1D9E75");lab="Z: points along the growth axis, m_l = 0"}
-if(sel==="X+iY"){sh=ring(cx,cy,110,30,1,"#D85A30");lab="X + iY: ring rotating one way, m_l = +1"}
-if(sel==="X−iY"){sh=ring(cx,cy,110,30,-1,"#D85A30");lab="X − iY: ring rotating the other way, m_l = −1"}
-fig.innerHTML=svg(260,`<line x1="200" y1="140" x2="480" y2="140" stroke="var(--b)" stroke-width="0.5" stroke-dasharray="3 3"/><line x1="340" y1="40" x2="340" y2="240" stroke="var(--b)" stroke-width="0.5" stroke-dasharray="3 3"/><circle cx="340" cy="140" r="3" fill="var(--t)"/>${sh}${axes(60,230)}<text class="th" x="340" y="252" text-anchor="middle">${lab}</text>`)};
-ctl.querySelectorAll("button").forEach(b=>b.onclick=()=>{sel=b.dataset.b;u()});u()}},
-{s:"2. Spin–orbit",t:"Spin meets orbit: J = 3/2 and J = 1/2",
-intu:"Each of the 3 p orbitals holds spin up or spin down: 6 states. Without extra effects they have the same energy at k = 0. But an electron moving around the nucleus sees, in its own frame, the nucleus moving around it. A moving charge makes a magnetic field, and the spin is a tiny magnet. So the energy depends on whether spin is lined up with the orbital motion or against it. Lined up gives J = 3/2 (4 states), opposed gives J = 1/2 (2 states). In GaAs they are 0.34 eV apart. Drag the slider to switch the coupling on.",
-eq:"J = L + S &nbsp;&nbsp; H<sub>SO</sub> = λ L·S &nbsp;&nbsp; L·S = ½[j(j+1) − l(l+1) − s(s+1)]<br>j = 3/2: L·S = +½ &nbsp;&nbsp; j = 1/2: L·S = −1 &nbsp;⟹&nbsp; Δ<sub>SO</sub> = (3/2)λ",
-sym:[["L","orbital angular momentum, l = 1"],["S","spin, s = 1/2"],["J","total angular momentum, j = 3/2 or 1/2"],["m_j","projection of J on z"],["λ","spin–orbit strength (energy)"],["Δ_SO","splitting between J = 3/2 and J = 1/2"]],
-how:["Angular momenta add: j = l + s = 3/2 or l − s = 1/2.","Count: j = 3/2 has 2j + 1 = 4 states, j = 1/2 has 2. Total 6, matching 3 orbitals × 2 spins.","From J² = L² + 2L·S + S²: L·S = ½[j(j+1) − l(l+1) − s(s+1)].","j = 3/2 gives +½, j = 1/2 gives −1. Difference (3/2)λ.","J = 3/2 is the top of the valence band. J = 1/2 is the split-off band, Δ_SO lower, ignored for your dots."],
-say:"Spin–orbit coupling splits the six p-like states into J = 3/2 (four states, top of the band) and J = 1/2 (two states, about 0.34 eV lower in GaAs). Heavy and light holes both belong to J = 3/2.",
-num:"GaAs: Δ<sub>SO</sub> ≈ <b>0.341 eV</b>. Dot confinement energies are tens of meV, about 10 times smaller, so the split-off band plays no role.<br>J = 3/2 has m<sub>j</sub> = <b>+3/2, +1/2, −1/2, −3/2</b>.",
-r(fig,ctl){ctl.innerHTML=sl("so","Spin–orbit strength",0,1,0.05,1);const u=()=>{const f=+$("so").value;$("sov").textContent=(f*0.341).toFixed(3)+" eV";const y0=130,yT=y0-f*25,yB=y0+f*65;
-const dots=(n,x,y,col)=>{let d="";for(let i=0;i<n;i++)d+=`<circle cx="${x+i*22}" cy="${y-10}" r="6" fill="${col}"/>`;return d};
-fig.innerHTML=svg(250,`<text class="th" x="140" y="34" text-anchor="middle">without spin–orbit</text><line x1="60" y1="${y0}" x2="220" y2="${y0}" stroke="var(--p)" stroke-width="2"/>${dots(6,85,y0,"#7F77DD")}<text class="ts" x="140" y="${y0+22}" text-anchor="middle">6 states: X, Y, Z × ↑, ↓</text><line x1="240" y1="130" x2="330" y2="130" class="arr" marker-end="url(#ar)"/><text class="th" x="490" y="34" text-anchor="middle">with spin–orbit</text><line x1="400" y1="${yT}" x2="580" y2="${yT}" stroke="#D85A30" stroke-width="2"/>${dots(4,457,yT,"#D85A30")}<text class="ts" x="590" y="${yT+4}">J = 3/2</text><line x1="400" y1="${yB}" x2="580" y2="${yB}" stroke="#888780" stroke-width="2"/>${dots(2,479,yB,"#888780")}<text class="ts" x="590" y="${yB+4}">J = 1/2</text>${f>0.15?`<line x1="390" y1="${yT+3}" x2="390" y2="${yB-3}" stroke="var(--t)" stroke-width="1" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="380" y="${(yT+yB)/2+4}" text-anchor="end">Δ_SO</text>`:""}<text class="ts" x="490" y="240" text-anchor="middle">top: heavy + light hole. Lower: split-off</text>`)};$("so").oninput=u;u()}},
-{s:"3. HH and LH",t:"What heavy and light holes look like",
-intu:"Build the four J = 3/2 states from rings (m_l = ±1), Z (m_l = 0) and spin (m_s = ±½). To reach m_j = +3/2 you need the most of everything: ring +1 and spin +½. Only one way, so the state is a pure ring with spin up and contains no Z. That is the heavy hole. To reach m_j = +1/2 there are two ways: ring +1 with spin −½, or Z with spin +½. The state mixes both, and two thirds of it is Z. That is the light hole. Click each state.",
-eq:"HH: |3/2, +3/2⟩ = −(1/√2)(X + iY)↑ &nbsp;&nbsp; |3/2, −3/2⟩ = (1/√2)(X − iY)↓<br>LH: |3/2, +1/2⟩ = −(1/√6)[(X + iY)↓ − 2Z↑] &nbsp;&nbsp; |3/2, −1/2⟩ = (1/√6)[(X − iY)↑ + 2Z↓]",
-sym:[["↑, ↓","spin up, spin down along z (m_s = ±½)"],["|j, m_j⟩","state with total j and projection m_j"],["(X + iY)","ring rotating around z, m_l = +1"],["Z","dumbbell along z, m_l = 0"],["1/√2, 1/√6, 2/√6","Clebsch–Gordan weights. Squared, they give each part's share"]],
-how:["m_j = m_l + m_s. The largest, +3/2, needs m_l = +1 and m_s = +½: one way only.","m_j = +1/2 comes from (m_l = +1, m_s = −½) or (m_l = 0, m_s = +½). Clebsch–Gordan weights are 1/3 and 2/3.","So the heavy hole contains only X and Y. The light hole contains Z with weight (2/√6)² = 2/3.","Negative m_j states are mirror images. Signs depend on convention, weights do not."],
-say:"The heavy hole, m_j = ±3/2, is built only from X and Y, so it has no Z component. The light hole, m_j = ±1/2, is two thirds Z and one third in-plane.",
-num:"Shares: heavy hole in-plane <b>100 %</b>, Z <b>0 %</b>. Light hole in-plane <b>33 %</b>, Z <b>67 %</b>.<br>So in-plane emission from HH is 3 times stronger than from LH, and an LH emits 4 times more into z polarization than into x.",
-r(fig,ctl){let sel=0;const S=[["+3/2","HH",1,0,"↑"],["+1/2","LH",1/3,2/3,"↑ / ↓"],["−1/2","LH",1/3,2/3,"↑ / ↓"],["−3/2","HH",1,0,"↓"]];
-ctl.innerHTML=`<div class="row">${S.map((s,i)=>`<button data-i="${i}">m_j = ${s[0]} (${s[1]})</button>`).join("")}</div>`;
-const u=()=>{ctl.querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.i===sel));const s=S[sel],cx=260,cy=135,dir=sel<2?1:-1;
-const rr=s[1]==="HH"?ring(cx,cy,110,30,dir,"#D85A30"):ring(cx,cy,70,19,dir,"#D85A30")+lobe(cx,cy,0,-46,20,40,0,"#1D9E75");const bw=150;
-fig.innerHTML=svg(270,`${rr}${axes(60,250)}<text class="th" x="${cx}" y="255" text-anchor="middle">m_j = ${s[0]}: ${s[1]==="HH"?"heavy hole":"light hole"}</text><text class="ts" x="470" y="70">in-plane (X, Y)</text><rect x="470" y="78" width="${bw}" height="16" rx="3" fill="var(--b)"/><rect x="470" y="78" width="${bw*s[2]}" height="16" rx="3" fill="#D85A30"/><text class="ts" x="630" y="91">${Math.round(s[2]*100)} %</text><text class="ts" x="470" y="124">Z (growth axis)</text><rect x="470" y="132" width="${bw}" height="16" rx="3" fill="var(--b)"/><rect x="470" y="132" width="${bw*s[3]}" height="16" rx="3" fill="#1D9E75"/><text class="ts" x="630" y="145">${Math.round(s[3]*100)} %</text><text class="ts" x="470" y="186">spin part: ${s[4]}</text>`)};
-ctl.querySelectorAll("button").forEach(b=>b.onclick=()=>{sel=+b.dataset.i;u()});u()}},
-{s:"4. Why heavy, light",t:"Why 'heavy' and 'light': two curvatures",
-intu:"At k = 0 all four J = 3/2 states have the same energy. Away from k = 0 they split into two bands with different curvature. From Lesson 1, curvature sets the effective mass. Along z, the m_j = ±3/2 band is flat, so it is heavy, and the m_j = ±1/2 band is curved, so it is light. The names come only from this curvature. In the plane the order reverses. Switch the direction and watch the curves swap. Your dot squeezes along z, so the z masses matter.",
-eq:"along z: m<sub>hh</sub> = m<sub>0</sub>/(γ<sub>1</sub> − 2γ<sub>2</sub>) &nbsp;&nbsp; m<sub>lh</sub> = m<sub>0</sub>/(γ<sub>1</sub> + 2γ<sub>2</sub>)<br>in-plane: m<sub>hh</sub> = m<sub>0</sub>/(γ<sub>1</sub> + γ<sub>2</sub>) &nbsp;&nbsp; m<sub>lh</sub> = m<sub>0</sub>/(γ<sub>1</sub> − γ<sub>2</sub>)",
-sym:[["γ₁, γ₂","Luttinger parameters: describe valence band curvature in a given crystal"],["m_hh, m_lh","heavy and light hole masses (positive)"],["m₀","free electron mass"],["along z","the squeezed direction, sets confinement energy"]],
-how:["The four J = 3/2 states are degenerate at k = 0.","For k ≠ 0 the crystal mixes them depending on the direction of k. Luttinger described this with γ₁, γ₂, γ₃.","Along z, m_j = ±3/2 forms the flat band and m_j = ±1/2 the curved one.","In the plane the 'heavy' band is actually lighter. This is mass reversal."],
-say:"Heavy and light describe the curvature of the two J = 3/2 bands along the growth axis z. Along z the heavy hole is heavier, which is why it is the ground state in a flat dot. It is not heavier in every direction.",
-num:"GaAs: γ₁ = <b>6.98</b>, γ₂ = <b>2.06</b><br>along z: m<sub>hh</sub> = 1/(6.98 − 4.12) = <b>0.35 m₀</b>, m<sub>lh</sub> = 1/(6.98 + 4.12) = <b>0.090 m₀</b><br>in-plane: m<sub>hh</sub> = 1/(6.98 + 2.06) = <b>0.11 m₀</b>, m<sub>lh</sub> = 1/(6.98 − 2.06) = <b>0.20 m₀</b>",
-r(fig,ctl){let d="z";ctl.innerHTML=`<div class="row"><button data-d="z">along z (growth)</button><button data-d="p">in the plane</button></div>`;
-const u=()=>{ctl.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.d===d));const mh=d==="z"?0.35:0.111,ml=d==="z"?0.090:0.203;const X=k=>340+k*300,Y=E=>40+E*900;
-const cv=m=>{let s="";for(let k=-0.8;k<=0.8001;k+=0.02){const E=a0/m*k*k;if(E>0.22)continue;s+=(s?"L":"M")+X(k).toFixed(1)+" "+Y(E).toFixed(1)}return s};
-fig.innerHTML=svg(270,`<line x1="340" y1="250" x2="340" y2="20" stroke="var(--t)" stroke-width="0.5" marker-start="url(#ar)"/><line x1="90" y1="40" x2="600" y2="40" stroke="var(--t)" stroke-width="0.5" stroke-dasharray="3 3"/><text class="ts" x="560" y="56">k = 0, all 4 equal</text><text class="ts" x="348" y="262">hole energy grows downward</text><path d="${cv(mh)}" fill="none" stroke="#D85A30" stroke-width="2.5"/><path d="${cv(ml)}" fill="none" stroke="#1D9E75" stroke-width="2.5"/><text class="ts" x="100" y="80">coral: m_j = ±3/2 (HH), ${mh.toFixed(2)} m₀</text><text class="ts" x="100" y="98">teal: m_j = ±1/2 (LH), ${ml.toFixed(2)} m₀</text><text class="th" x="560" y="200" text-anchor="middle">${d==="z"?"HH flatter: heavier":"HH steeper: lighter"}</text><text class="ts" x="560" y="24" text-anchor="middle">k ${d==="z"?"along z":"in plane"}</text>`)};
-ctl.querySelectorAll("button").forEach(b=>b.onclick=()=>{d=b.dataset.d;u()});u()}},
-{s:"5. Flat dot",t:"The flat dot puts the heavy hole on top",
-intu:"Squeeze both holes along z. From Lesson 1, confinement cost is proportional to 1/(m L²), using the mass along the squeezed direction. The heavy hole has the larger z mass, so it pays less and stays closer to the band edge. The light hole is pushed further down. So the ground hole state of a flat dot is the heavy hole, and the gap between them is the HH–LH splitting. A thinner dot gives a larger splitting.",
-eq:"Δ<sub>HH–LH</sub> = E<sub>lh</sub> − E<sub>hh</sub> = (ħ²π²/2L²)(1/m<sub>lh,z</sub> − 1/m<sub>hh,z</sub>) &nbsp; (infinite walls)",
-sym:[["E_hh, E_lh","confinement energies of heavy and light hole"],["L","dot height along z"],["m_hh,z, m_lh,z","hole masses along z (card 4)"],["Δ_HH–LH","separation of the two hole levels"]],
-how:["Confinement energy E = ħ²π²/(2m*L²) for each hole with its z mass.","Since m_hh,z > m_lh,z, the heavy hole has the smaller E: it is the lowest hole state.","Subtract to get the splitting. With finite walls both levels shift less.","In strained InGaAs dots strain adds to the splitting. Droplet-etched GaAs dots are nearly strain-free, so it comes mostly from confinement and shape."],
-say:"In a flat dot, confinement along the growth axis lifts the HH–LH degeneracy. The heavy hole, with the larger z mass, becomes the ground hole state.",
-num:"Infinite walls, L = 10 nm: E<sub>hh</sub> = <b>10.7 meV</b>, E<sub>lh</sub> = <b>41.8 meV</b>, splitting ≈ <b>31 meV</b>.<br>The slider uses finite walls (assumed V₀,h ≈ 0.131 eV), which gives smaller numbers. The real splitting of your dots is measured: ask Kusal.",
-r(fig,ctl){ctl.innerHTML=sl("L","Dot height L",3,15,0.5,10);const u=()=>{const L=+$("L").value;$("Lv").textContent=L+" nm";const V=0.131,Eh=fw(V,a0/0.35,L),El=fw(V,a0/0.09,L);const yh=60+Eh/V*170,yl=60+El/V*170;
-fig.innerHTML=svg(260,`<path d="M100 230 H260 V60 H420 V230 H580" fill="none" stroke="var(--p)" stroke-width="1.5"/><text class="ts" x="110" y="248">AlGaAs</text><text class="ts" x="340" y="48" text-anchor="middle">GaAs dot: valence band well (hole energy down)</text><text class="ts" x="570" y="248" text-anchor="end">AlGaAs</text><line x1="266" x2="414" y1="${yh}" y2="${yh}" stroke="#D85A30" stroke-width="2.5"/><line x1="266" x2="414" y1="${yl}" y2="${yl}" stroke="#1D9E75" stroke-width="2" stroke-dasharray="6 4"/><text class="ts" x="430" y="${yh+4}">HH: ${(Eh*1000).toFixed(1)} meV</text><text class="ts" x="430" y="${Math.max(yl+4,yh+20)}">LH: ${(El*1000).toFixed(1)} meV</text><line x1="250" y1="${yh+3}" x2="250" y2="${yl-3}" stroke="var(--t)" stroke-width="1" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="240" y="${(yh+yl)/2+4}" text-anchor="end">${((El-Eh)*1000).toFixed(1)} meV</text>`)};$("L").oninput=u;u()}},
-{s:"6. Mixing",t:"A little light hole mixed in: the weak z part",
-intu:"A real dot is never a perfect flat disk. Its in-plane shape is a bit asymmetric, and there can be some strain. These imperfections mix a small amount of light hole into the heavy-hole ground state: mostly heavy, a little light. Since the light hole contains Z, the mixed hole picks up a small Z part. That is what makes the weak diagonal transitions in Fig. 1.1 possible, and why they carry a z-dipole component that couples to TM.",
-eq:"|hole⟩ = √(1 − ε²) |HH⟩ + ε |LH⟩<br>simple model: weak / strong ≈ (2/3) ε² / (1 − ε²)",
-sym:[["ε","light-hole amplitude. ε² is the light-hole fraction"],["|HH⟩, |LH⟩","states from card 3"],["2/3","Z share of the light hole"],["weak / strong","diagonal to vertical rate ratio in this simple picture"]],
-how:["Without mixing, the hole is pure HH: only in-plane dipoles, and diagonal transitions are forbidden (Lesson 5).","Shape asymmetry or strain couples HH and LH, adding ε|LH⟩.","The LH part brings Z with weight 2/3, so the diagonal gets a z dipole with strength ∝ ε² × 2/3.","The vertical keeps the HH part, ∝ 1 − ε². Their ratio gives the formula (illustrative)."],
-say:"The ground hole in a real dot is mostly heavy hole with a small light-hole admixture, which makes the diagonal transitions weakly allowed with a z-dipole component. Don't quote a mixing percentage for your dots unless it was measured.",
-num:"Javadi et al. 2018 measured the diagonal about <b>100 times</b> weaker than the vertical transition.<br>In this simple model a 1/100 ratio needs ε² ≈ <b>1.5 %</b> light-hole character. Order of magnitude only.",
-r(fig,ctl){ctl.innerHTML=sl("e","Light-hole fraction ε²",0,0.3,0.005,0.015);const u=()=>{const e2=+$("e").value;$("ev").textContent=(e2*100).toFixed(1)+" %";const r=e2>0?(2/3)*e2/(1-e2):0;const cx=260,cy=150;const zl=Math.sqrt(e2*2/3)*170;
-fig.innerHTML=svg(270,`${ring(cx,cy,110,30,1,"#D85A30")}${zl>2?`<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-zl}" stroke="#1D9E75" stroke-width="4" marker-end="url(#ar)"/>`:""}${axes(60,255)}<text class="ts" x="${cx}" y="215" text-anchor="middle">coral ring: HH part (in-plane)</text><text class="ts" x="${cx}" y="233" text-anchor="middle">teal arrow: z part from the LH admixture</text><text class="ts" x="470" y="80">weak / strong rate</text><text class="th" x="470" y="104">${r>0?(r<0.001?r.toExponential(1):r.toFixed(3)):"0 (forbidden)"}</text><text class="ts" x="470" y="124">${r>0?"about 1 in "+Math.round(1/r):""}</text><text class="ts" x="470" y="160">Javadi 2018: about 1 in 100</text>`)};$("e").oninput=u;u()}}
-],
-summary:"The GaAs valence band is p-like, built from X, Y and Z. Spin–orbit coupling splits it into J = 3/2 at the top and a split-off band about 0.34 eV lower. J = 3/2 contains the heavy hole, m_j = ±3/2, built only from X and Y, and the light hole, m_j = ±1/2, which is two thirds Z. Along z the heavy hole has the larger mass, so in a flat dot it is shifted least and becomes the ground hole state. Real dots mix in a little light hole, and that small Z part makes the diagonal transitions weakly allowed, with a z-dipole component.",
-sheet:[
-["|m<sub>l</sub> = ±1⟩ = ∓(X ± iY)/√2, &nbsp; |m<sub>l</sub> = 0⟩ = Z","p orbitals and angular momentum"],
-["J = L + S, &nbsp; j = 3/2 or 1/2","Adding orbit and spin"],
-["L·S = ½[j(j+1) − l(l+1) − s(s+1)], &nbsp; Δ<sub>SO</sub> = (3/2)λ","Spin–orbit splitting, 0.341 eV in GaAs"],
-["|3/2, ±3/2⟩ ∝ (X ± iY)·spin","Heavy hole, no Z"],
-["|3/2, +1/2⟩ = −(1/√6)[(X + iY)↓ − 2Z↑]","Light hole, two thirds Z"],
-["m<sub>hh,z</sub> = m<sub>0</sub>/(γ<sub>1</sub> − 2γ<sub>2</sub>), &nbsp; m<sub>lh,z</sub> = m<sub>0</sub>/(γ<sub>1</sub> + 2γ<sub>2</sub>)","Luttinger masses along z"],
-["Δ<sub>HH–LH</sub> = (ħ²π²/2L²)(1/m<sub>lh,z</sub> − 1/m<sub>hh,z</sub>)","Splitting in a flat dot"],
-["|hole⟩ = √(1 − ε²)|HH⟩ + ε|LH⟩","Heavy–light hole mixing"]],
-consts:"γ₁ = 6.98, γ₂ = 2.06 (GaAs), Δ<sub>SO</sub> = 0.341 eV, m<sub>hh,z</sub> = 0.35 m₀, m<sub>lh,z</sub> = 0.090 m₀",
-sources:["Chuang, Physics of Photonic Devices, 2nd ed., Ch. 4 (k·p and Luttinger–Kohn)","Vurgaftman et al., J. Appl. Phys. 89, 5815 (2001) (Luttinger parameters)","Warburton, Nature Materials 12, 483 (2013) (thesis ref., HH–LH mixing in dots)","Javadi et al., Nature Nanotechnology 13, 398 (2018) (thesis ref., Γ ≈ 100 γ)"]
-};
-
-const LIBRARY=[
- {id:"thesis",kind:"Subject",title:"M.Sc. Thesis",desc:"Inverse design of nanophotonic devices for quantum photonic integration. Defense 18 November 2026.",
-  groups:[
-   {id:"ch1",title:"Chapter 1: Introduction",desc:"Quantum dot physics behind Sec. 1.1 to 1.3 and Fig. 1.1.",
-    lessons:[L1,L2],
-    planned:["3. Exciton, trion, biexciton","4. How a dot emits light","5. Optical selection rules","6. From dipole to waveguide","7. Spin pumping and defense quiz"]}
-  ]}
-];
-
-/* ---------------- progress (per browser only) ---------------- */
-const PKEY="study-notebook-read";
-function getRead(){try{return JSON.parse(localStorage.getItem(PKEY)||"{}")}catch(e){return{}}}
-function setRead(id,v){try{const r=getRead();if(v)r[id]=1;else delete r[id];localStorage.setItem(PKEY,JSON.stringify(r))}catch(e){}}
-
-/* ---------------- rendering ---------------- */
-function findLesson(id){for(const s of LIBRARY)for(const g of s.groups)for(const l of g.lessons)if(l.id===id)return{s,g,l};return null}
-function tree(cur){const rd=getRead();let h=`<li><a href="#" class="${cur?"":"cur"}">Library home</a></li>`;
- for(const s of LIBRARY){h+=`<li><p class="lab">${s.title}</p><ul>`;for(const g of s.groups){h+=`<li><span class="soon" style="color:var(--fg);font-weight:600">${g.title}</span><ul>`;
-  for(const l of g.lessons)h+=`<li><a href="#${l.id}" class="${cur===l.id?"cur":""}"><span>${l.short}</span>${rd[l.id]?'<span class="chk">read</span>':""}</a></li>`;
-  for(const p of g.planned||[])h+=`<li><span class="soon">${p}</span></li>`;h+=`</ul></li>`}h+=`</ul></li>`}
- $("tree").innerHTML=h}
-function home(){const rd=getRead();let h=`<p class="crumb">Library</p><h1>Study Notebook</h1><p class="txt" style="color:var(--muted)">Each subject has its own shelf. Open a lesson to read the big picture, work through the interactive cards, and finish with the 30-second summary and the equation sheet.</p>`;
- for(const s of LIBRARY){h+=`<h2>${s.title}</h2><p class="txt" style="color:var(--muted)">${s.desc}</p><div class="libgrid">`;
-  for(const g of s.groups){const tot=g.lessons.length+(g.planned||[]).length,done=g.lessons.filter(l=>rd[l.id]).length;
-   for(const l of g.lessons)h+=`<a class="libcard" href="#${l.id}"><span class="k">${g.title.split(":")[0]}</span><p class="n">${l.title.replace(/^Lesson \d+: /,"")}</p><p class="d">${rd[l.id]?"Read":"Not marked read"} · ${l.cards.length} cards</p></a>`;
-   h+=`</div><p class="src">${g.title}: ${g.lessons.length} of ${tot} lessons written, ${done} marked read.</p><div class="bar" style="max-width:320px"><i style="width:${tot?done/tot*100:0}%"></i></div>`}}
- h+=`<h2>Adding a new subject</h2><p class="addnote">Ask Claude to add a lesson or a new subject. It goes onto its own shelf here, under its own name, and this same link keeps working.</p>`;
- $("view").innerHTML=h}
-let cardIdx=0;
-function lesson(id){const f=findLesson(id);if(!f){home();return}const {s,g,l}=f;const rd=getRead();
- const all=g.lessons,ix=all.indexOf(l),prev=all[ix-1],next=all[ix+1];
- $("view").innerHTML=`<p class="crumb"><a href="#">Library</a> / ${s.title} / ${g.title}</p><h1>${l.title}</h1>
- <p class="sec">Big picture</p><p class="big">${l.big}</p>
- <div class="meta"><label><input type="checkbox" id="rd" ${rd[l.id]?"checked":""}> I've read this lesson</label><span>${l.cards.length} cards, then summary and equation sheet</span></div>
- <h2>Interactive cards</h2><div class="tabs" id="tabs"></div>
- <div class="card"><h3 id="ct"></h3><div class="fig" id="fig"></div><div id="ctl"></div>
-  <p class="sec">What the picture shows</p><p class="txt" id="intu"></p>
-  <p class="sec">Equation</p><div class="eq" id="eq"></div><div class="sym" id="sym"></div>
-  <p class="sec">Where it comes from</p><ol class="st" id="how"></ol>
-  <p class="sec">Say it correctly</p><p class="say" id="say"></p>
-  <p class="sec">Numbers</p><div class="num" id="num"></div>
-  <div class="nav2"><button id="cp">Previous card</button><button id="cn">Next card</button></div></div>
- <h2>30-second summary for Dr. Javadi</h2><p class="big">${l.summary}</p>
- <h2>Equation sheet</h2><div class="sheet">${l.sheet.map((r,i)=>`<div class="r"><span>${i+1}</span><div><div class="e">${r[0]}</div><div class="c">${r[1]}</div></div></div>`).join("")}</div>
- <p class="src" style="margin-top:10px"><b>Constants:</b> ${l.consts}</p>
- <h2>Sources</h2><ul class="src">${l.sources.map(x=>`<li>${x}</li>`).join("")}</ul>
- <div class="nav2" style="margin-top:28px">${prev?`<a href="#${prev.id}">← ${prev.short}</a>`:"<span></span>"}${next?`<a href="#${next.id}">${next.short} →</a>`:`<span class="src">Next lesson coming soon</span>`}</div>`;
- $("rd").onchange=e=>{setRead(l.id,e.target.checked);tree(l.id)};
- cardIdx=0;const draw=()=>{const c=l.cards[cardIdx];
-  $("tabs").innerHTML=l.cards.map((x,i)=>`<button class="tab${i===cardIdx?" on":""}" data-i="${i}">${x.s}</button>`).join("");
-  $("tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{cardIdx=+b.dataset.i;draw()});
-  $("ct").textContent=c.t;$("intu").textContent=c.intu;$("eq").innerHTML=c.eq;
-  $("sym").innerHTML=c.sym.map(([a,b])=>`<b>${a}</b><span>${b}</span>`).join("");
-  $("how").innerHTML=c.how.map(h=>`<li>${h}</li>`).join("");$("say").textContent=c.say;$("num").innerHTML=c.num;
-  c.r($("fig"),$("ctl"));$("cp").disabled=cardIdx===0;$("cn").disabled=cardIdx===l.cards.length-1};
- $("cp").onclick=()=>{cardIdx--;draw()};$("cn").onclick=()=>{cardIdx++;draw()};draw()}
-function route(){const h=location.hash.replace("#","");tree(h);if(h)lesson(h);else home();window.scrollTo(0,0)}
-window.addEventListener("hashchange",route);route();
-</script>
+<script src="app.js"></script>
+<script src="lessons/thesis-ch1/l1.js"></script>
+<script src="lessons/thesis-ch1/l2.js"></script>
+<script src="lessons/thesis-ch1/l3.js"></script>
+<script src="lessons/thesis-ch1/l4.js"></script>
+<script src="lessons/thesis-ch1/l5.js"></script>
+<script src="lessons/thesis-ch1/l6.js"></script>
+<script src="lessons/thesis-ch1/l7.js"></script>
 </body>
 </html>
