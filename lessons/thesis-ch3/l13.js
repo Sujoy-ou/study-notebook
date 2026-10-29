@@ -120,7 +120,7 @@ r(fig, ctl) {
 }},
 
 {s: "6. Quiz", t: "Chapter 3 quiz: twelve questions",
-intu: "Twelve questions across the chapter. Answer, read why, and say the reason out loud as you would to Dr. Javadi. If a question goes beyond these lessons into your own results, answer from your thesis chapters.",
+intu: "Twelve questions across the chapter. Answer, read why, and say the reason out loud as you would in your defense. If a question goes beyond these lessons into your own results, answer from your thesis chapters.",
 eq: "Lessons 1 to 13",
 sym: [["L1 to L4", "problem, adjoint, Tidy3D, objectives"], ["L5 to L7", "parameters, filter, projection"], ["L8 to L11", "morphology, penalties, DRC"], ["L12, L13", "Adam, full run"]],
 how: ["Answer without looking.", "Explain the reason in one sentence.", "Reopen the lesson for any miss.", "Repeat before the defense."],

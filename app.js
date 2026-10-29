@@ -132,7 +132,7 @@ function lesson(id) {
       <p class="sec">Numbers</p><div class="num" id="num"></div>
     </div>
   </div>
-  <h2>30-second summary for Dr. Javadi</h2><p class="big">${l.summary}</p>
+  <h2>30-second summary</h2><p class="big">${l.summary}</p>
   <h2>Equation sheet</h2><div class="sheet">${l.sheet.map((r, i) => `<div class="r"><span>${i + 1}</span><div><div class="e">${r[0]}</div><div class="c">${r[1]}</div></div></div>`).join("")}</div>
   ${l.consts ? `<p class="src" style="margin-top:10px"><b>Constants:</b> ${l.consts}</p>` : ""}
   <h2>Sources</h2><ul class="src">${l.sources.map(x => `<li>${x}</li>`).join("")}</ul>
