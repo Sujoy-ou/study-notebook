@@ -50,7 +50,7 @@ r(fig, ctl) {
   $("z").oninput = u; u();
 }},
 
-{s: "3. Top view", t: "Top view: E<sub>y</sub> across the strip, E<sub>x</sub> along it",
+{s: "3. Top view", t: String.raw`Top view: \(E_y\) across the strip, \(E_x\) along it`,
 intu: String.raw`Now look from above at the TE0 mode in a narrow strip. Its main field \(E_y\) points across the strip and is strongest at the center. But a guided mode also has a small field component along the propagation direction, \(E_x\). It is zero on the center line, grows toward the edges, has opposite signs on the two sides, and oscillates a quarter period out of step with \(E_y\). Slide the dot across the strip. At the center a \(y\) dipole couples best and an \(x\) dipole does not couple at all. Near the edges both components are present, which sets up card 4.`,
 eq: String.raw`<div class="eqnote">TE0 at the mid-plane</div>\[ \mathbf{E} = (E_x, E_y, 0), \qquad E_x = i\,a(y), \qquad E_y = b(y) \]\[ a(-y) = -a(y), \qquad a(0) = 0 \]<div class="eqnote">from \(\nabla\cdot(\varepsilon\mathbf{E}) = 0\)</div>\[ i\beta E_x = -\frac{\partial E_y}{\partial y}\ (\text{inside the core}) \]`,
 sym: [[String.raw`\(x\)`, "propagation direction"], [String.raw`\(y\)`, "across the strip width"], [String.raw`\(a(y), b(y)\)`, "real amplitudes of the longitudinal and transverse field"], [String.raw`\(i\)`, String.raw`the quarter-period delay between \(E_x\) and \(E_y\)`], [String.raw`\(\beta\)`, String.raw`propagation constant, \(n_{\mathrm{eff}}\,2\pi/\lambda\)`]],

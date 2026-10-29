@@ -69,15 +69,16 @@ function typesetMath(...els) {
   const M = window.MathJax;
   if (!M || !M.typesetPromise) return;
   els = els.filter(Boolean);
-  if (M.typesetClear) M.typesetClear(els);
-  M.typesetPromise(els).then(() => fitMath(els)).catch(() => {});
+  // MathJax calls must not overlap, so chain them on one promise.
+  MJQ = MJQ.then(() => { if (M.typesetClear) M.typesetClear(els); return M.typesetPromise(els); }).then(() => fitMath(els)).catch(e => console.warn("MathJax", e));
 }
+let MJQ = Promise.resolve();
 /* Shrink display equations that are wider than their box (down to 70 %), so nothing is cut off. */
 function fitMath(els) {
   els.forEach(el => el.querySelectorAll('mjx-container[display="true"]').forEach(c => {
     c.style.fontSize = "";
-    const box = c.parentElement.clientWidth - 4, w = c.firstElementChild ? c.firstElementChild.getBoundingClientRect().width : 0;
-    if (box > 0 && w > box) c.style.fontSize = Math.max(70, Math.floor(100 * box / w)) + "%";
+    const box = c.clientWidth - 2, w = c.firstElementChild ? c.firstElementChild.getBoundingClientRect().width : 0;
+    if (box > 0 && w > box) c.style.fontSize = Math.max(62, Math.floor(100 * box / w)) + "%";
   }));
 }
 window.addEventListener("resize", () => { const v = document.getElementById("view"); if (v && window.MathJax && MathJax.typesetPromise) fitMath([v]); });
@@ -162,12 +163,12 @@ function lesson(id) {
     const c = l.cards[cardIdx];
     $("tabs").innerHTML = l.cards.map((x, i) => `<button class="tab${i === cardIdx ? " on" : ""}" data-i="${i}">${x.s}</button>`).join("");
     $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => { cardIdx = +b.dataset.i; draw(); });
-    $("ct").textContent = c.t; $("intu").innerHTML = c.intu; $("eq").innerHTML = c.eq;
+    $("ct").innerHTML = c.t; $("intu").innerHTML = c.intu; $("eq").innerHTML = c.eq;
     $("sym").innerHTML = c.sym.map(([a, b]) => `<b>${a}</b><span>${b}</span>`).join("");
     $("how").innerHTML = c.how.map(h => `<li>${h}</li>`).join("");
     $("say").innerHTML = c.say; $("num").innerHTML = c.num;
     $("fig").innerHTML = ""; $("ctl").innerHTML = "";
-    typesetMath($("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"));
+    typesetMath($("ct"), $("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"));
     c.r($("fig"), $("ctl"));
     $("cp").disabled = cardIdx === 0; $("cn").disabled = cardIdx === l.cards.length - 1;
   };
