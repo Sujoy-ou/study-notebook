@@ -1,16 +1,16 @@
 addLesson("thesis", "ch3", {
 level: "Core",
 id: "thesis-ch3-l5", title: "Bounded parameterizations: widths, layers, tapers and outlines", short: "5. Bounded parameters",
-big: "An optimizer like Adam takes steps of any size in any direction, but a geometry has limits: a tooth cannot be thinner than the smallest feature that can be written, a taper cannot be narrower than its input waveguide, and an outline should stay near the shape it started from. The thesis handles all of this the same way. Each bounded quantity is written as a smooth function of an unbounded variable q, using tanh, which maps the whole real line into a finite interval. The optimizer moves q freely, and the geometry stays inside its limits automatically. The price is that a quantity near its bound responds less to a change of q.",
-bridge: "This is Ch. 3 Sec. 3.3: the grating widths of Eq. (3.7), the DBR scale 1 + ½tanh q, the taper half-widths of Eq. (3.8) and the vertex moves of Eq. (3.12). The DBR reflectance below uses the transfer matrix method of Chapter 2, Lesson 6. Michaels and Yablonovitch optimized a taper outline in the same spirit, with polygon vertices as parameters.",
+big: String.raw`An optimizer like Adam takes steps of any size in any direction, but a geometry has limits: a tooth cannot be thinner than the smallest feature that can be written, a taper cannot be narrower than its input waveguide, and an outline should stay near the shape it started from. The thesis handles all of this the same way. Each bounded quantity is written as a smooth function of an unbounded variable \(q\), using tanh, which maps the whole real line into a finite interval. The optimizer moves \(q\) freely, and the geometry stays inside its limits automatically. The price is that a quantity near its bound responds less to a change of \(q\).`,
+bridge: String.raw`This is Ch. 3 Sec. 3.3: the grating widths of Eq. (3.7), the DBR scale \(1 + \tfrac{1}{2}\tanh q\), the taper half-widths of Eq. (3.8) and the vertex moves of Eq. (3.12). The DBR reflectance below uses the transfer matrix method of Chapter 2, Lesson 6. Michaels and Yablonovitch optimized a taper outline in the same spirit, with polygon vertices as parameters.`,
 cards: [
 {s: "1. The tanh map", t: "From an unbounded q to a bounded width",
-intu: "tanh q runs from −1 to +1 as q runs over all real numbers. Scaling and shifting it maps q onto the interval from w<sub>min</sub> to w<sub>max</sub>. At q = 0 the width sits in the middle of the interval. Whatever value the optimizer gives q, the width can never leave the interval. Set the bounds and move q.",
+intu: String.raw`\(\tanh q\) runs from −1 to +1 as \(q\) runs over all real numbers. Scaling and shifting it maps \(q\) onto the interval from \(w_{\mathrm{min}}\) to \(w_{\mathrm{max}}\). At \(q = 0\) the width sits in the middle of the interval. Whatever value the optimizer gives \(q\), the width can never leave the interval. Set the bounds and move \(q\).`,
 eq: String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]<div class="eqref">Ch. 3 Eq. (3.7)</div>`,
 sym: [[String.raw`\(q\)`, "free variable seen by the optimizer, any real number"], [String.raw`\(w_{\mathrm{min}}\)`, "smallest allowed width, the minimum feature of the device"], [String.raw`\(w_{\mathrm{max}}\)`, "largest allowed width"], [String.raw`\(w(q)\)`, "physical width used to build the geometry"]],
-how: ["tanh: ℝ → (−1, 1), smooth and monotonic.", "Multiply by half the range and add the center.", "q = ±∞ give the bounds, q = 0 gives the center.", "The chain rule gives ∂J/∂q = (∂J/∂w)(dw/dq), which autograd applies automatically."],
+how: [String.raw`\(\tanh: \mathbb{R} \to (-1, 1)\), smooth and monotonic.`, "Multiply by half the range and add the center.", String.raw`\(q = \pm\infty\) give the bounds, \(q = 0\) gives the center.`, String.raw`The chain rule gives \(\partial J/\partial q = (\partial J/\partial w)(dw/dq)\), which autograd applies automatically.`],
 say: "Each width is a tanh function of a free variable, so the optimizer can take any step and the width still stays between its bounds.",
-num: "For example, with w<sub>min</sub> = 100 nm and w<sub>max</sub> = 800 nm, q = 0 gives 450 nm and q = 2 gives 787 nm.",
+num: String.raw`For example, with \(w_{\mathrm{min}} = 100\) nm and \(w_{\mathrm{max}} = 800\) nm, \(q = 0\) gives 450 nm and \(q = 2\) gives 787 nm.`,
 r(fig, ctl) {
   ctl.innerHTML = sl("a", "w_min (nm)", 40, 300, 10, 100) + sl("b", "w_max (nm)", 400, 1200, 10, 800) + sl("q", "q", -4, 4, 0.05, 0.6) + '<div class="readout" id="ro"></div>';
   const qs = range(-4, 4, 200);
@@ -28,12 +28,12 @@ r(fig, ctl) {
 }},
 
 {s: "2. Saturation", t: "Near a bound the width responds less",
-intu: "The slope dw/dq = ½(w<sub>max</sub> − w<sub>min</sub>) sech²q is largest at q = 0 and falls off quickly. A width pressed against a bound has a large |q| and a tiny slope, so both its gradient ∂J/∂q and its response to a step become small. This is the gentle way the bound is enforced. It also means a parameter that wandered deep into saturation needs many steps to come back. Move q and compare the effect of the same step Δq = 0.1.",
+intu: String.raw`The slope \(dw/dq = \tfrac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q\) is largest at \(q = 0\) and falls off quickly. A width pressed against a bound has a large \(|q|\) and a tiny slope, so both its gradient \(\partial J/\partial q\) and its response to a step become small. This is the gentle way the bound is enforced. It also means a parameter that wandered deep into saturation needs many steps to come back. Move \(q\) and compare the effect of the same step \(\Delta q = 0.1\).`,
 eq: String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q, \qquad \frac{\partial J}{\partial q} = \frac{\partial J}{\partial w} \frac{dw}{dq} \]`,
-sym: [[String.raw`\(\operatorname{sech}^2 q = 1/\cosh^2 q\)`, "1 at q = 0, about 0.07 at q = 2, about 0.0013 at q = 4"], [String.raw`\(\Delta q\)`, "a step taken by the optimizer in q"], [String.raw`\(\Delta w \approx (dw/dq)\, \Delta q\)`, "the resulting change of width"]],
-how: ["Differentiate tanh: d tanh q/dq = sech²q.", "Multiply by the half range.", "Chain rule: the gradient reaching q is scaled by the same factor.", "Adam partly compensates, because it normalizes each parameter's step by its own gradient history (Lesson 12)."],
+sym: [[String.raw`\(\operatorname{sech}^2 q = 1/\cosh^2 q\)`, String.raw`1 at \(q = 0\), about 0.07 at \(q = 2\), about 0.0013 at \(q = 4\)`], [String.raw`\(\Delta q\)`, String.raw`a step taken by the optimizer in \(q\)`], [String.raw`\(\Delta w \approx (dw/dq)\, \Delta q\)`, "the resulting change of width"]],
+how: [String.raw`Differentiate tanh: \(d\tanh q/dq = \operatorname{sech}^2 q\).`, "Multiply by the half range.", String.raw`Chain rule: the gradient reaching \(q\) is scaled by the same factor.`, "Adam partly compensates, because it normalizes each parameter's step by its own gradient history (Lesson 12)."],
 say: "Close to a bound the tanh map flattens, so the width responds less to the optimizer, which keeps it inside the limits without a hard clip.",
-num: "With the example bounds 100 and 800 nm, a step Δq = 0.1 moves the width by 35 nm at q = 0 but by only 2.2 nm at q = 2.",
+num: String.raw`With the example bounds 100 and 800 nm, a step \(\Delta q = 0.1\) moves the width by 35 nm at \(q = 0\) but by only 2.2 nm at \(q = 2\).`,
 r(fig, ctl) {
   ctl.innerHTML = sl("q", "q", -4, 4, 0.05, 2) + '<div class="readout" id="ro"></div>';
   const a = 100, b = 800, qs = range(-4, 4, 200), d = v => 0.5 * (b - a) / Math.cosh(v) ** 2, w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a);
@@ -49,11 +49,11 @@ r(fig, ctl) {
 }},
 
 {s: "3. A grating", t: "A grating described by its tooth and gap widths",
-intu: "A grating with N teeth is described by the widths of its N gaps and N teeth, 2N numbers, each built with Eq. (3.7). Here the q values are random with a chosen spread. However large the spread, no tooth or gap ever falls below w<sub>min</sub>, which is how the minimum feature of the grating is guaranteed. A uniform grating is the natural start: all q equal.",
+intu: String.raw`A grating with \(N\) teeth is described by the widths of its \(N\) gaps and \(N\) teeth, \(2N\) numbers, each built with Eq. (3.7). Here the \(q\) values are random with a chosen spread. However large the spread, no tooth or gap ever falls below \(w_{\mathrm{min}}\), which is how the minimum feature of the grating is guaranteed. A uniform grating is the natural start: all \(q\) equal.`,
 eq: String.raw`\[ w_j = w(q_j), \qquad j = 1, \dots, 2N \qquad (\text{gaps and teeth alternating}) \]`,
-sym: [[String.raw`\(N\)`, "number of teeth"], [String.raw`\(q_j\)`, "free variable of width j"], ["spread", "standard deviation of the random q values in this demo"]],
-how: ["Each gap and tooth gets its own free variable.", "All widths share the same bounds.", "The grating is built tooth by tooth from the widths, so the period can vary along the grating (apodization).", "The bounds guarantee the minimum feature for any q."],
-say: "The grating is described by 2N widths, each bounded by a tanh map, so every tooth and gap respects the minimum feature size.",
+sym: [[String.raw`\(N\)`, "number of teeth"], [String.raw`\(q_j\)`, String.raw`free variable of width \(j\)`], ["spread", String.raw`standard deviation of the random \(q\) values in this demo`]],
+how: ["Each gap and tooth gets its own free variable.", "All widths share the same bounds.", "The grating is built tooth by tooth from the widths, so the period can vary along the grating (apodization).", String.raw`The bounds guarantee the minimum feature for any \(q\).`],
+say: String.raw`The grating is described by \(2N\) widths, each bounded by a tanh map, so every tooth and gap respects the minimum feature size.`,
 num: "Typical sizes: about 10 teeth, so about 20 parameters. Varying the period along the grating is how the radiated beam is shaped to match a fiber.",
 r(fig, ctl) {
   ctl.innerHTML = sl("n", "Teeth N", 4, 14, 1, 9) + sl("s", "Spread of q", 0, 3, 0.05, 1) + `<div class="row"><button id="rn">New random q</button><button id="un">Uniform start (all q = −0.4)</button></div><div class="readout" id="ro"></div>`;
@@ -75,12 +75,12 @@ r(fig, ctl) {
 }},
 
 {s: "4. DBR layers", t: "Scaling the mirror layers between 0.5 and 1.5",
-intu: "The bottom mirror can also be designed. Each layer keeps its quarter-wave thickness times a scale 1 + ½tanh q, which stays between 0.5 and 1.5. At q = 0 the stack is the ideal quarter-wave mirror of Chapter 2. Here all high-index layers share one q and all low-index layers another, so you can see what the scales do: thicker layers shift the stopband to longer wavelengths, unequal scales narrow it. The reflectance is computed live with the transfer matrix method.",
+intu: String.raw`The bottom mirror can also be designed. Each layer keeps its quarter-wave thickness times a scale \(1 + \tfrac{1}{2}\tanh q\), which stays between 0.5 and 1.5. At \(q = 0\) the stack is the ideal quarter-wave mirror of Chapter 2. Here all high-index layers share one \(q\) and all low-index layers another, so you can see what the scales do: thicker layers shift the stopband to longer wavelengths, unequal scales narrow it. The reflectance is computed live with the transfer matrix method.`,
 eq: String.raw`\[ d_j = d_j^{\mathrm{QW}} \left( 1 + \tfrac{1}{2} \tanh q_j \right) \]\[ d^{\mathrm{QW}} = \frac{\lambda_0}{4n}, \qquad 0.5 \lt d_j/d_j^{\mathrm{QW}} \lt 1.5 \]`,
-sym: [[String.raw`\(d_j\)`, "thickness of layer j"], [String.raw`\(d^{\mathrm{QW}}\)`, "quarter-wave thickness at λ₀"], [String.raw`\(q_j\)`, "free variable of layer j"], [String.raw`\(n_H, n_L\)`, "3.5 and 3.0 in this example"]],
-how: ["Start from the quarter-wave stack, the best mirror at λ₀ for a fixed number of pairs.", "Allow each layer to change by at most ±50 %.", "The scale is a tanh map with center 1 and half range ½.", "With per-layer scales the optimizer can tune the phase of the reflection, not just its strength."],
+sym: [[String.raw`\(d_j\)`, String.raw`thickness of layer \(j\)`], [String.raw`\(d^{\mathrm{QW}}\)`, String.raw`quarter-wave thickness at \(\lambda_0\)`], [String.raw`\(q_j\)`, String.raw`free variable of layer \(j\)`], [String.raw`\(n_H, n_L\)`, "3.5 and 3.0 in this example"]],
+how: [String.raw`Start from the quarter-wave stack, the best mirror at \(\lambda_0\) for a fixed number of pairs.`, "Allow each layer to change by at most ±50 %.", "The scale is a tanh map with center 1 and half range ½.", "With per-layer scales the optimizer can tune the phase of the reflection, not just its strength."],
 say: "Each DBR layer thickness is its quarter-wave value times a tanh-bounded scale between 0.5 and 1.5, starting from the quarter-wave stack.",
-num: "Example stack: 10 pairs, n<sub>H</sub> = 3.5, n<sub>L</sub> = 3.0, λ<sub>0</sub> = 800 nm, so d<sup>QW</sup> = 57.1 and 66.7 nm. Each pair adds two parameters.",
+num: String.raw`Example stack: 10 pairs, \(n_H = 3.5\), \(n_L = 3.0\), \(\lambda_0 = 800\) nm, so \(d^{\mathrm{QW}} = 57.1\) and 66.7 nm. Each pair adds two parameters.`,
 r(fig, ctl) {
   ctl.innerHTML = sl("h", "q of high-index layers", -2.5, 2.5, 0.05, 0) + sl("l", "q of low-index layers", -2.5, 2.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
   const nH = 3.5, nL = 3.0, l0 = 800, ls = range(600, 1050, 226);
@@ -98,12 +98,12 @@ r(fig, ctl) {
 }},
 
 {s: "5. A taper", t: "Taper half-widths bounded between the two waveguides",
-intu: "A taper from a narrow waveguide to a wide section is described by its half-width y<sub>i</sub> at M fixed, equally spaced positions. Each y<sub>i</sub> is a tanh map of its own q<sub>i</sub>, bounded by the two half-widths. The map bounds the width but does not prescribe a profile: the outline can bulge or even wiggle, and the optimizer decides. Choose a starting profile and add a ripple in q to see that the outline always stays between the dashed limits. The outline is mirrored about the axis.",
+intu: String.raw`A taper from a narrow waveguide to a wide section is described by its half-width \(y_i\) at \(M\) fixed, equally spaced positions. Each \(y_i\) is a tanh map of its own \(q_i\), bounded by the two half-widths. The map bounds the width but does not prescribe a profile: the outline can bulge or even wiggle, and the optimizer decides. Choose a starting profile and add a ripple in \(q\) to see that the outline always stays between the dashed limits. The outline is mirrored about the axis.`,
 eq: String.raw`\[ y_i = \frac{w_{\mathrm{in}}}{2} + \frac{w_{\mathrm{out}} - w_{\mathrm{in}}}{2} \cdot \frac{\tanh(\pi q_i) + 1}{2} \]<div class="eqref">Ch. 3 Eq. (3.8)</div>`,
-sym: [[String.raw`\(y_i\)`, "half-width at position x_i"], [String.raw`\(w_{\mathrm{in}}, w_{\mathrm{out}}\)`, "widths of the narrow and the wide waveguide"], [String.raw`\(q_i\)`, "free variable of point i"], [String.raw`\([\tanh(\pi q) + 1]/2\)`, "runs from 0 to 1, so y_i runs from w_in/2 to w_out/2"]],
-how: ["Fix M positions along the taper.", "Let only the half-width at each position change.", "Map each q_i through (tanh(πq_i) + 1)/2 onto [0, 1], then onto the allowed half-width range.", "Mirror the outline about the axis and etch it through the membrane."],
+sym: [[String.raw`\(y_i\)`, String.raw`half-width at position \(x_i\)`], [String.raw`\(w_{\mathrm{in}}, w_{\mathrm{out}}\)`, "widths of the narrow and the wide waveguide"], [String.raw`\(q_i\)`, String.raw`free variable of point \(i\)`], [String.raw`\([\tanh(\pi q) + 1]/2\)`, String.raw`runs from 0 to 1, so \(y_i\) runs from \(w_{\mathrm{in}}/2\) to \(w_{\mathrm{out}}/2\)`]],
+how: [String.raw`Fix \(M\) positions along the taper.`, "Let only the half-width at each position change.", String.raw`Map each \(q_i\) through \((\tanh(\pi q_i) + 1)/2\) onto \([0, 1]\), then onto the allowed half-width range.`, "Mirror the outline about the axis and etch it through the membrane."],
 say: "The taper outline is a set of half-widths at fixed positions, each bounded between the two waveguide half-widths by a tanh map, with no profile imposed.",
-num: "Typical: about 100 points along a few micrometers. The first and last points connect to the waveguides. A linear start uses q<sub>i</sub> = atanh(2t<sub>i</sub> − 1)/π with t<sub>i</sub> the fractional position.",
+num: String.raw`Typical: about 100 points along a few micrometers. The first and last points connect to the waveguides. A linear start uses \(q_i = \operatorname{atanh}(2t_i - 1)/\pi\) with \(t_i\) the fractional position.`,
 r(fig, ctl) {
   let prof = "lin"; ctl.innerHTML = btns([["lin", "Linear start"], ["cvx", "Bulging"], ["cnc", "Hollow"]], "p") + sl("r", "Ripple in q", 0, 1.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
   const M = 41, wi = 0.3, wo = 2.0;
@@ -128,12 +128,12 @@ r(fig, ctl) {
 }},
 
 {s: "6. An outline", t: "Polygon vertices that move along their normals",
-intu: "After a topology design is traced into a polygon, its boundary can be optimized directly. Each free vertex moves along its outward normal by Δ<sub>max</sub> tanh θ<sub>i</sub>, so it never leaves a band of half-width Δ<sub>max</sub> around the starting outline (shaded), and θ = 0 reproduces the start exactly. Because the boundary moves continuously instead of in pixel steps, staircase edges disappear and corner radii can be controlled (Lesson 10). Shuffle the θ values and change Δ<sub>max</sub>.",
+intu: String.raw`After a topology design is traced into a polygon, its boundary can be optimized directly. Each free vertex moves along its outward normal by \(\Delta_{\mathrm{max}} \tanh \theta_i\), so it never leaves a band of half-width \(\Delta_{\mathrm{max}}\) around the starting outline (shaded), and \(\theta = 0\) reproduces the start exactly. Because the boundary moves continuously instead of in pixel steps, staircase edges disappear and corner radii can be controlled (Lesson 10). Shuffle the \(\theta\) values and change \(\Delta_{\mathrm{max}}\).`,
 eq: String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]<div class="eqref">Ch. 3 Eq. (3.12)</div>`,
-sym: [[String.raw`\(\mathbf{r}_i^{(0)}\)`, "starting position of vertex i"], [String.raw`\(\hat{\mathbf{n}}_i\)`, "outward unit normal at vertex i"], [String.raw`\(\theta_i\)`, "free variable of vertex i"], [String.raw`\(\Delta_{\mathrm{max}}\)`, "largest allowed move"]],
-how: ["Compute the normal at each vertex from its two neighbors.", "Let the vertex move only along that normal.", "Bound the move with Δ_max tanh θ.", "The boundary gradient of Eq. (3.6) gives ∂J/∂r_i, and the chain rule gives ∂J/∂θ_i = (∂J/∂r_i)·n̂_i Δ_max sech²θ_i."],
-say: "In the shape stage each vertex moves along its normal by a tanh-bounded amount, so the outline stays within Δ_max of where it started.",
-num: "A larger Δ<sub>max</sub> gives the optimizer more freedom. A small one, a few nanometers, keeps a design that already passed a design rule check close to passing (Lesson 11).",
+sym: [[String.raw`\(\mathbf{r}_i^{(0)}\)`, String.raw`starting position of vertex \(i\)`], [String.raw`\(\hat{\mathbf{n}}_i\)`, String.raw`outward unit normal at vertex \(i\)`], [String.raw`\(\theta_i\)`, String.raw`free variable of vertex \(i\)`], [String.raw`\(\Delta_{\mathrm{max}}\)`, "largest allowed move"]],
+how: ["Compute the normal at each vertex from its two neighbors.", "Let the vertex move only along that normal.", String.raw`Bound the move with \(\Delta_{\mathrm{max}} \tanh \theta\).`, String.raw`The boundary gradient of Eq. (3.6) gives \(\partial J/\partial \mathbf{r}_i\), and the chain rule gives \(\partial J/\partial \theta_i = (\partial J/\partial \mathbf{r}_i) \cdot \hat{\mathbf{n}}_i\, \Delta_{\mathrm{max}} \operatorname{sech}^2 \theta_i\).`],
+say: String.raw`In the shape stage each vertex moves along its normal by a tanh-bounded amount, so the outline stays within \(\Delta_{\mathrm{max}}\) of where it started.`,
+num: String.raw`A larger \(\Delta_{\mathrm{max}}\) gives the optimizer more freedom. A small one, a few nanometers, keeps a design that already passed a design rule check close to passing (Lesson 11).`,
 r(fig, ctl) {
   ctl.innerHTML = sl("d", "Δ_max (nm)", 0, 60, 1, 30) + sl("a", "Spread of θ", 0, 3, 0.05, 1.5) + `<div class="row"><button id="rn">New random θ</button></div><div class="readout" id="ro"></div>`;
   let seed = 8; const n = 48, sc = 0.45;
@@ -155,7 +155,7 @@ r(fig, ctl) {
   $("d").oninput = u; $("a").oninput = u; $("rn").onclick = () => { seed++; u(); }; u();
 }}
 ],
-summary: "Every bounded geometric quantity is written as a tanh function of a free variable, so the optimizer moves freely while the geometry stays inside its limits. Grating widths lie between w_min and w_max (Eq. 3.7), DBR layers between 0.5 and 1.5 times their quarter-wave thickness, taper half-widths between those of the two waveguides (Eq. 3.8), and outline vertices within Δ_max of their start along the normal (Eq. 3.12). Near a bound the tanh flattens, so the quantity responds less, which enforces the bound gently. The chain rule through the tanh is applied automatically.",
+summary: String.raw`Every bounded geometric quantity is written as a tanh function of a free variable, so the optimizer moves freely while the geometry stays inside its limits. Grating widths lie between \(w_{\mathrm{min}}\) and \(w_{\mathrm{max}}\) (Eq. 3.7), DBR layers between 0.5 and 1.5 times their quarter-wave thickness, taper half-widths between those of the two waveguides (Eq. 3.8), and outline vertices within \(\Delta_{\mathrm{max}}\) of their start along the normal (Eq. 3.12). Near a bound the tanh flattens, so the quantity responds less, which enforces the bound gently. The chain rule through the tanh is applied automatically.`,
 sheet: [
 [String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]`, "Grating widths (Ch. 3 Eq. 3.7)"],
 [String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q \]`, "Saturation near the bounds"],
