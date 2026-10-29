@@ -88,7 +88,7 @@ h3.gt{font-family:var(--display);font-size:18px;margin:18px 0 2px}
 .exp .sec:first-child{margin-top:0}
 .txt{margin:4px 0}
 .eq{font-family:var(--display);font-size:17px;line-height:1.9;background:var(--sunk);border-radius:6px;padding:12px 14px;margin:6px 0;text-align:center;overflow-x:auto}
-.sym{display:grid;grid-template-columns:fit-content(45%) minmax(0,1fr);gap:4px 14px;font-size:14px;line-height:1.6;margin:8px 0}
+.sym{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px;line-height:1.6;margin:8px 0}
 .sym b{font-family:var(--mono);font-weight:500;font-size:13px}
 ol.st{margin:4px 0;padding-left:22px}
 ol.st li{margin:3px 0}
@@ -113,11 +113,11 @@ ol.st li{margin:3px 0}
 .eq mjx-container[display="true"]{margin:6px 0 !important}
 .eq .eqref{font-family:var(--body,inherit);font-size:12px;color:var(--muted);text-align:right;margin-top:2px}
 .eq .eqnote{font-family:var(--body,inherit);font-size:13px;color:var(--muted);text-align:left;margin:4px 0 0}
-.sym b{min-width:0;overflow-x:auto}
+.sym b{white-space:nowrap;max-width:16em}
 .sym b mjx-container{font-size:105% !important}
 .sheet .e mjx-container[display="true"]{margin:2px 0 !important;text-align:left !important}
 code{font-family:var(--mono);font-size:.88em;background:var(--sunk);padding:0 4px;border-radius:3px;overflow-wrap:anywhere}
-mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+mjx-container[display="true"]{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0}
 
 .src{font-size:14px;color:var(--muted)}
 .src li{margin:3px 0}
@@ -146,7 +146,8 @@ svg .c-coral rect,svg rect.c-coral{fill:var(--coral-bg);stroke:var(--coral)}
   nav.side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
   h1{font-size:26px}
   .card{padding:14px}
-  .sym{grid-template-columns:fit-content(48%) minmax(0,1fr)}
+  .sym{grid-template-columns:auto minmax(0,1fr)}
+  .sym b{max-width:11em;white-space:normal}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
