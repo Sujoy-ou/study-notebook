@@ -12,6 +12,9 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "ch2", title: "Chapter 2: Background",
         desc: "Waveguide optics, symmetry, grating couplers, DBR, MMI, and four lessons on how FDTD works. Theory only, computed live in the page.",
+        lessons: [], planned: [] },
+      { id: "ch3", title: "Chapter 3: Inverse design methods",
+        desc: "The adjoint method, parameterizations, filters and projection, erosion and dilation, the erosion-dilation and curvature penalties, design rule checks and repair, Adam, and a full inverse design run computed live in the page. Theory only.",
         lessons: [], planned: [] }
     ]
   }
