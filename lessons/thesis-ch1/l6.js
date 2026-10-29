@@ -2,7 +2,7 @@ addLesson("thesis", "ch1", {
 level: "Advanced",
 id: "thesis-ch1-l6", title: "From dipole to your waveguide", short: "6. Dipole to waveguide",
 big: "A dot couples to a waveguide mode in proportion to |d·E|², the overlap of its dipole with the mode's field at the dot. The mirror symmetry of your air-clad membrane forces TE-like modes to have only in-plane field at the mid-plane and TM-like modes to have only z field there. So in-plane dipoles feed TE and z dipoles feed TM. Across the strip, the TE field also has a small component along the propagation direction, a quarter period out of phase, which makes circular dipoles emit more one way than the other. This is where the thesis devices take over.",
-bridge: "Coordinates follow your Chapter 2: x is the propagation direction, y the width (200 nm), z the thickness (160 nm). The mode shapes drawn here are schematic. Your own Tidy3D profiles (Fig. 2.3) are the real ones.",
+bridge: "Coordinates: x is the propagation direction, y the width of the strip (typically about 200 nm), z the membrane thickness (a common GaAs membrane is 160 nm, as in Midolo 2015). The mode shapes drawn here are schematic. A mode solver gives the real ones (Chapter 2, Lesson 3).",
 cards: [
 {s: "1. Overlap", t: "Coupling is an overlap: |d·E|²",
 intu: "From the golden rule (Lesson 4), the rate into a particular mode is proportional to |d·E|², where E is that mode's field at the dot. If the dipole points along the field, coupling is maximal. If it is perpendicular, coupling is zero, no matter how strong the field. In between it goes as cos² of the angle. Rotate the dipole relative to the field. This single rule, combined with the mode shapes in the next two cards, explains everything about which transition feeds which mode.",
@@ -10,7 +10,7 @@ eq: "Γ<sub>wg</sub> ∝ |d*·E<sub>k</sub>(r<sub>0</sub>)|² × n<sub>g</sub> &
 sym: [["Γ_wg", "emission rate into the guided mode"], ["E_k(r₀)", "electric field of the mode at the dot's position r₀ (mode normalized to unit power)"], ["d*", "complex conjugate of the dipole vector (matters for circular dipoles)"], ["n_g", "group index: slower light means more time to interact, so a higher rate"], ["α", "angle between a linear dipole and the local field"]],
 how: ["Golden rule: Γ ∝ |⟨f|−d·E|i⟩|² ρ.", "For a single guided mode, the matrix element is the dipole dotted into that mode's field at r₀.", "The density of states of a 1D waveguide is proportional to 1/v_g, i.e. to the group index n_g.", "For a linear dipole the dot product is |d||E| cos α."],
 say: "The coupling of a dot to a waveguide mode is set by the projection of its transition dipole onto the mode's local electric field, and scales with the group index.",
-num: "cos²α at 0°: <b>1</b>, at 45°: <b>0.5</b>, at 90°: <b>0</b><br>Your 200 nm × 160 nm strip at 795 nm (Ch. 2): TE0 n<sub>eff</sub> = <b>2.368</b>, TM0 n<sub>eff</sub> = <b>2.094</b>",
+num: "cos²α at 0°: <b>1</b>, at 45°: <b>0.5</b>, at 90°: <b>0</b><br>For a thin GaAs strip in air, both fundamental modes have n<sub>eff</sub> between 1 and the GaAs index, with TE0 above TM0 (Chapter 2, Lessons 2 and 3).",
 r(fig, ctl) {
   ctl.innerHTML = sl("al", "Angle between dipole and field", 0, 90, 1, 0) + '<div class="readout" id="ro"></div>';
   const u = () => {
@@ -27,9 +27,9 @@ r(fig, ctl) {
 intu: "Your membrane has air above and below, so it is a mirror image of itself across its mid-plane. Every mode is then either even or odd under that mirror. For TE-like (even) modes the in-plane field is symmetric and E<sub>z</sub> is antisymmetric, so E<sub>z</sub> must be exactly zero at the mid-plane. For TM-like (odd) modes it is the other way round: the in-plane field vanishes at the mid-plane and E<sub>z</sub> is maximal. Move the dot up and down. At the mid-plane the separation is perfect: in-plane dipoles see only TE, z dipoles see only TM. Off the mid-plane, TE picks up some E<sub>z</sub> and the separation leaks.",
 eq: "mirror z → −z: &nbsp; TE-like: E<sub>x,y</sub>(−z) = E<sub>x,y</sub>(z), &nbsp; E<sub>z</sub>(−z) = −E<sub>z</sub>(z) ⟹ E<sub>z</sub>(0) = 0<br>TM-like: E<sub>x,y</sub>(−z) = −E<sub>x,y</sub>(z) ⟹ E<sub>x,y</sub>(0) = 0",
 sym: [["z = 0", "membrane mid-plane, halfway through the 160 nm"], ["TE-like (even)", "in-plane field symmetric in z"], ["TM-like (odd)", "in-plane field antisymmetric in z"], ["E_z", "field component along the growth axis"]],
-how: ["The structure is unchanged by the mirror z → −z, so each mode must be even or odd under it.", "The electric field is a vector. Under this mirror, in-plane components keep their sign and E_z flips sign.", "A component that must equal minus itself at z = 0 is zero there.", "So at the mid-plane, TE has no E_z and TM has no in-plane field. Your Ch. 2 uses exactly this mirror (PMC for TE, PEC for TM) to halve the simulations."],
+how: ["The structure is unchanged by the mirror z → −z, so each mode must be even or odd under it.", "The electric field is a vector. Under this mirror, in-plane components keep their sign and E_z flips sign.", "A component that must equal minus itself at z = 0 is zero there.", "So at the mid-plane, TE has no E_z and TM has no in-plane field. FDTD solvers use exactly this mirror (PMC for TE, PEC for TM) to halve a simulation (Chapter 2, Lesson 4)."],
 say: "Because the air-clad membrane is mirror symmetric, a dot at its mid-plane couples in-plane dipoles only to TE-like modes and z dipoles only to TM-like modes. This holds only at the mid-plane.",
-num: "Membrane thickness t = <b>160 nm</b>, mid-plane at z = 0, surfaces at z = ±80 nm.<br>The curves here are schematic shapes that obey the symmetry. For real values, read |E_z| of TE0 off your Tidy3D mode profiles at the dot height.",
+num: "Membrane thickness t = <b>160 nm</b>, mid-plane at z = 0, surfaces at z = ±80 nm.<br>The curves here are schematic shapes that obey the symmetry. For real values, read |E_z| of TE0 from a mode solver at the dot height.",
 r(fig, ctl) {
   ctl.innerHTML = sl("z", "Dot height z from mid-plane", -80, 80, 1, 0) + '<div class="readout" id="ro"></div>';
   const u = () => {
@@ -44,19 +44,19 @@ r(fig, ctl) {
       <line x1="200" x2="200" y1="30" y2="270" stroke="var(--p)" stroke-width="0.5"/>
       <path d="${pf(tey)}" fill="none" stroke="#378ADD" stroke-width="2.5"/><path d="${pf(tez)}" fill="none" stroke="#D85A30" stroke-width="2" stroke-dasharray="5 4"/>
       <circle cx="380" cy="${zy(z)}" r="8" fill="#EF9F27" stroke="#854F0B"/><line x1="380" x2="380" y1="${zy(z)}" y2="${zy(z)}" stroke="none"/>
-      <text class="ts" x="210" y="40">TE0: in-plane field (blue), E_z (coral dashed)</text><text class="ts" x="380" y="272" text-anchor="middle">schematic profiles, not Tidy3D data</text>`);
+      <text class="ts" x="210" y="40">TE0: in-plane field (blue), E_z (coral dashed)</text><text class="ts" x="380" y="272" text-anchor="middle">schematic profiles, not solver data</text>`);
     $("ro").innerHTML = `<div><span>in-plane dipole → TE</span><b>${teIn.toFixed(2)}</b></div><div><span>z dipole → TE (leak)</span><b>${teZ.toFixed(3)}</b></div><div><span>z dipole → TM</span><b>${tmZ.toFixed(2)}</b></div>`;
   };
   $("z").oninput = u; u();
 }},
 
 {s: "3. Top view", t: "Top view: E<sub>y</sub> across the strip, E<sub>x</sub> along it",
-intu: "Now look from above at the TE0 mode in your 200 nm strip. Its main field E<sub>y</sub> points across the strip and is strongest at the center. But a guided mode also has a small field component along the propagation direction, E<sub>x</sub>. It is zero on the center line, grows toward the edges, has opposite signs on the two sides, and oscillates a quarter period out of step with E<sub>y</sub>. Slide the dot across the strip. At the center a y dipole couples best and an x dipole does not couple at all. Near the edges both components are present, which sets up card 4.",
+intu: "Now look from above at the TE0 mode in a narrow strip. Its main field E<sub>y</sub> points across the strip and is strongest at the center. But a guided mode also has a small field component along the propagation direction, E<sub>x</sub>. It is zero on the center line, grows toward the edges, has opposite signs on the two sides, and oscillates a quarter period out of step with E<sub>y</sub>. Slide the dot across the strip. At the center a y dipole couples best and an x dipole does not couple at all. Near the edges both components are present, which sets up card 4.",
 eq: "TE0 at the mid-plane: &nbsp; E = (E<sub>x</sub>, E<sub>y</sub>, 0), &nbsp; E<sub>x</sub> = i a(y), &nbsp; E<sub>y</sub> = b(y)<br>a(−y) = −a(y), &nbsp; a(0) = 0 &nbsp;&nbsp;&nbsp; from ∇·(εE) = 0: &nbsp; i β E<sub>x</sub> = −∂E<sub>y</sub>/∂y (inside the core)",
-sym: [["x", "propagation direction"], ["y", "across the 200 nm width"], ["a(y), b(y)", "real amplitudes of the longitudinal and transverse field"], ["i", "the quarter-period delay between E_x and E_y"], ["β", "propagation constant, n_eff 2π/λ"]],
+sym: [["x", "propagation direction"], ["y", "across the strip width"], ["a(y), b(y)", "real amplitudes of the longitudinal and transverse field"], ["i", "the quarter-period delay between E_x and E_y"], ["β", "propagation constant, n_eff 2π/λ"]],
 how: ["Inside the uniform core, ∇·E = 0. For a field ∝ e^(iβx), this gives iβE_x + ∂E_y/∂y + ∂E_z/∂z = 0.", "At the mid-plane ∂E_z/∂z is small for TE0, so E_x ≈ (i/β) ∂E_y/∂y.", "E_y peaks at the center, so its slope is zero there: E_x = 0 on the center line.", "The slope has opposite signs on the two sides, and the factor i means E_x is a quarter period out of phase with E_y."],
 say: "The TE0 mode has a longitudinal field component that vanishes on the waveguide axis, is antisymmetric across the width, and is in quadrature with the transverse field.",
-num: "TE0 n<sub>eff</sub> = 2.368 ⟹ β = 2π × 2.368 / 795 nm ≈ <b>0.0187 nm⁻¹</b><br>Width 200 nm, so the dot can sit at most 100 nm from the axis.<br>Amplitudes in the plot are schematic.",
+num: "Example: n<sub>eff</sub> = 2.4 at 795 nm gives β = 2π × 2.4 / 795 nm ≈ <b>0.019 nm⁻¹</b><br>For a 200 nm wide strip the dot can sit at most 100 nm from the axis.<br>Amplitudes in the plot are schematic.",
 r(fig, ctl) {
   ctl.innerHTML = sl("y", "Dot position across the strip", -100, 100, 1, 0) + '<div class="readout" id="ro"></div>';
   const u = () => {
@@ -64,7 +64,7 @@ r(fig, ctl) {
     const b = Math.cos(yv / 100 * Math.PI / 2 * 0.85), a = 0.55 * Math.sin(yv / 100 * Math.PI / 2);
     const Y = v => 150 - v / 100 * 70;
     let arr = ""; for (let xx = 90; xx <= 590; xx += 50) for (const v of [-80, -40, 0, 40, 80]) { const bb = Math.cos(v / 100 * Math.PI / 2 * 0.85) * 26; arr += `<line x1="${xx}" y1="${Y(v)+bb/2}" x2="${xx}" y2="${Y(v)-bb/2}" stroke="#378ADD" stroke-width="1.4" marker-end="url(#ar)" opacity="0.6"/>`; }
-    fig.innerHTML = svg(280, `<rect x="60" y="${Y(100)}" width="560" height="${Y(-100)-Y(100)}" fill="var(--gray-bg)" stroke="var(--p)" stroke-width="0.5"/>${arr}<line x1="60" x2="620" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--p)" stroke-dasharray="3 4" opacity="0.6"/><line x1="250" x2="430" y1="40" y2="40" stroke="var(--t)" marker-end="url(#ar)"/><text class="ts" x="340" y="32" text-anchor="middle">propagation (x)</text><circle cx="340" cy="${Y(yv)}" r="9" fill="#EF9F27" stroke="#854F0B"/><text class="ts" x="340" y="262" text-anchor="middle">blue: E_y of TE0 (schematic). Width 200 nm.</text>`);
+    fig.innerHTML = svg(280, `<rect x="60" y="${Y(100)}" width="560" height="${Y(-100)-Y(100)}" fill="var(--gray-bg)" stroke="var(--p)" stroke-width="0.5"/>${arr}<line x1="60" x2="620" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--p)" stroke-dasharray="3 4" opacity="0.6"/><line x1="250" x2="430" y1="40" y2="40" stroke="var(--t)" marker-end="url(#ar)"/><text class="ts" x="340" y="32" text-anchor="middle">propagation (x)</text><circle cx="340" cy="${Y(yv)}" r="9" fill="#EF9F27" stroke="#854F0B"/><text class="ts" x="340" y="262" text-anchor="middle">blue: E_y of TE0 (schematic). Width about 200 nm.</text>`);
     $("ro").innerHTML = `<div><span>|E_y|² (y dipole)</span><b>${(b * b).toFixed(2)}</b></div><div><span>|E_x|² (x dipole)</span><b>${(a * a).toFixed(3)}</b></div><div><span>E_x is</span><b>${Math.abs(yv) < 2 ? "zero" : "90° out of phase"}</b></div>`;
   };
   $("y").oninput = u; u();
@@ -151,6 +151,6 @@ sheet: [
 ["β = Γ<sub>wg</sub>/(Γ<sub>wg</sub> + Γ<sub>other</sub>)", "β factor"],
 ["η<sub>total</sub> = β f<sub>dir</sub> η<sub>devices</sub> η<sub>GC</sub>", "Collection chain"],
 ["ER [dB] = 10 log<sub>10</sub>(T/X)", "PBS extinction ratio"]],
-consts: "Strip 200 nm × 160 nm, n = 3.492, λ = 795 nm. TE0 n<sub>eff</sub> = 2.368, TM0 n<sub>eff</sub> = 2.094 (Ch. 2).",
-sources: ["Lodahl, Mahmoodian and Stobbe, Rev. Mod. Phys. 87, 347 (2015) (thesis ref., β factor, chiral coupling)", "Javadi et al., Nature Nanotechnology 13, 398 (2018) (thesis ref., spin-dependent directional emission)", "Your Chapter 2: mode profiles, mirror symmetry, n_eff values", "Your Chapters 4 and 5: grating coupler and PBS efficiencies"]
+consts: "Example geometry: GaAs strip about 200 nm × 160 nm in air at 795 nm. Mode shapes on this page are schematic.",
+sources: ["Lodahl, Mahmoodian and Stobbe, Rev. Mod. Phys. 87, 347 (2015) (thesis ref., β factor, chiral coupling)", "Javadi et al., Nature Nanotechnology 13, 398 (2018) (thesis ref., spin-dependent directional emission)", "Johnson et al., Phys. Rev. B 60, 5751 (1999) (mirror symmetry of slab modes)"]
 });

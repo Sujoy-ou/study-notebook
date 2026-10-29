@@ -9,6 +9,9 @@ const LIBRARY = [
     groups: [
       { id: "ch1", title: "Chapter 1: Introduction",
         desc: "Quantum dot physics behind Sec. 1.1 to 1.3 and Fig. 1.1, from bands to spin pumping.",
+        lessons: [], planned: [] },
+      { id: "ch2", title: "Chapter 2: Background",
+        desc: "Waveguide optics, symmetry, grating couplers, DBR, MMI, and four lessons on how FDTD works. Theory only, computed live in the page.",
         lessons: [], planned: [] }
     ]
   }
