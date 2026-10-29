@@ -6,8 +6,8 @@ bridge: "This is Ch. 3 Sec. 3.3, Eqs. (3.9) and (3.11). Christiansen and Sigmund
 cards: [
 {s: "1. Pixels", t: "A density per pixel, interpolated between air and GaAs",
 intu: "Each pixel carries a density ρ. The permittivity is linear in ρ: 1 for air at ρ = 0, 12.19 for GaAs at ρ = 1. A design can start from a rough drawing, here a Y-shaped splitter with dense arms on a light background. Any value in between is a grey material that does not exist: at ρ = 0.5 the index would be about 2.6. The optimizer has to be pushed toward 0 and 1, otherwise its best design may rely on such fictitious material. Change the arm and background densities.",
-eq: "ε = ε<sub>air</sub> + ρ̂ (ε<sub>GaAs</sub> − ε<sub>air</sub>) &nbsp;&nbsp; (Ch. 3 Eq. 3.11, Christiansen Eqs. 9 and 19)",
-sym: [["ρ", "raw density of a pixel, the design variable, in [0, 1]"], ["ρ̂", "density after filter and projection, the one that sets ε (Lesson 7)"], ["ε_air = 1, ε_GaAs = 12.19", "the two materials (n = 3.492)"]],
+eq: String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]<div class="eqref">Ch. 3 Eq. (3.11), Christiansen Eqs. 9 and 19</div>`,
+sym: [[String.raw`\(\rho\)`, "raw density of a pixel, the design variable, in [0, 1]"], [String.raw`\(\hat\rho\)`, "density after filter and projection, the one that sets ε (Lesson 7)"], [String.raw`\(\varepsilon_{\mathrm{air}} = 1, \varepsilon_{\mathrm{GaAs}} = 12.19\)`, "the two materials (n = 3.492)"]],
 how: ["Discretize the design region into square pixels.", "Give each pixel a continuous density so that gradients exist.", "Interpolate ε linearly, as Christiansen and Sigmund do.", "Only ρ = 0 and ρ = 1 correspond to real materials."],
 say: "Each pixel has a density between 0 and 1, and its permittivity is a linear interpolation between air and GaAs, so only the end values are physical.",
 num: "ρ = 0.5 gives ε = 6.6 and n = 2.57. ρ = 0.9 gives ε = 11.1 and n = 3.33.",
@@ -31,8 +31,8 @@ r(fig, ctl) {
 
 {s: "2. Raw pixels", t: "What an unconstrained pixel optimization produces",
 intu: "Left free, the optimizer exploits every pixel. Christiansen and Sigmund observe pixel-by-pixel varying regions in a naive optimization, and features of single pixels. Such patterns can be fine in simulation, partly because a pixel-size feature is poorly resolved by the grid, but they cannot be written by lithography. The two maps show the typical symptoms: speckle of single pixels and large grey regions. The readouts count them.",
-eq: "smallest feature without a filter: one pixel, Δ &nbsp;&nbsp; grey fraction = share of pixels with 0.05 &lt; ρ &lt; 0.95",
-sym: [["Δ", "pixel size, about 10 nm in a typical 3D design"], ["grey fraction", "a simple measure of how far the design is from binary"]],
+eq: String.raw`\[ \text{smallest feature without a filter: one pixel, } \Delta \]\[ \text{grey fraction} = \text{share of pixels with } 0.05 \lt \rho \lt 0.95 \]`,
+sym: [[String.raw`\(\Delta\)`, "pixel size, about 10 nm in a typical 3D design"], ["grey fraction", "a simple measure of how far the design is from binary"]],
 how: ["Each pixel is an independent variable with its own gradient.", "Nothing couples neighbors, so the optimum can vary from pixel to pixel.", "Grey values are often optimal for a continuous problem.", "Both effects are removed by the filter (this lesson) and the projection (Lesson 7)."],
 say: "Without regularization the optimizer produces single-pixel features and grey regions, which is why a filter and a projection are added.",
 num: "At 10 nm pixels a single-pixel feature is 10 nm, an order of magnitude below a typical electron-beam lithography rule of about 100 nm.",
@@ -47,8 +47,8 @@ r(fig, ctl) {
 
 {s: "3. The conic kernel", t: "The conic filter kernel and its rounded radius",
 intu: "The filter replaces each pixel by a weighted average of its neighbors. The weight falls linearly from 1 at the center to 0 at a radius R̃, like a cone. Because the kernel lives on the pixel grid, Tidy3D rounds the radius up to a whole number of pixels, R̃ = ⌈R/Δ⌉Δ, and builds a kernel of 2⌈R/Δ⌉ + 1 pixels per side. Pixels at exactly R̃ get zero weight. Change R/Δ and watch the rounding.",
-eq: "ρ̃<sub>i</sub> = Σ<sub>j</sub> K(r<sub>ij</sub>) ρ<sub>j</sub> / Σ<sub>j</sub> K(r<sub>ij</sub>), &nbsp;&nbsp; K(r) = max(0, 1 − r/R̃), &nbsp;&nbsp; R̃ = ⌈R/Δ⌉Δ &nbsp;&nbsp; (Ch. 3 Eq. 3.9)",
-sym: [["ρ̃_i", "filtered density of pixel i"], ["r_ij", "distance between the centers of pixels i and j"], ["K", "cone-shaped weight"], ["R", "requested filter radius"], ["R̃", "radius actually used, rounded up to whole pixels"], ["Δ", "pixel size"]],
+eq: String.raw`\[ \tilde\rho_i = \frac{\sum_j K(r_{ij})\, \rho_j}{\sum_j K(r_{ij})} \]\[ K(r) = \max(0, 1 - r/\tilde R), \qquad \tilde R = \lceil R/\Delta \rceil \Delta \]<div class="eqref">Ch. 3 Eq. (3.9)</div>`,
+sym: [[String.raw`\(\tilde\rho_i\)`, "filtered density of pixel i"], [String.raw`\(r_{ij}\)`, "distance between the centers of pixels i and j"], [String.raw`\(K\)`, "cone-shaped weight"], [String.raw`\(R\)`, "requested filter radius"], [String.raw`\(\tilde R\)`, "radius actually used, rounded up to whole pixels"], [String.raw`\(\Delta\)`, "pixel size"]],
 how: ["Choose a radius R in nanometers.", "Convert to pixels and round up: n = ⌈R/Δ⌉.", "Build a (2n + 1) × (2n + 1) kernel with K = max(0, 1 − r/(nΔ)).", "Normalize by the sum of the weights so a uniform design stays uniform."],
 say: "The conic filter averages the densities with weights that fall linearly to zero at the radius, which Tidy3D rounds up to a whole number of pixels.",
 num: "Example: R = 100 nm on 9 nm pixels gives ⌈11.1⌉ = 12 pixels, R̃ = 108 nm, a kernel of 25 × 25 pixels. A radius of one pixel leaves only the center weight, so the filter does nothing.",
@@ -72,8 +72,8 @@ r(fig, ctl) {
 
 {s: "4. Filtering", t: "The filter removes pixel noise and makes the design grey",
 intu: "Apply the filter to a map of random pixel values. Small-scale variation is averaged out and smooth blobs of size about R remain. Notice the side effect: the filtered values bunch up around the mean, 0.5. The filter alone turns a noisy design into a grey one. That is the reason a projection always follows the filter. Change the radius.",
-eq: "ρ̃ = K ∗ ρ / (K ∗ 1) &nbsp;&nbsp; (normalized convolution)",
-sym: [["∗", "convolution over the pixel grid"], ["K ∗ 1", "sum of the weights inside the region, which normalizes at the edges"], ["std", "spread of the values around their mean"]],
+eq: String.raw`\[ \tilde\rho = \frac{K \ast \rho}{K \ast 1} \qquad (\text{normalized convolution}) \]`,
+sym: [[String.raw`\(\ast\)`, "convolution over the pixel grid"], [String.raw`\(K \ast 1\)`, "sum of the weights inside the region, which normalizes at the edges"], ["std", "spread of the values around their mean"]],
 how: ["Each filtered pixel is a weighted mean of many raw pixels.", "Means of many random values cluster near their average.", "So the spread shrinks roughly like 1/√(number of pixels in the kernel).", "Spatial features smaller than about R are averaged away."],
 say: "The filter smooths the design over a radius R, removing pixel-scale features, but it also pushes values toward grey.",
 num: "Raw uniform random values have a spread of 0.29. After a filter of radius 3 pixels it drops to 0.07, and at 4 pixels to 0.05, so almost every pixel is grey.",
@@ -92,7 +92,7 @@ r(fig, ctl) {
 
 {s: "5. A weak length scale", t: "Filter, then threshold: features grow with R, but no guarantee",
 intu: "Threshold the filtered map at 0.5 to see the shapes it encodes. A larger radius gives larger features, so the filter does set a length scale. Christiansen and Sigmund call it a weak sense of length scale, because nothing forbids a thin neck or a tiny island where the filtered value happens to cross 0.5. The readout tracks the smallest island or hole. Change R and look for small features.",
-eq: "binary design: ρ̂ = 1 if ρ̃ &gt; 0.5, else 0 &nbsp;&nbsp; (the limit β → ∞ of the projection, Lesson 7)",
+eq: String.raw`\[ \text{binary design: } \hat\rho = 1 \text{ if } \tilde\rho \gt 0.5, \text{ else } 0 \]<div class="eqref">the limit \(\beta \to \infty\) of the projection, Lesson 7</div>`,
 sym: [["island", "connected GaAs region"], ["hole", "connected air region surrounded by GaAs"], ["smallest feature", "area of the smallest island or hole, in pixels"]],
 how: ["Filtering limits how fast ρ̃ can vary in space.", "So the 0.5 contour cannot wiggle on scales much below R.", "But the contour can still pass close to itself, making thin necks and small islands.", "A hard guarantee needs more: the erosion and dilation penalty (Lesson 9) and a design rule check (Lesson 11)."],
 say: "The filter radius sets a typical feature size, but only a weak one: it does not guarantee a minimum feature size.",
@@ -112,8 +112,8 @@ r(fig, ctl) {
 
 {s: "6. Gradients through the filter", t: "The filter smooths the gradient too",
 intu: "The chain rule passes the gradient back through the filter. Because the conic kernel is symmetric, the backward pass is again a convolution with the same kernel (with the normalization moved inside). So a sensitivity that varies from pixel to pixel is smoothed before it reaches the design variables. A single-pixel spike becomes a cone, and a checkerboard pattern, the classic pixel-scale artifact, is almost wiped out. Pick a gradient pattern.",
-eq: "∂J/∂ρ<sub>j</sub> = Σ<sub>i</sub> (∂J/∂ρ̃<sub>i</sub>) K(r<sub>ij</sub>) / Σ<sub>k</sub>K(r<sub>ik</sub>)",
-sym: [["∂J/∂ρ̃_i", "gradient arriving at the filtered density (from projection and simulation)"], ["∂J/∂ρ_j", "gradient with respect to the raw design variable"], ["red / blue", "positive / negative gradient"]],
+eq: String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum_k K(r_{ik})} \]`,
+sym: [[String.raw`\(\partial J/\partial \tilde\rho_i\)`, "gradient arriving at the filtered density (from projection and simulation)"], [String.raw`\(\partial J/\partial \rho_j\)`, "gradient with respect to the raw design variable"], ["red / blue", "positive / negative gradient"]],
 how: ["ρ̃ is linear in ρ, with matrix entries K(r_ij)/ΣK.", "The vector-Jacobian product multiplies by the transpose of that matrix.", "K(r_ij) = K(r_ji), so the transpose is again a cone-weighted sum.", "High spatial frequencies are damped in the gradient as well as in the design."],
 say: "Backpropagation through the conic filter is again a cone-weighted average, so the gradient reaching the design variables is smoothed on the scale R.",
 num: "A checkerboard has the highest spatial frequency of the grid. A cone of radius 2 pixels reduces it to about 4 % of its amplitude, radius 3 to below 1 %.",
@@ -133,10 +133,10 @@ r(fig, ctl) {
 ],
 summary: "In density topology optimization each pixel has a density ρ in [0, 1], and the permittivity is interpolated linearly between air and GaAs, so only 0 and 1 are physical. Unregularized, the optimizer produces single-pixel features and grey regions. A conic filter of radius R averages the densities with weights max(0, 1 − r/R̃), where Tidy3D rounds R up to whole pixels. The filter removes pixel-scale features and smooths the gradient on the same scale, but it makes the design greyer and gives only a weak length scale, so a projection and further penalties are needed.",
 sheet: [
-["ε = ε<sub>air</sub> + ρ̂(ε<sub>GaAs</sub> − ε<sub>air</sub>)", "Linear interpolation (Ch. 3 Eq. 3.11, Christiansen Eqs. 9, 19)"],
-["ρ̃<sub>i</sub> = ΣK(r<sub>ij</sub>)ρ<sub>j</sub>/ΣK(r<sub>ij</sub>), &nbsp; K(r) = max(0, 1 − r/R̃)", "Conic filter (Ch. 3 Eq. 3.9, Tidy3D)"],
-["R̃ = ⌈R/Δ⌉Δ, &nbsp; kernel 2⌈R/Δ⌉ + 1 pixels per side", "Radius rounding (Tidy3D get_kernel_size_px)"],
-["∂J/∂ρ<sub>j</sub> = Σ<sub>i</sub>(∂J/∂ρ̃<sub>i</sub>)K(r<sub>ij</sub>)/ΣK", "Backward pass through the filter"]],
+[String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]`, "Linear interpolation (Ch. 3 Eq. 3.11, Christiansen Eqs. 9, 19)"],
+[String.raw`\[ \tilde\rho_i = \frac{\sum K(r_{ij})\, \rho_j}{\sum K(r_{ij})}, \qquad K(r) = \max(0, 1 - r/\tilde R) \]`, "Conic filter (Ch. 3 Eq. 3.9, Tidy3D)"],
+[String.raw`\[ \tilde R = \lceil R/\Delta \rceil \Delta, \qquad \text{kernel } 2\lceil R/\Delta \rceil + 1 \text{ pixels per side} \]`, "Radius rounding (Tidy3D get_kernel_size_px)"],
+[String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum K} \]`, "Backward pass through the filter"]],
 consts: "ε_air = 1, ε_GaAs = 12.19. Maps are 90 × 60 pixels of random or drawn densities, filtered live with edge renormalization.",
 sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eqs. (9), (17), (19) and Sec. 4 (interpolation, filtering, weak length scale)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/utilities.py (_kernel_conic, make_kernel, get_kernel_size_px), plugins/invdes/region.py (eps_values)"]
 });

@@ -6,8 +6,8 @@ bridge: "The effective index method used here is an approximation (the same redu
 cards: [
 {s: "1. EIM steps", t: "From slab to strip: the effective index method",
 intu: "A strip is a 2D problem, but it can be split into two 1D slab problems. Step 1: ignore the side walls and solve the vertical slab (thickness t). That gives a slab index N<sub>s</sub>. Step 2: replace the core by a material of index N<sub>s</sub> and solve a slab of width w along y, with air on both sides. The answer is the effective index of the strip. The trick for polarization: in step 2 the role of TE and TM swaps. A TE-like mode has E along y, which is normal to the side walls, so step 2 is a TM-type problem with the ×ε jump at the walls. Step through it.",
-eq: "1: &nbsp; slab(n, t) &nbsp;→&nbsp; N<sub>s</sub> &nbsp;&nbsp;&nbsp; 2: &nbsp; slab(N<sub>s</sub>, w) &nbsp;→&nbsp; N<sub>eff</sub><br>TE-like: step 1 TE, step 2 TM-type &nbsp;&nbsp; TM-like: step 1 TM, step 2 TE-type",
-sym: [["N_s", "effective index of the vertical slab, used as the core in step 2"], ["w", "strip width (along y)"], ["t", "membrane thickness (along z)"], ["N_eff", "estimated effective index of the strip mode"]],
+eq: String.raw`\[ \text{1: } \mathrm{slab}(n, t) \to N_{\mathrm{s}} \qquad \text{2: } \mathrm{slab}(N_{\mathrm{s}}, w) \to N_{\mathrm{eff}} \]<div class="eqnote">TE-like: step 1 TE, step 2 TM-type</div><div class="eqnote">TM-like: step 1 TM, step 2 TE-type</div>`,
+sym: [[String.raw`\(N_{\mathrm{s}}\)`, "effective index of the vertical slab, used as the core in step 2"], [String.raw`\(w\)`, "strip width (along y)"], [String.raw`\(t\)`, "membrane thickness (along z)"], [String.raw`\(N_{\mathrm{eff}}\)`, "estimated effective index of the strip mode"]],
 how: ["Assume the field separates: E(y, z) ≈ F(z) G(y).", "Solve the vertical slab for F(z) and N_s.", "Use N_s as the core index of the lateral slab and solve for G(y) and N_eff.", "Pick the lateral boundary type by which way the main E field points relative to the side walls."],
 say: "The effective index method reduces the strip to two slab problems, vertical then lateral. It is a good estimate for wide strips but overestimates N_eff for narrow, high-contrast strips, where a full mode solver is needed.",
 num: "Soldano and Pennings 1995 reduce their MMI sections to 2D with this same method (their Sec. II), because their guides are single mode vertically.",
@@ -35,8 +35,8 @@ r(fig, ctl) {
 
 {s: "2. N vs width", t: "Effective index against width, and the TE/TM crossing",
 intu: "As the strip gets wider, both modes approach their slab values. As it gets narrower, more of the light sits in the air beside the strip and N drops. The two families drop at different rates. The TE-like mode has its field across the width, normal to the side walls, so narrowing the strip hurts it the way thinning a slab hurts a TM mode: strongly. The TM-like mode has its field along z, parallel to the side walls, so it is hurt less. When the width falls below the thickness, the curves cross and the TM-like mode becomes the one with the higher index. Drag the marker to the crossing.",
-eq: "w ≫ t: &nbsp; N<sub>TE-like</sub> → N<sub>s,TE</sub>, &nbsp; N<sub>TM-like</sub> → N<sub>s,TM</sub> &nbsp;&nbsp;&nbsp; w ≲ t: &nbsp; N<sub>TM-like</sub> > N<sub>TE-like</sub>",
-sym: [["N_s,TE, N_s,TM", "slab limits for very wide strips (Lesson 2)"], ["crossing", "width where the two families have the same N, roughly where w ≈ t"]],
+eq: String.raw`\[ w \gg t: \quad N_{\text{TE-like}} \to N_{\mathrm{s,TE}}, \quad N_{\text{TM-like}} \to N_{\mathrm{s,TM}} \]\[ w \lesssim t: \quad N_{\text{TM-like}} \gt N_{\text{TE-like}} \]`,
+sym: [[String.raw`\(N_{\mathrm{s,TE}}, N_{\mathrm{s,TM}}\)`, "slab limits for very wide strips (Lesson 2)"], ["crossing", "width where the two families have the same N, roughly where w ≈ t"]],
 how: ["Wide strip: the side walls barely matter, so N approaches the slab index.", "TE-like: the lateral problem is TM-type (E normal to walls) and suffers the same ζ penalty as a thin TM slab.", "TM-like: the lateral problem is TE-type, with a weaker penalty.", "So TE-like falls faster as w shrinks and the curves cross near w ≈ t, where the roles of y and z swap."],
 say: "In a narrow strip both fundamental modes lose effective index. When the strip becomes narrower than it is thick, the TM-like mode overtakes the TE-like mode.",
 num: "With this approximate method, for a 160 nm membrane at 800 nm, the crossing is near w ≈ <b>165 nm</b>. A full mode solver puts it in the same range. Below the crossing the naming by 'TE-like' and 'TM-like' still follows the field direction, not which mode is higher.",
@@ -57,8 +57,8 @@ r(fig, ctl) {
 
 {s: "3. Single mode", t: "How wide before a second mode appears",
 intu: "A wider strip holds more lateral modes, the same way a thicker slab holds more vertical modes. The first lateral higher-order mode has one zero across the width. Routing waveguides are usually kept narrow enough that this mode is cut off or only barely guided, so light cannot scatter into it and interfere. Drag the width and see when the first-order lateral modes switch on for each family. Johnson et al. described modes near cutoff as hugging the light line: they exist but are weakly guided and spread far into the air.",
-eq: "lateral cutoff of order p (EIM): &nbsp; w<sub>p</sub> = p λ<sub>0</sub> / (2√(N<sub>s</sub>² − n<sub>c</sub>²))",
-sym: [["p", "lateral mode order, number of zeros across the width"], ["w_p", "width at which lateral mode p appears"], ["N_s", "slab index used as the core in the lateral problem"]],
+eq: String.raw`\[ \text{lateral cutoff of order } p \text{ (EIM): } \quad w_p = \frac{p\lambda_{0}}{2\sqrt{N_{\mathrm{s}}^{2} - n_{\mathrm{c}}^{2}}} \]`,
+sym: [[String.raw`\(p\)`, "lateral mode order, number of zeros across the width"], [String.raw`\(w_p\)`, "width at which lateral mode p appears"], [String.raw`\(N_{\mathrm{s}}\)`, "slab index used as the core in the lateral problem"]],
 how: ["Apply the slab cutoff of Lesson 2 to the lateral problem.", "The core index is now N_s, not n, so the cutoff width is larger than the cutoff thickness.", "TE-like and TM-like have different N_s, so their first lateral modes appear at different widths.", "Below w₁ the strip is single mode for that family."],
 say: "A strip is single mode per polarization family below the cutoff width of the first lateral higher-order mode. Narrow routing waveguides are chosen so higher-order modes are absent or only weakly guided.",
 num: "n = 3.5, t = 160 nm, 800 nm, effective index method: TE-like p = 1 appears near w ≈ <b>138 nm</b>, TM-like p = 1 near <b>170 nm</b>.<br>The effective index method puts these cutoffs too low for narrow, high-contrast strips. A full mode solver finds the first-order modes still close to cutoff at somewhat larger widths, which is why a strip around 200 nm wide is used for routing.",
@@ -81,8 +81,8 @@ r(fig, ctl) {
 
 {s: "4. Field maps", t: "What the strip modes look like in cross-section",
 intu: "These maps show |E|² over the cross-section, built from the two slab solutions of the effective index method. Look at the edges. The TE-like mode drops almost to zero just inside the side walls and jumps up again just outside them, because its main field is normal to the side walls (the jump of Lesson 2). The TM-like mode does the same at the top and bottom surfaces, where its main field is normal. The first-order lateral modes have a dark line down the middle. Change the width and see the field spread into the air as the strip narrows.",
-eq: "|E(y, z)|² ≈ |F(z)|² |G(y)|² &nbsp;&nbsp; (separable approximation of the effective index method)",
-sym: [["F(z)", "vertical slab profile (Lesson 2)"], ["G(y)", "lateral slab profile with core index N_s"], ["bright edges", "field jumps where the main field is normal to a surface"]],
+eq: String.raw`\[ |E(y, z)|^{2} \approx |F(z)|^{2}\, |G(y)|^{2} \]<div class="eqref">separable approximation of the effective index method</div>`,
+sym: [[String.raw`\(F(z)\)`, "vertical slab profile (Lesson 2)"], [String.raw`\(G(y)\)`, "lateral slab profile with core index N_s"], ["bright edges", "field jumps where the main field is normal to a surface"]],
 how: ["Compute F(z) from the vertical slab of the right family.", "Compute G(y) from the lateral slab of the swapped family, including its jump at the walls.", "Multiply and square to get an intensity map.", "Corners are not exact in this approximation. A 2D mode solver gets them right."],
 say: "The TE-like mode's field jumps up just outside the side walls and the TM-like mode's field just outside the top and bottom surfaces, each because the main field is normal to that surface.",
 num: "Intensity jump at a GaAs to air surface for the normal field: about <b>n⁴ ≈ 150</b> in |E|², since |E| jumps by n² ≈ 12. The colour scale here is clipped so the core stays visible.",
@@ -110,8 +110,8 @@ r(fig, ctl) {
 
 {s: "5. TE-like naming", t: "Why 'TE-like', and how modes are named by symmetry",
 intu: "In a slab, TE and TM are exact. In a strip they are not: every mode has all six field components, so it is only mostly TE or mostly TM. Johnson et al. 1999 explain this for photonic crystal slabs: with no translation symmetry vertically, modes cannot be purely TE or TM, but they can still be classified exactly by mirror symmetry, and exactly at the mirror plane they are purely TE or TM. A practical way to name strip modes is by the sign pattern of E<sub>y</sub> under the two mirrors y → −y and z → −z. Click a mode to see its sign pattern in the four quadrants.",
-eq: "E<sub>y</sub>(−y, z) = σ<sub>y</sub> E<sub>y</sub>(y, z), &nbsp;&nbsp; E<sub>y</sub>(y, −z) = σ<sub>z</sub> E<sub>y</sub>(y, z), &nbsp;&nbsp; σ = ±1<br>TE0 (+, +) &nbsp; TM0 (−, −) &nbsp; TE1 (−, +) &nbsp; TM1 (+, −)",
-sym: [["σ_y, σ_z", "parity of E_y under the y and z mirrors"], ["TE fraction", "share of the field energy in the in-plane components, used to call a mode TE-like"], ["(+, +)", "E_y even in both y and z"]],
+eq: String.raw`\[ E_{y}(-y, z) = \sigma_{y} E_{y}(y, z), \qquad E_{y}(y, -z) = \sigma_{z} E_{y}(y, z), \qquad \sigma = \pm 1 \]\[ \text{TE0 } (+,+) \qquad \text{TM0 } (-,-) \qquad \text{TE1 } (-,+) \qquad \text{TM1 } (+,-) \]`,
+sym: [[String.raw`\(\sigma_{y}, \sigma_{z}\)`, "parity of E_y under the y and z mirrors"], ["TE fraction", "share of the field energy in the in-plane components, used to call a mode TE-like"], [String.raw`\((+, +)\)`, "E_y even in both y and z"]],
 how: ["A strip in air is symmetric under both y → −y and z → −z.", "Every mode must be even or odd under each mirror, giving four classes.", "Label the class by the parity of one chosen component, here E_y.", "Andreani and Gerace note that for higher-order modes the TE and TM names lose meaning, so symmetry labels are safer."],
 say: "Strip modes are hybrid, so they are called TE-like or TM-like. They are named unambiguously by their mirror symmetries, for example the parity of E_y under y and z reflection.",
 num: "TE0: E<sub>y</sub> has the same sign everywhere. TM0: E<sub>y</sub> is small and changes sign in both directions (its main field is E<sub>z</sub>, which is even in both).<br>Johnson: at the mirror plane itself the modes are exactly TE or TM.",
@@ -130,8 +130,8 @@ r(fig, ctl) {
 
 {s: "6. Wide sections", t: "Wide sections behave like the slab",
 intu: "Couplers and multimode sections are often micrometers wide. There the side walls are far away from most of the light, and the fundamental mode has almost the slab index. Drag the width up to a few micrometers on a log scale and watch N approach the slab value. This is why a grating that is a few micrometers wide can be designed first as a 2D slab problem and then checked in 3D: the 3D index differs only slightly from the slab index. It is also why an MMI section can be treated with the 2D model of Lesson 7.",
-eq: "N<sub>eff</sub>(w) → N<sub>s</sub> &nbsp;as&nbsp; w → ∞, &nbsp;&nbsp; N<sub>s</sub> − N<sub>eff</sub> ≈ (λ<sub>0</sub>²/8N<sub>s</sub>w²) for wide strips",
-sym: [["N_s", "slab index (Lesson 2)"], ["w", "section width"]],
+eq: String.raw`\[ N_{\mathrm{eff}}(w) \to N_{\mathrm{s}} \;\text{ as }\; w \to \infty \]\[ N_{\mathrm{s}} - N_{\mathrm{eff}} \approx \frac{\lambda_{0}^{2}}{8 N_{\mathrm{s}} w^{2}} \;\text{ for wide strips} \]`,
+sym: [[String.raw`\(N_{\mathrm{s}}\)`, "slab index (Lesson 2)"], [String.raw`\(w\)`, "section width"]],
 how: ["For a wide lateral slab, the lowest lateral wavenumber is k_y ≈ π/w.", "β² = k₀²N_s² − k_y², so N_eff ≈ N_s − k_y²/(2k₀²N_s).", "Substitute k_y = π/w and k₀ = 2π/λ₀ to get the λ₀²/(8N_s w²) correction.", "The same quadratic idea gives the β of each MMI mode in Soldano and Pennings, Eq. (5)."],
 say: "Sections several micrometers wide have an effective index close to the slab index, with a correction that falls as 1/w². That justifies designing wide gratings first in 2D.",
 num: "n = 3.5, 160 nm, 800 nm, TE: N<sub>s</sub> ≈ 3.076.<br>w = 2 µm: correction ≈ 800²/(8 × 3.076 × 2000²) ≈ <b>0.0065</b><br>w = 10 µm: ≈ <b>0.0003</b>",
@@ -151,10 +151,10 @@ r(fig, ctl) {
 ],
 summary: "A strip confines light in both directions. Its modes are hybrid, so they are called TE-like and TM-like and are named exactly by their mirror symmetries. The effective index method estimates them with two slab problems, vertical then lateral, with the lateral boundary type swapped. Narrow strips lose effective index, and below a width close to the thickness the TM-like mode overtakes the TE-like one. Narrow strips are single mode per family, and sections several micrometers wide approach the slab index, which justifies 2D design of wide gratings and MMIs.",
 sheet: [
-["slab(n, t) → N<sub>s</sub>, &nbsp; slab(N<sub>s</sub>, w) → N<sub>eff</sub>", "Effective index method"],
-["w<sub>p</sub> = pλ<sub>0</sub>/(2√(N<sub>s</sub>² − n<sub>c</sub>²))", "Lateral cutoff"],
-["E<sub>y</sub>(−y, z) = σ<sub>y</sub>E<sub>y</sub>, &nbsp; E<sub>y</sub>(y, −z) = σ<sub>z</sub>E<sub>y</sub>", "Symmetry naming"],
-["N<sub>s</sub> − N<sub>eff</sub> ≈ λ<sub>0</sub>²/(8N<sub>s</sub>w²)", "Wide-section correction"]],
+[String.raw`\[ \mathrm{slab}(n, t) \to N_{\mathrm{s}}, \qquad \mathrm{slab}(N_{\mathrm{s}}, w) \to N_{\mathrm{eff}} \]`, "Effective index method"],
+[String.raw`\[ w_p = \frac{p\lambda_{0}}{2\sqrt{N_{\mathrm{s}}^{2} - n_{\mathrm{c}}^{2}}} \]`, "Lateral cutoff"],
+[String.raw`\[ E_{y}(-y, z) = \sigma_{y} E_{y}, \qquad E_{y}(y, -z) = \sigma_{z} E_{y} \]`, "Symmetry naming"],
+[String.raw`\[ N_{\mathrm{s}} - N_{\mathrm{eff}} \approx \frac{\lambda_{0}^{2}}{8 N_{\mathrm{s}} w^{2}} \]`, "Wide-section correction"]],
 consts: "Examples: n = 3.5, t = 160 nm, λ₀ = 800 nm, air cladding. Effective index method, illustrative only.",
 sources: ["Johnson et al., Phys. Rev. B 60, 5751 (1999) (TE-like and TM-like, symmetry classification)", "Andreani and Gerace, Phys. Rev. B 73, 235114 (2006) (TE and TM names for higher-order modes)", "Soldano and Pennings, J. Lightwave Technol. 13, 615 (1995) (effective index method, Sec. II)"]
 });

@@ -6,8 +6,8 @@ bridge: "This is Ch. 3 Sec. 3.5, Eq. (3.17). Michaels and Yablonovitch 2018 intr
 cards: [
 {s: "1. Why corners matter", t: "A sharp corner is never fabricated as drawn",
 intu: "Electron-beam lithography and etching cannot reproduce a perfectly sharp corner. A simple way to picture the effect is an opening with a small radius r<sub>fab</sub>: convex corners come out rounded with that radius (Lesson 8). A layout drawn with sharp corners therefore loses area at every corner, and the simulated device is not the one that gets made. A layout whose corners already have a radius of at least r<sub>fab</sub> is unchanged. Compare a sharp and a rounded design.",
-eq: "fabricated ≈ open<sub>r<sub>fab</sub></sub>(drawn) &nbsp;&nbsp; (a simple picture of corner rounding)<br>unchanged if every convex corner radius ≥ r<sub>fab</sub>",
-sym: [["r_fab", "effective rounding radius of the process, a picture rather than a precise model"], ["corner radius", "radius of the arc that replaces the corner"]],
+eq: String.raw`\[ \text{fabricated} \approx \operatorname{open}_{r_{\mathrm{fab}}}(\text{drawn}) \]<div class="eqnote">a simple picture of corner rounding</div>\[ \text{unchanged if every convex corner radius} \ge r_{\mathrm{fab}} \]`,
+sym: [[String.raw`\(r_{\mathrm{fab}}\)`, "effective rounding radius of the process, a picture rather than a precise model"], ["corner radius", "radius of the arc that replaces the corner"]],
 how: ["Draw the same shape with sharp corners and with rounded ones.", "Apply an opening of radius r_fab to both.", "Count the area that changes (red).", "Only the rounded design survives unchanged once its corner radius exceeds r_fab."],
 say: "Sharp corners are rounded by fabrication, so the optimizer is discouraged from making corners tighter than a minimum radius.",
 num: "A 90° corner loses (1 − π/4)r<sub>fab</sub>² of area. Michaels and Yablonovitch chose r<sub>min</sub> = 150 nm for their taper as a radius that can be easily fabricated.",
@@ -26,8 +26,8 @@ r(fig, ctl) {
 
 {s: "2. Radius from three points", t: "The local radius from a Bézier curve through three vertices",
 intu: "Take a vertex p<sub>c</sub> and its two neighbors p<sub>0</sub> and p<sub>2</sub>. Tidy3D builds a quadratic Bézier curve that starts at p<sub>0</sub>, ends at p<sub>2</sub> and passes through p<sub>c</sub> at its middle, and takes the curvature there. The radius is one over the curvature. The orange circle has that radius. Move the middle vertex out and in and change the spacing. The readout compares with the circle through the three points.",
-eq: "B(t) = (1 − t)²p<sub>0</sub> + 2t(1 − t)p<sub>1</sub> + t²p<sub>2</sub>, &nbsp; p<sub>1</sub> = 2p<sub>c</sub> − (p<sub>0</sub> + p<sub>2</sub>)/2 &nbsp; ⇒ &nbsp; B(½) = p<sub>c</sub><br>κ = |B′ × B″| / |B′|³ at t = ½, &nbsp; B′ = p<sub>2</sub> − p<sub>0</sub>, &nbsp; B″ = 4(p<sub>0</sub> − 2p<sub>c</sub> + p<sub>2</sub>), &nbsp; r = 1/|κ|",
-sym: [["p₀, p_c, p₂", "previous vertex, the vertex, next vertex"], ["p₁", "control point chosen so the curve passes through p_c"], ["κ", "curvature of the curve at p_c"], ["r", "local radius of curvature"]],
+eq: String.raw`\[ B(t) = (1 - t)^2\, \mathbf{p}_0 + 2t(1 - t)\, \mathbf{p}_1 + t^2\, \mathbf{p}_2 \]\[ \mathbf{p}_1 = 2\mathbf{p}_c - \frac{\mathbf{p}_0 + \mathbf{p}_2}{2} \quad\Longrightarrow\quad B\!\left(\tfrac{1}{2}\right) = \mathbf{p}_c \]\[ \kappa = \frac{\lvert B' \times B'' \rvert}{\lvert B' \rvert^3} \;\text{ at } t = \tfrac{1}{2} \]\[ B' = \mathbf{p}_2 - \mathbf{p}_0 \qquad B'' = 4(\mathbf{p}_0 - 2\mathbf{p}_c + \mathbf{p}_2) \qquad r = \frac{1}{\lvert \kappa \rvert} \]`,
+sym: [[String.raw`\(\mathbf{p}_0, \mathbf{p}_c, \mathbf{p}_2\)`, "previous vertex, the vertex, next vertex"], [String.raw`\(\mathbf{p}_1\)`, "control point chosen so the curve passes through p_c"], [String.raw`\(\kappa\)`, "curvature of the curve at p_c"], [String.raw`\(r\)`, "local radius of curvature"]],
 how: ["Choose the control point p₁ so that B(½) = p_c.", "Differentiate the quadratic: B′(½) = p₂ − p₀ and B″ = 2(p₀ − 2p₁ + p₂) = 4(p₀ − 2p_c + p₂).", "Plane curvature: κ = (x′y″ − y′x″)/(x′² + y′²)^{3/2}.", "Michaels and Yablonovitch fit quadratic curves to sets of three points in the same way (their Eq. 34)."],
 say: "The radius at each vertex is one over the curvature of the quadratic Bézier curve through that vertex and its two neighbors.",
 num: "For three points on a circle of radius R separated by an angle φ, this estimate gives R(1 + cos φ)/2. With 10 points per quarter circle the estimate is within 0.6 % of R. With very coarse spacing it underestimates the radius.",
@@ -52,8 +52,8 @@ r(fig, ctl) {
 
 {s: "3. The logistic penalty", t: "A soft switch that charges radii below r_min",
 intu: "Each vertex is charged a logistic function of its radius. Far above r<sub>min</sub> the charge is nearly 0, far below it is nearly 1, and exactly at r<sub>min</sub> it is ½. The steepness κ sets how wide the switch is: about 4/κ in radius goes from 0.12 to 0.88. Note the units: κ is per micrometer, so κ = 10 µm<sup>−1</sup> is a gentle switch hundreds of nanometers wide. Change κ and r<sub>min</sub>.",
-eq: "p(r) = e<sup>−κ(r − r<sub>min</sub>)</sup> / [1 + e<sup>−κ(r − r<sub>min</sub>)</sup>] = 1 / [1 + e<sup>κ(r − r<sub>min</sub>)</sup>] &nbsp;&nbsp; (Ch. 3 Eq. 3.17, Michaels Eq. 35)",
-sym: [["r", "local radius at a vertex"], ["r_min", "minimum radius, where the charge is ½"], ["κ", "steepness, per unit length"], ["p(r)", "charge of one vertex, between 0 and 1"]],
+eq: String.raw`\[ p(r) = \frac{e^{-\kappa(r - r_{\mathrm{min}})}}{1 + e^{-\kappa(r - r_{\mathrm{min}})}} = \frac{1}{1 + e^{\kappa(r - r_{\mathrm{min}})}} \]<div class="eqref">Ch. 3 Eq. (3.17), Michaels Eq. 35</div>`,
+sym: [[String.raw`\(r\)`, "local radius at a vertex"], [String.raw`\(r_{\mathrm{min}}\)`, "minimum radius, where the charge is ½"], [String.raw`\(\kappa\)`, "steepness, per unit length"], [String.raw`\(p(r)\)`, "charge of one vertex, between 0 and 1"]],
 how: ["Michaels and Yablonovitch subtract α/(1 + exp[−κ(R₀ − R_i)]) for every vertex.", "That is the same logistic, written with R₀ = r_min.", "Tidy3D writes it as e^{−arg}/(1 + e^{−arg}) with arg = κ(r − r_min) and α = 1.", "The logistic is smooth, so its gradient exists everywhere."],
 say: "Each vertex is charged a logistic function of its radius that equals one half at r_min and switches off above it, with κ setting how sharp the switch is.",
 num: "With κ = 10 µm<sup>−1</sup> the charge 100 nm above r<sub>min</sub> is still 0.27, a very soft switch. Tidy3D's defaults are κ = 10 and α = 1.",
@@ -73,8 +73,8 @@ r(fig, ctl) {
 
 {s: "4. A whole outline", t: "The penalty is the mean charge over the vertices",
 intu: "Apply the charge to every vertex of an outline and average. Here a closed outline has lobes and wiggles. Vertices are colored by their charge, red for nearly 1 and green for nearly 0. Make the wiggles stronger or more frequent and watch the tight spots turn red and the mean rise. Only vertices with a neighbor on each side are counted, which for a closed outline is all of them.",
-eq: "P<sub>κ</sub> = (1/N<sub>v</sub>) Σ<sub>i</sub> p(r<sub>i</sub>), &nbsp;&nbsp; J = F − w<sub>κ</sub>P<sub>κ</sub> &nbsp;&nbsp; (Ch. 3 Eq. 3.17)",
-sym: [["N_v", "number of vertices with a neighbor on each side"], ["P_κ", "mean charge, between 0 and 1"], ["w_κ", "weight of the penalty in J"]],
+eq: String.raw`\[ P_{\kappa} = \frac{1}{N_v} \sum_i p(r_i) \qquad J = F - w_{\kappa} P_{\kappa} \]<div class="eqref">Ch. 3 Eq. (3.17)</div>`,
+sym: [[String.raw`\(N_v\)`, "number of vertices with a neighbor on each side"], [String.raw`\(P_{\kappa}\)`, "mean charge, between 0 and 1"], [String.raw`\(w_{\kappa}\)`, "weight of the penalty in J"]],
 how: ["Estimate r_i at every vertex (card 2).", "Charge each with the logistic (card 3).", "Average: Tidy3D takes the mean, Michaels and Yablonovitch the sum.", "Subtract w_κ P_κ from the figure of merit."],
 say: "The curvature penalty is the average logistic charge over the vertices, subtracted from the figure of merit with a weight.",
 num: "Averaging instead of summing makes the penalty independent of the number of vertices, so the same weight works for outlines with 80 or 500 points.",
@@ -95,8 +95,8 @@ r(fig, ctl) {
 
 {s: "5. Gentle or sharp", t: "Two settings of κ: gentle shaping and a near hard limit",
 intu: "The same function can play two roles. With a small κ the switch is hundreds of nanometers wide: every vertex feels some charge, so the penalty gently smooths the whole outline. With a large κ the switch is a few nanometers wide: vertices comfortably above r<sub>min</sub> pay almost nothing, and only those that cross it are charged, so it behaves almost like a hard limit. A gentle setting suits an early shape stage, a sharp one a final stage that must respect a rule. Compare the two curves.",
-eq: "p(r) for κ = 10 µm<sup>−1</sup> (gentle) and κ = 200 µm<sup>−1</sup> (sharp)",
-sym: [["κ = 10 µm⁻¹", "switch width 4/κ = 400 nm"], ["κ = 200 µm⁻¹", "switch width 4/κ = 20 nm"]],
+eq: String.raw`\[ p(r) \text{ for } \kappa = 10\,\mu\mathrm{m}^{-1} \text{ (gentle) and } \kappa = 200\,\mu\mathrm{m}^{-1} \text{ (sharp)} \]`,
+sym: [[String.raw`\(\kappa = 10\,\mu\mathrm{m}^{-1}\)`, "switch width 4/κ = 400 nm"], [String.raw`\(\kappa = 200\,\mu\mathrm{m}^{-1}\)`, "switch width 4/κ = 20 nm"]],
 how: ["Fix r_min.", "Plot the logistic for both κ.", "Read the charge at a few radii.", "Choose κ according to whether the penalty should shape or only police."],
 say: "A small κ makes the curvature penalty a gentle smoothing term, a large κ makes it close to a hard minimum radius.",
 num: "With r<sub>min</sub> = 50 nm and κ = 200 µm<sup>−1</sup>: 0.07 for a corner of 63 nm, 0.88 for one of 40 nm. With κ = 10 µm<sup>−1</sup>, a vertex 100 nm above r<sub>min</sub> still pays 0.27.",
@@ -117,8 +117,8 @@ r(fig, ctl) {
 
 {s: "6. The penalty smooths", t: "Following the curvature gradient alone",
 intu: "Start from an outline with tight wiggles and minimize P<sub>κ</sub> alone, moving each vertex along its normal as in the shape stage (Lesson 5). Press run. The tightest spots relax first and the outline smooths until its radii clear r<sub>min</sub>. Some vertices may stay below r<sub>min</sub> if the outline cannot fix them within the allowed move. In a real run the figure of merit pulls the other way, so the result is a compromise, and nothing guarantees every vertex ends above r<sub>min</sub>.",
-eq: "θ ← θ − Adam(∂P<sub>κ</sub>/∂θ), &nbsp; r<sub>i</sub> = r<sub>i</sub><sup>(0)</sup> + Δ<sub>max</sub> tanh(θ<sub>i</sub>) n̂<sub>i</sub>",
-sym: [["θ_i", "vertex move variables (Lesson 5)"], ["Δ_max", "60 nm here"], ["gradient", "computed here by finite differences, cheap because P_κ needs no simulation"]],
+eq: String.raw`\[ \theta \leftarrow \theta - \operatorname{Adam}\!\left(\frac{\partial P_{\kappa}}{\partial \theta}\right) \qquad \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]`,
+sym: [[String.raw`\(\theta_i\)`, "vertex move variables (Lesson 5)"], [String.raw`\(\Delta_{\mathrm{max}}\)`, "60 nm here"], ["gradient", "computed here by finite differences, cheap because P_κ needs no simulation"]],
 how: ["Parameterize the vertices by bounded normal moves.", "Compute P_κ and its gradient with respect to every θ_i.", "Take Adam steps downhill.", "Watch the radii grow at the tight spots."],
 say: "The curvature penalty gradient relaxes tight spots on the outline, but as a soft term it does not guarantee that every vertex ends above the minimum radius.",
 num: "Michaels and Yablonovitch: this soft constraint does not guarantee that the approximate radius of curvature stays above the limit everywhere.",
@@ -148,11 +148,11 @@ r(fig, ctl) {
 ],
 summary: "The curvature penalty estimates the radius at every vertex as one over the curvature of the quadratic Bézier curve through that vertex and its two neighbors, charges each vertex with the logistic 1/[1 + e^{κ(r − r_min)}], which is ½ at r_min, and averages the charges: P_κ = (1/N_v)Σp(r_i), subtracted from the figure of merit with weight w_κ. A small κ gives gentle smoothing, a large κ approaches a hard minimum radius. It comes from Michaels and Yablonovitch, who summed instead of averaging. It is soft, so it discourages tight corners without guaranteeing their absence.",
 sheet: [
-["p<sub>1</sub> = 2p<sub>c</sub> − (p<sub>0</sub> + p<sub>2</sub>)/2, &nbsp; B′(½) = p<sub>2</sub> − p<sub>0</sub>, &nbsp; B″ = 4(p<sub>0</sub> − 2p<sub>c</sub> + p<sub>2</sub>)", "Bézier through the vertex (Tidy3D bezier_curvature, Michaels Eq. 34)"],
-["κ = (x′y″ − y′x″)/(x′² + y′²)<sup>3/2</sup>, &nbsp; r = 1/|κ|", "Curvature and radius"],
-["p(r) = e<sup>−κ(r − r<sub>min</sub>)</sup>/[1 + e<sup>−κ(r − r<sub>min</sub>)</sup>]", "Logistic charge (Michaels Eq. 35)"],
-["P<sub>κ</sub> = (1/N<sub>v</sub>)Σp(r<sub>i</sub>), &nbsp; J = F − w<sub>κ</sub>P<sub>κ</sub>", "Curvature penalty (Ch. 3 Eq. 3.17)"],
-["r<sub>est</sub> = R(1 + cos φ)/2", "Three-point estimate on a circle of radius R, spacing angle φ"]],
+[String.raw`\[ \begin{aligned} \mathbf{p}_1 &= 2\mathbf{p}_c - \frac{\mathbf{p}_0 + \mathbf{p}_2}{2} \\ B'\!\left(\tfrac{1}{2}\right) &= \mathbf{p}_2 - \mathbf{p}_0 \\ B'' &= 4(\mathbf{p}_0 - 2\mathbf{p}_c + \mathbf{p}_2) \end{aligned} \]`, "Bézier through the vertex (Tidy3D bezier_curvature, Michaels Eq. 34)"],
+[String.raw`\[ \kappa = \frac{x'y'' - y'x''}{(x'^2 + y'^2)^{3/2}} \qquad r = \frac{1}{\lvert \kappa \rvert} \]`, "Curvature and radius"],
+[String.raw`\[ p(r) = \frac{e^{-\kappa(r - r_{\mathrm{min}})}}{1 + e^{-\kappa(r - r_{\mathrm{min}})}} \]`, "Logistic charge (Michaels Eq. 35)"],
+[String.raw`\[ P_{\kappa} = \frac{1}{N_v} \sum_i p(r_i) \qquad J = F - w_{\kappa} P_{\kappa} \]`, "Curvature penalty (Ch. 3 Eq. 3.17)"],
+[String.raw`\[ r_{\mathrm{est}} = \frac{R\,(1 + \cos\varphi)}{2} \]`, "Three-point estimate on a circle of radius R, spacing angle φ"]],
 consts: "Outlines are drawn in nanometers. κ is quoted per micrometer, as in Tidy3D, so κ(r − r_min) uses r in micrometers.",
 sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018), Eqs. (17), (34), (35) and Sec. 5 (curvature penalty for a silicon taper, soft constraint caveat)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/penalties.py (make_curvature_penalty, bezier_curvature, bezier_with_grads)"]
 });

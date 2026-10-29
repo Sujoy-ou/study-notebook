@@ -6,8 +6,8 @@ bridge: "Taillaert et al. 2006 is the main reference: a review from the Ghent gr
 cards: [
 {s: "1. Why a grating", t: "Why light needs help to leave the chip",
 intu: "A nanophotonic strip is a few hundred nanometers across, while a fiber mode is about 10 µm. Butt coupling them wastes almost all the light. A grating on the surface instead scatters the guided light upward into a beam about the size of the fiber mode. Taillaert et al. list the practical benefits: it can be placed anywhere on the chip, needs no polished facet, and lets the circuit be tested from above. The obstacle is momentum. The guided light has β = k₀N with N > 1, larger than any wave in air can have along the surface, k₀ sin θ ≤ k₀. Drag N to see the mismatch.",
-eq: "guided: &nbsp; β = k<sub>0</sub> N, &nbsp; N > n<sub>c</sub> &nbsp;&nbsp;&nbsp; free space along the surface: &nbsp; k<sub>0</sub> n<sub>c</sub> sin θ ≤ k<sub>0</sub> n<sub>c</sub><br>⟹ &nbsp; a smooth guide cannot radiate",
-sym: [["β", "propagation constant of the guided mode"], ["k₀ n_c sin θ", "component along the surface of a wave leaving at angle θ"], ["N", "effective index of the mode in the grating region"]],
+eq: String.raw`\[ \text{guided: } \beta = k_{0} N, \quad N \gt n_{\mathrm{c}} \]\[ \text{free space along the surface: } k_{0} n_{\mathrm{c}} \sin\theta \le k_{0} n_{\mathrm{c}} \]\[ \Longrightarrow\quad \text{a smooth guide cannot radiate} \]`,
+sym: [[String.raw`\(\beta\)`, "propagation constant of the guided mode"], [String.raw`\(k_{0} n_{\mathrm{c}} \sin\theta\)`, "component along the surface of a wave leaving at angle θ"], [String.raw`\(N\)`, "effective index of the mode in the grating region"]],
 how: ["To leave, the guided wave and the outgoing wave must match their phase along the surface.", "That needs β = k₀n_c sin θ.", "But β > k₀n_c for a guided mode, so no real angle works.", "Something periodic must supply the missing momentum. That is the grating."],
 say: "A guided mode cannot couple to free space by itself because its propagation constant exceeds the free-space wavenumber. A periodic grating supplies the momentum difference.",
 num: "Taillaert et al. 2006, measured in SOI: <b>31 %</b> per coupler, <b>69 %</b> with a gold bottom mirror.<br>Zhou et al. 2018, GaAs membrane at about 930 nm: <b>> 60 %</b> per grating, back reflection below 1 %.",
@@ -23,8 +23,8 @@ r(fig, ctl) {
 
 {s: "2. Phase matching", t: "Phase matching: subtract grating kicks",
 intu: "A grating of period Λ can add or remove any whole number of kicks K = 2π/Λ. Each choice m is a diffraction order. Draw β, subtract mK, and check whether the tip lands inside the light circle of radius k₀n<sub>c</sub>. If it does, that order radiates, at the angle where the circle is hit. Light goes both up and down, because air is on both sides of a suspended membrane. Change the period and watch the orders move in and out of the circle. A coupler is designed so that only m = −1 radiates.",
-eq: "k<sub>0</sub> n<sub>c</sub> sin θ<sub>m</sub> = β + m (2π/Λ), &nbsp;&nbsp; m = 0, ±1, ±2, … &nbsp;&nbsp; (Ch. 2 Eq. 2.3)<br>order m radiates if &nbsp; |β + m 2π/Λ| < k<sub>0</sub> n<sub>c</sub>",
-sym: [["Λ", "grating period"], ["K = 2π/Λ", "grating vector, the momentum one period supplies"], ["m", "diffraction order"], ["θ_m", "emission angle of order m, from the surface normal"], ["n_c", "cladding index (air: 1)"]],
+eq: String.raw`\[ k_{0} n_{\mathrm{c}} \sin\theta_m = \beta + m\,\frac{2\pi}{\Lambda}, \qquad m = 0, \pm 1, \pm 2, \dots \]\[ \text{order } m \text{ radiates if } \left|\beta + m\,\frac{2\pi}{\Lambda}\right| \lt k_{0} n_{\mathrm{c}} \]<div class="eqref">Ch. 2 Eq. (2.3)</div>`,
+sym: [[String.raw`\(\Lambda\)`, "grating period"], [String.raw`\(K = 2\pi/\Lambda\)`, "grating vector, the momentum one period supplies"], [String.raw`\(m\)`, "diffraction order"], [String.raw`\(\theta_m\)`, "emission angle of order m, from the surface normal"], [String.raw`\(n_{\mathrm{c}}\)`, "cladding index (air: 1)"]],
 how: ["Each groove scatters a little light. Grooves are Λ apart, so their waves have a phase delay βΛ between neighbours.", "In direction θ the extra path delay between neighbours is k₀n_cΛ sin θ.", "The scattered waves add up in phase when the difference of these two is a multiple of 2π.", "Dividing by Λ gives the phase-matching condition."],
 say: "A grating radiates the diffraction orders whose propagation constant β + mK falls inside the cladding light circle. The period is chosen so that only the first order, m = −1, radiates.",
 num: "Example: N = 2.8, λ₀ = 800 nm, Λ = 300 nm: sin θ₋₁ = 2.8 − 800/300 = 0.133, θ ≈ <b>7.7°</b>, tilted forward along the propagation direction.<br>m = −2: 2.8 − 5.33 = −2.53 → outside, does not radiate.",
@@ -51,8 +51,8 @@ r(fig, ctl) {
 
 {s: "3. The period", t: "Choosing the period for a target angle",
 intu: "Solve phase matching for m = −1 and you get the period that sends light out at angle θ. For vertical emission it reduces to the simplest possible rule: one period equals one guide wavelength, Λ = λ₀/N, which Taillaert et al. state directly. Tilting the beam forward needs a slightly longer period, tilting it backward a shorter one. There is a subtlety: in a strong grating, N is not the index of the plain waveguide. It is an average over the etched and unetched parts, and Zhou et al. point out that for a shallow-etched GaAs grating it is set by the fill factor and etch depth. Change N to see how much the period moves.",
-eq: "Λ = λ<sub>0</sub> / (N − n<sub>c</sub> sin θ) &nbsp;&nbsp; (Ch. 2 Eq. 2.4) &nbsp;&nbsp;&nbsp; vertical: &nbsp; Λ = λ<sub>0</sub>/N &nbsp;(Taillaert et al.)",
-sym: [["θ", "target emission angle, positive toward the propagation direction"], ["N", "average effective index of the grating region"], ["fill factor f", "fraction of each period left unetched"]],
+eq: String.raw`\[ \Lambda = \frac{\lambda_{0}}{N - n_{\mathrm{c}}\sin\theta} \qquad \text{vertical: } \Lambda = \frac{\lambda_{0}}{N} \]<div class="eqref">Ch. 2 Eq. (2.4), Taillaert et al.</div>`,
+sym: [[String.raw`\(\theta\)`, "target emission angle, positive toward the propagation direction"], [String.raw`\(N\)`, "average effective index of the grating region"], [String.raw`fill factor \(f\)`, "fraction of each period left unetched"]],
 how: ["Set m = −1 in k₀n_c sin θ = k₀N − 2π/Λ.", "Divide by k₀ = 2π/λ₀: n_c sin θ = N − λ₀/Λ.", "Solve for Λ.", "Taillaert et al. write only the vertical case. The angled form follows from the same condition."],
 say: "The first-order period for emission at angle θ is Λ = λ₀/(N − n_c sin θ), which becomes λ₀/N for vertical emission. N is the average index of the grating region, set by fill factor and etch depth.",
 num: "N = 2.8, λ₀ = 800 nm: vertical Λ = <b>286 nm</b>, θ = 10° gives Λ = 800/(2.8 − 0.174) ≈ <b>305 nm</b><br>Zhou et al. 2018, their GaAs grating at 930 nm: N = 2.79, θ = 10°, Λ = <b>355 nm</b>",
@@ -71,8 +71,8 @@ r(fig, ctl) {
 
 {s: "4. Not vertical", t: "Why not straight up: the second order",
 intu: "At exactly vertical emission, the period is one guide wavelength. Then two kicks, the second order, take β exactly to −β: the mode travelling backwards. The grating becomes a Bragg mirror and reflects a large part of the light back into the waveguide. Taillaert et al. avoid this by detuning the period so the beam leaves at a small angle, and tilting the fiber to match. Drag the angle toward zero and watch the second-order point land on the backward mode.",
-eq: "θ = 0: &nbsp; Λ = λ<sub>0</sub>/N &nbsp;⟹&nbsp; β − 2·(2π/Λ) = β − 2β = −β &nbsp;(backward mode, strong reflection)",
-sym: [["−β", "propagation constant of the same mode travelling backward"], ["second order", "m = −2, two grating kicks"]],
+eq: String.raw`\[ \theta = 0: \quad \Lambda = \frac{\lambda_{0}}{N} \;\Longrightarrow\; \beta - 2\cdot\frac{2\pi}{\Lambda} = \beta - 2\beta = -\beta \]<div class="eqnote">backward mode, strong reflection</div>`,
+sym: [[String.raw`\(-\beta\)`, "propagation constant of the same mode travelling backward"], ["second order", "m = −2, two grating kicks"]],
 how: ["Vertical emission sets 2π/Λ = β.", "The second order then has β − 2·2π/Λ = −β.", "That is exactly the backward guided mode, so the grating couples forward light into backward light: a Bragg reflection.", "A small angle detunes the second order away from −β and suppresses the reflection."],
 say: "Exactly vertical emission is avoided because the second diffraction order then matches the backward guided mode and the grating reflects strongly. The period is detuned for a small emission angle and the fiber is tilted to match.",
 num: "Taillaert et al. tilt the fiber by <b>10°</b>.<br>Zhou et al. also use <b>10°</b> on their GaAs membrane grating and report back reflection below <b>1 %</b>.",
@@ -90,8 +90,8 @@ r(fig, ctl) {
 
 {s: "5. Efficiency limits", t: "Why a simple grating loses light",
 intu: "Taillaert et al. name two main losses. First, a grating radiates down as well as up. A grating etched through a membrane with air on both sides is symmetric, so it sends about as much light down as up, and half is lost unless a mirror sends it back (Lesson 6). Second, the beam shape. A uniform grating leaks light at a constant rate, so the beam it emits decays exponentially along the grating, while the fiber mode is a Gaussian. Their overlap can never reach 100 %. This card computes that overlap live: adjust the leakage rate and fiber size and find the best possible match.",
-eq: "beam: &nbsp; E(x) = √(2α) e<sup>−αx</sup> (x ≥ 0) &nbsp;&nbsp; fiber: &nbsp; G(x) Gaussian of waist w<sub>0</sub><br>η<sub>overlap</sub> = |∫E G dx|² / (∫|E|² dx ∫|G|² dx) &nbsp;&nbsp; best ≈ 80 % (Taillaert et al.)",
-sym: [["α", "leakage rate of the field along the grating (1/µm)"], ["w₀", "fiber mode radius (1/e of the field)"], ["η_overlap", "fraction of the upward beam that enters the fiber mode"], ["x", "position along the grating"]],
+eq: String.raw`\[ \text{beam: } E(x) = \sqrt{2\alpha}\, e^{-\alpha x} \ \ (x \ge 0) \qquad \text{fiber: } G(x) \text{ Gaussian of waist } w_{0} \]\[ \eta_{\mathrm{overlap}} = \frac{\left|\int E\, G\, \mathrm{d}x\right|^{2}}{\int |E|^{2}\, \mathrm{d}x \int |G|^{2}\, \mathrm{d}x} \qquad \text{best} \approx 80\,\% \]<div class="eqref">Taillaert et al.</div>`,
+sym: [[String.raw`\(\alpha\)`, "leakage rate of the field along the grating (1/µm)"], [String.raw`\(w_{0}\)`, "fiber mode radius (1/e of the field)"], [String.raw`\(\eta_{\mathrm{overlap}}\)`, "fraction of the upward beam that enters the fiber mode"], [String.raw`\(x\)`, "position along the grating"]],
 how: ["A uniform grating removes the same fraction of the remaining power per unit length, so the guided power decays as e^(−2αx).", "The emitted field is proportional to the local guided field, so it decays as e^(−αx).", "The power coupled into the fiber is the normalized overlap of this beam with the Gaussian fiber mode.", "Optimizing α and the fiber position gives at most about 80 %. Shaping the beam (apodization, a nonuniform grating) can do better."],
 say: "A uniform grating is limited by downward radiation and by the mismatch between its exponential beam and the Gaussian fiber mode. The mode-overlap limit alone is about 80 %.",
 num: "Taillaert et al. (SOI, TE): uniform grating 37 %, 79 % with a two-pair mirror. Nonuniform grating 61 %, and 92 % with a mirror.<br>Their measured efficiency per coupler, √T of two couplers, is a lower bound.",
@@ -112,8 +112,8 @@ r(fig, ctl) {
 
 {s: "6. Polarization", t: "One grating, one polarization",
 intu: "TE-like and TM-like modes have very different effective indices (Lesson 2, card 6). Feed both into the same grating and phase matching sends them out at very different angles, so a coupler designed for one polarization barely couples the other into the fiber. Taillaert et al. call grating couplers strongly polarization selective for this reason. The same physics makes the emission angle shift with wavelength, so a coupler only works over a band: Taillaert et al. found about 9 nm of center-wavelength shift per degree of fiber tilt. Drag the period and compare the two polarizations.",
-eq: "sin θ<sub>TE</sub> = N<sub>TE</sub> − λ<sub>0</sub>/Λ, &nbsp;&nbsp; sin θ<sub>TM</sub> = N<sub>TM</sub> − λ<sub>0</sub>/Λ &nbsp;&nbsp; (n<sub>c</sub> = 1, m = −1)<br>Λ<sub>TM</sub> > Λ<sub>TE</sub> for the same angle",
-sym: [["N_TE, N_TM", "average effective indices of the grating for each polarization"], ["θ_TE, θ_TM", "their emission angles for the same period"]],
+eq: String.raw`\[ \sin\theta_{\mathrm{TE}} = N_{\mathrm{TE}} - \frac{\lambda_{0}}{\Lambda}, \qquad \sin\theta_{\mathrm{TM}} = N_{\mathrm{TM}} - \frac{\lambda_{0}}{\Lambda} \qquad (n_{\mathrm{c}} = 1,\ m = -1) \]\[ \Lambda_{\mathrm{TM}} \gt \Lambda_{\mathrm{TE}} \ \text{for the same angle} \]`,
+sym: [[String.raw`\(N_{\mathrm{TE}}, N_{\mathrm{TM}}\)`, "average effective indices of the grating for each polarization"], [String.raw`\(\theta_{\mathrm{TE}}, \theta_{\mathrm{TM}}\)`, "their emission angles for the same period"]],
 how: ["Apply phase matching separately to each polarization.", "N_TM < N_TE, so for the same period the TM beam leaves at a more negative angle.", "To make TM leave at the design angle the period must be longer.", "So each polarization needs its own grating design."],
 say: "Grating couplers are strongly polarization selective, because TE-like and TM-like modes have very different effective indices. A TM coupler needs a longer period than a TE coupler for the same angle.",
 num: "Example N<sub>TE</sub> = 2.8, N<sub>TM</sub> = 2.3, λ₀ = 800 nm, Λ = 305 nm: θ<sub>TE</sub> ≈ <b>10°</b>, θ<sub>TM</sub> ≈ <b>−19°</b><br>Taillaert et al.: about <b>9 nm per degree</b> of fiber tilt (SOI at 1550 nm).",
@@ -131,10 +131,10 @@ r(fig, ctl) {
 ],
 summary: "A guided mode has β > k₀n_c and cannot radiate from a smooth guide. A grating of period Λ adds kicks of 2π/Λ, and order m radiates when β + m2π/Λ lies inside the light circle, at k₀n_c sin θ = β + m2π/Λ. For m = −1 this gives Λ = λ₀/(N − n_c sin θ), or λ₀/N vertically, where N is the average index of the grating. Vertical emission is avoided because the second order then reflects light into the backward mode. Efficiency is limited by downward radiation and by the overlap of the exponential beam with the Gaussian fiber mode, about 80 % at best for a uniform grating. TE and TM need separate gratings.",
 sheet: [
-["k<sub>0</sub>n<sub>c</sub> sin θ<sub>m</sub> = β + m 2π/Λ", "Phase matching (Ch. 2 Eq. 2.3)"],
-["Λ = λ<sub>0</sub>/(N − n<sub>c</sub> sin θ), &nbsp; Λ = λ<sub>0</sub>/N (vertical)", "Period (Ch. 2 Eq. 2.4, Taillaert)"],
-["θ = 0 ⟹ β − 2·2π/Λ = −β", "Second-order back reflection"],
-["η = |∫EG|²/(∫|E|²∫|G|²)", "Mode overlap with the fiber"]],
+[String.raw`\[ k_{0} n_{\mathrm{c}} \sin\theta_m = \beta + m\,\frac{2\pi}{\Lambda} \]`, "Phase matching (Ch. 2 Eq. 2.3)"],
+[String.raw`\[ \Lambda = \frac{\lambda_{0}}{N - n_{\mathrm{c}}\sin\theta}, \qquad \Lambda = \frac{\lambda_{0}}{N} \ \text{(vertical)} \]`, "Period (Ch. 2 Eq. 2.4, Taillaert)"],
+[String.raw`\[ \theta = 0 \;\Longrightarrow\; \beta - 2\cdot\frac{2\pi}{\Lambda} = -\beta \]`, "Second-order back reflection"],
+[String.raw`\[ \eta = \frac{\left|\int E G\right|^{2}}{\int |E|^{2} \int |G|^{2}} \]`, "Mode overlap with the fiber"]],
 consts: "Examples use λ₀ = 800 nm, air cladding, illustrative indices. Published numbers are quoted from the papers named.",
 sources: ["Taillaert et al., Jpn. J. Appl. Phys. 45, 6071 (2006) (review of grating couplers in SOI: period, tilt, two efficiency limits, mirrors, 9 nm per degree, polarization selectivity)", "Zhou et al., Appl. Phys. Lett. 113, 251103 (2018) (shallow-etched, apodized grating on GaAs membranes near 930 nm, > 60 %)"]
 });

@@ -6,8 +6,8 @@ bridge: "The formulas are the textbook quarter-wave results stated in Gačević 
 cards: [
 {s: "1. One interface", t: "One interface reflects only a little",
 intu: "Every interface between two materials reflects a bit of light. The amplitude reflection coefficient depends only on the two indices. Going from low to high index, the reflected wave is flipped (a phase of π), going from high to low it is not. For GaAs against AlGaAs the indices are close, so each interface reflects only a few tenths of a percent of the power. A useful mirror has to stack many of these small reflections so they all add in phase. Drag the indices.",
-eq: "r = (n<sub>1</sub> − n<sub>2</sub>) / (n<sub>1</sub> + n<sub>2</sub>), &nbsp;&nbsp; R = r² &nbsp;&nbsp; (normal incidence, from n<sub>1</sub> into n<sub>2</sub>)<br>r < 0 when n<sub>2</sub> > n<sub>1</sub>: &nbsp; a phase shift of π",
-sym: [["r", "amplitude reflection coefficient"], ["R", "power reflectance"], ["n₁, n₂", "index on the incoming side and on the far side"]],
+eq: String.raw`\[ r = \frac{n_{1} - n_{2}}{n_{1} + n_{2}}, \qquad R = r^{2} \quad \text{(normal incidence, from } n_{1} \text{ into } n_{2}\text{)} \]\[ r \lt 0 \ \text{when}\ n_{2} \gt n_{1}: \quad \text{a phase shift of } \pi \]`,
+sym: [[String.raw`\(r\)`, "amplitude reflection coefficient"], [String.raw`\(R\)`, "power reflectance"], [String.raw`\(n_{1}, n_{2}\)`, "index on the incoming side and on the far side"]],
 how: ["At normal incidence, match the tangential E and H on both sides of the interface.", "H is proportional to nE, so the two conditions give 1 + r = t and n₁(1 − r) = n₂t.", "Solve for r.", "The sign of r gives the phase: negative means the reflected field is inverted."],
 say: "A single interface reflects r = (n₁ − n₂)/(n₁ + n₂) of the field amplitude, with a π phase shift when reflecting off a higher index. Small index contrast gives weak reflection per interface.",
 num: "GaAs-like 3.5 against AlGaAs-like 3.0: r = 0.077, R = <b>0.59 %</b><br>Gačević and Vukmirović's GaN/AlN example: |r| about 0.1<br>GaAs against air: r = 0.56, R = <b>31 %</b>",
@@ -24,8 +24,8 @@ r(fig, ctl) {
 
 {s: "2. Quarter waves", t: "Quarter-wave layers make every reflection add up",
 intu: "Make each layer a quarter wavelength thick in its own material. A reflection from the back of a layer then travels an extra half wavelength (in and out), which is a phase of π. Every second interface also has the π flip from card 1. Gačević and Vukmirović explain the result: all reflected waves come back with the same phase and add up. Each arrow here is one interface's reflection, drawn as a phasor (length = amplitude, angle = phase). At the design wavelength they line up in a straight line. Detune the wavelength and they curl up and partly cancel.",
-eq: "d<sub>i</sub> = λ<sub>0</sub>/(4n<sub>i</sub>) &nbsp;⟹&nbsp; round trip phase in each layer = π<br>Σ<sub>k</sub> r<sub>k</sub> e<sup>iφ<sub>k</sub></sup> &nbsp;with all φ<sub>k</sub> equal at λ<sub>0</sub> (single-reflection picture)",
-sym: [["d_i", "thickness of layer i"], ["φ_k", "total phase of the reflection from interface k when it returns to the top"], ["phasor", "arrow representing a complex amplitude"]],
+eq: String.raw`\[ d_i = \frac{\lambda_{0}}{4 n_i} \;\Longrightarrow\; \text{round trip phase in each layer} = \pi \]\[ \sum_k r_k\, e^{i\varphi_k} \quad \text{with all } \varphi_k \text{ equal at } \lambda_{0} \]<div class="eqref">single-reflection picture</div>`,
+sym: [[String.raw`\(d_i\)`, "thickness of layer i"], [String.raw`\(\varphi_k\)`, "total phase of the reflection from interface k when it returns to the top"], ["phasor", "arrow representing a complex amplitude"]],
 how: ["A wave reflected at interface k travels down and back through all layers above it, picking up 2·(2π/λ)·n_i·d_i each.", "With quarter-wave layers each layer contributes π.", "Interfaces alternate between low-to-high (extra π) and high-to-low (no extra phase), which cancels the alternation of signs.", "So at λ₀ all contributions have the same phase. Away from λ₀ the phases spread out. With weak interfaces, multiple reflections can be neglected, as Gačević and Vukmirović do."],
 say: "In a quarter-wave stack each layer adds a round-trip phase of π, which together with the alternating reflection signs makes all partial reflections add in phase at the design wavelength.",
 num: "λ₀ = 800 nm: a 3.5-index layer is <b>57.1 nm</b>, a 3.0-index layer <b>66.7 nm</b>.<br>Each pair adds about 2|r| ≈ 0.15 to the amplitude in this simple picture, until the true multiple-reflection result saturates near 1.",
@@ -48,8 +48,8 @@ r(fig, ctl) {
 
 {s: "3. Pairs needed", t: "How many pairs: the peak reflectance formula",
 intu: "Stacking pairs raises the reflectance toward 1, and the closed formula shows how fast: everything depends on the index ratio raised to the power 2N. A small ratio means many pairs. Gačević and Vukmirović give the general form with different media in front and behind the stack. When the same medium is on both sides, as when a simulated stack ends in air, it reduces to the simple q form. The dots here are the exact transfer-matrix result, the line is the formula. They agree exactly at the design wavelength.",
-eq: "R = ((q − 1)/(q + 1))², &nbsp;&nbsp; q = (n<sub>H</sub>/n<sub>L</sub>)<sup>2N</sup> &nbsp;&nbsp; (same medium on both sides, Ch. 2 Eq. 2.5, Gačević Eq. 2)",
-sym: [["N", "number of high/low pairs"], ["n_H, n_L", "high and low indices"], ["q", "(n_H/n_L)^(2N), grows exponentially with N"]],
+eq: String.raw`\[ R = \left(\frac{q - 1}{q + 1}\right)^{2}, \qquad q = \left(\frac{n_{\mathrm{H}}}{n_{\mathrm{L}}}\right)^{2N} \]<div class="eqref">same medium on both sides, Ch. 2 Eq. (2.5), Gačević Eq. (2)</div>`,
+sym: [[String.raw`\(N\)`, "number of high/low pairs"], [String.raw`\(n_{\mathrm{H}}, n_{\mathrm{L}}\)`, "high and low indices"], [String.raw`\(q\)`, "(n_H/n_L)^(2N), grows exponentially with N"]],
 how: ["Use the transfer matrix of a quarter-wave layer: at λ₀ it is a simple off-diagonal matrix.", "Multiplying N pairs gives a diagonal matrix with entries (n_H/n_L)^(±N).", "The reflection coefficient of the stack then depends only on q = (n_H/n_L)^(2N).", "With equal media outside, r = (q − 1)/(q + 1)."],
 say: "The peak reflectance of a quarter-wave DBR is R = ((q − 1)/(q + 1))² with q = (n_H/n_L)^(2N). A small index ratio requires many pairs.",
 num: "Ratio 3.5/3.0 = 1.167: N = 10 gives R ≈ <b>83 %</b>, N = 20 ≈ <b>99 %</b> (see the plot)<br>Ratio 1.5 (much higher contrast): 4 pairs already give over 95 %.",
@@ -68,8 +68,8 @@ r(fig, ctl) {
 
 {s: "4. Stopband", t: "The stopband: high reflectance only near λ₀",
 intu: "Away from the design wavelength the layers are no longer quarter waves and the reflections stop adding in phase. The reflectance stays high only inside a band, the stopband, whose width depends only on the index contrast, not on the number of pairs. A low contrast stack has a narrow band. This spectrum is computed live with a transfer matrix. The orange lines mark the stopband width from the formula. Add pairs: the band gets flatter and squarer, but not much wider.",
-eq: "Δλ<sub>0</sub> ≈ (4λ<sub>0</sub>/π) arcsin((n<sub>H</sub> − n<sub>L</sub>)/(n<sub>H</sub> + n<sub>L</sub>)) &nbsp;&nbsp; (Ch. 2 Eq. 2.6, Gačević Eq. 3)",
-sym: [["Δλ₀", "full width of the stopband"], ["λ₀", "design wavelength"], ["(n_H − n_L)/(n_H + n_L)", "the single-interface reflection coefficient from card 1"]],
+eq: String.raw`\[ \Delta\lambda_{0} \approx \frac{4\lambda_{0}}{\pi} \arcsin\!\left(\frac{n_{\mathrm{H}} - n_{\mathrm{L}}}{n_{\mathrm{H}} + n_{\mathrm{L}}}\right) \]<div class="eqref">Ch. 2 Eq. (2.6), Gačević Eq. (3)</div>`,
+sym: [[String.raw`\(\Delta\lambda_{0}\)`, "full width of the stopband"], [String.raw`\(\lambda_{0}\)`, "design wavelength"], [String.raw`\((n_{\mathrm{H}} - n_{\mathrm{L}})/(n_{\mathrm{H}} + n_{\mathrm{L}})\)`, "the single-interface reflection coefficient from card 1"]],
 how: ["For an infinite periodic stack, waves are forbidden in a frequency band around λ₀ (a 1D photonic band gap).", "Its relative width follows from the band edges of the periodic medium.", "The result depends only on the contrast through the interface coefficient.", "For a finite stack the formula is a good estimate. Gačević and Vukmirović note it is strictly exact only for infinitely many periods."],
 say: "A quarter-wave DBR reflects strongly only within a stopband of width about (4λ₀/π) arcsin((n_H − n_L)/(n_H + n_L)), which depends only on the index contrast.",
 num: "n<sub>H</sub> = 3.5, n<sub>L</sub> = 3.0, λ₀ = 800 nm: Δλ₀ ≈ (3200/π) × arcsin(0.0769) ≈ <b>78 nm</b>",
@@ -87,8 +87,8 @@ r(fig, ctl) {
 
 {s: "5. The air gap", t: "The gap decides whether the mirror helps",
 intu: "A grating in a symmetric membrane sends half its light up and half down. The downward half crosses the air gap, reflects off the DBR, and comes back up through the membrane, where it interferes with the light that went up directly. If the round trip through the gap adds a whole number of wavelengths (counting the mirror's phase), they add and nearly all light goes up. If it is off by half a wavelength, they cancel. Because the light crosses the gap twice, the pattern repeats every half wavelength of gap thickness. Taillaert et al. found the same with the buried oxide in silicon-on-insulator: the best oxide thicknesses come in a series. This simple two-beam model ignores how the returning light also changes the grating's own strength, which they point out too.",
-eq: "U ∝ |1 + √R e<sup>iδ</sup>|², &nbsp;&nbsp; δ = 2k<sub>0</sub>t<sub>gap</sub> + φ<sub>DBR</sub> &nbsp;&nbsp; (simple two-beam model)<br>period in t<sub>gap</sub>: &nbsp; λ<sub>0</sub>/2 (air gap)",
-sym: [["U", "upward power (relative)"], ["R", "DBR reflectance"], ["δ", "round-trip phase of the downward light relative to the upward light"], ["t_gap", "air gap thickness"], ["φ_DBR", "reflection phase of the mirror (π for a stack starting with high index)"]],
+eq: String.raw`\[ U \propto \left|1 + \sqrt{R}\, e^{i\delta}\right|^{2}, \qquad \delta = 2 k_{0} t_{\mathrm{gap}} + \varphi_{\mathrm{DBR}} \]\[ \text{period in } t_{\mathrm{gap}}: \ \frac{\lambda_{0}}{2} \ \text{(air gap)} \]<div class="eqref">simple two-beam model</div>`,
+sym: [[String.raw`\(U\)`, "upward power (relative)"], [String.raw`\(R\)`, "DBR reflectance"], [String.raw`\(\delta\)`, "round-trip phase of the downward light relative to the upward light"], [String.raw`\(t_{\mathrm{gap}}\)`, "air gap thickness"], [String.raw`\(\varphi_{\mathrm{DBR}}\)`, "reflection phase of the mirror (π for a stack starting with high index)"]],
 how: ["Equal amplitudes leave up and down.", "The down wave gains 2k₀t_gap through the gap and φ_DBR at the mirror, and is scaled by √R.", "Up power ∝ |1 + √R e^(iδ)|². The unreflected part (1 − R) is lost below.", "δ changes by 2π when t_gap changes by λ₀/2, so the pattern repeats."],
 say: "The gap between the membrane and the DBR sets the phase of the light reflected back up. Constructive interference sends most light upward, and the condition repeats every half wavelength of gap. The gap also changes the grating strength, so the grating and gap are designed together.",
 num: "λ₀ = 800 nm in air: the pattern repeats every <b>400 nm</b> of gap.<br>Taillaert et al. (SOI at 1550 nm): optimal oxide thicknesses about <b>550 nm</b> apart, close to half a wavelength in oxide (534 nm).",
@@ -106,8 +106,8 @@ r(fig, ctl) {
 
 {s: "6. Real stacks", t: "Real mirrors: substrate and disorder",
 intu: "Two things make a real DBR differ from the ideal formula. First, what lies behind the stack: Gačević and Vukmirović's general formula has different media in front and behind. A simulation that ends the stack in air is not the same as a wafer with a GaAs substrate underneath, which gives a higher value. Second, real interfaces are rough or intermixed. Their research question was exactly this, and their answer, the effective refractive-index approximation, is that a disordered DBR behaves like a perfect one with a smaller index ratio. Toggle the substrate and reduce the effective ratio to see both effects.",
-eq: "general: &nbsp; R = ((n<sub>0</sub>n<sub>L</sub><sup>2N</sup> − n<sub>s</sub>n<sub>H</sub><sup>2N</sup>)/(n<sub>0</sub>n<sub>L</sub><sup>2N</sup> + n<sub>s</sub>n<sub>H</sub><sup>2N</sup>))² &nbsp;(Gačević Eq. 2)<br>disorder: &nbsp; n<sub>H</sub>/n<sub>L</sub> → (n<sub>H</sub>/n<sub>L</sub>)<sub>eff</sub> < n<sub>H</sub>/n<sub>L</sub>",
-sym: [["n₀", "medium in front of the stack (air here)"], ["n_s", "medium behind the stack (air in a simulation, GaAs for a real wafer)"], ["(n_H/n_L)_eff", "reduced effective ratio that mimics interface disorder (their ERIA)"]],
+eq: String.raw`\[ \text{general: } R = \left(\frac{n_{0} n_{\mathrm{L}}^{2N} - n_{\mathrm{s}} n_{\mathrm{H}}^{2N}}{n_{0} n_{\mathrm{L}}^{2N} + n_{\mathrm{s}} n_{\mathrm{H}}^{2N}}\right)^{2} \]\[ \text{disorder: } \frac{n_{\mathrm{H}}}{n_{\mathrm{L}}} \to \left(\frac{n_{\mathrm{H}}}{n_{\mathrm{L}}}\right)_{\mathrm{eff}} \lt \frac{n_{\mathrm{H}}}{n_{\mathrm{L}}} \]<div class="eqref">Gačević Eq. (2)</div>`,
+sym: [[String.raw`\(n_{0}\)`, "medium in front of the stack (air here)"], [String.raw`\(n_{\mathrm{s}}\)`, "medium behind the stack (air in a simulation, GaAs for a real wafer)"], [String.raw`\((n_{\mathrm{H}}/n_{\mathrm{L}})_{\mathrm{eff}}\)`, "reduced effective ratio that mimics interface disorder (their ERIA)"]],
 how: ["Repeat the transfer matrix with n_s instead of n₀ on the exit side.", "A high-index substrate adds one more reflection in phase, raising R.", "Interface disorder smears the index step, which lowers the reflection per interface.", "Gačević and Vukmirović show this is equivalent to a perfect stack with a smaller index ratio, so both R and the stopband shrink."],
 say: "The peak reflectance depends on what is behind the stack, and real interface disorder lowers both the reflectance and the stopband width, which can be modelled as a reduced effective index ratio.",
 num: "n<sub>H</sub>/n<sub>L</sub> = 3.5/3.0, 10 pairs: air behind ≈ <b>83 %</b>, GaAs-like substrate (3.5) behind ≈ <b>95 %</b> (see the readout).<br>Their simulations, like most, neglect absorption.",
@@ -127,11 +127,11 @@ r(fig, ctl) {
 ],
 summary: "Each interface reflects r = (n₁ − n₂)/(n₁ + n₂), small for GaAs and AlGaAs. Quarter-wave layers make all partial reflections return in phase, so a stack of N pairs reaches R = ((q − 1)/(q + 1))² with q = (n_H/n_L)^(2N), within a stopband of width about (4λ₀/π) arcsin((n_H − n_L)/(n_H + n_L)). Low contrast needs many pairs and gives a narrow band. Under a grating, the air gap sets the phase of the light reflected back up, and the condition for upward emission repeats every half wavelength of gap. The medium behind the stack and interface disorder both change the real reflectance, as Gačević and Vukmirović analyse.",
 sheet: [
-["r = (n<sub>1</sub> − n<sub>2</sub>)/(n<sub>1</sub> + n<sub>2</sub>)", "Single interface"],
-["d = λ<sub>0</sub>/(4n)", "Quarter-wave layer"],
-["R = ((q − 1)/(q + 1))², &nbsp; q = (n<sub>H</sub>/n<sub>L</sub>)<sup>2N</sup>", "Peak reflectance (Ch. 2 Eq. 2.5)"],
-["Δλ<sub>0</sub> ≈ (4λ<sub>0</sub>/π) arcsin((n<sub>H</sub> − n<sub>L</sub>)/(n<sub>H</sub> + n<sub>L</sub>))", "Stopband (Ch. 2 Eq. 2.6)"],
-["U ∝ |1 + √R e<sup>iδ</sup>|², &nbsp; period λ<sub>0</sub>/2 in gap", "Air gap interference (simple model)"]],
+[String.raw`\[ r = \frac{n_{1} - n_{2}}{n_{1} + n_{2}} \]`, "Single interface"],
+[String.raw`\[ d = \frac{\lambda_{0}}{4n} \]`, "Quarter-wave layer"],
+[String.raw`\[ R = \left(\frac{q - 1}{q + 1}\right)^{2}, \qquad q = \left(\frac{n_{\mathrm{H}}}{n_{\mathrm{L}}}\right)^{2N} \]`, "Peak reflectance (Ch. 2 Eq. 2.5)"],
+[String.raw`\[ \Delta\lambda_{0} \approx \frac{4\lambda_{0}}{\pi} \arcsin\!\left(\frac{n_{\mathrm{H}} - n_{\mathrm{L}}}{n_{\mathrm{H}} + n_{\mathrm{L}}}\right) \]`, "Stopband (Ch. 2 Eq. 2.6)"],
+[String.raw`\[ U \propto \left|1 + \sqrt{R}\, e^{i\delta}\right|^{2}, \qquad \text{period } \frac{\lambda_{0}}{2} \text{ in gap} \]`, "Air gap interference (simple model)"]],
 consts: "Examples: n_H = 3.5, n_L = 3.0, λ₀ = 800 nm, normal incidence, lossless. Not thesis values.",
 sources: ["Gačević and Vukmirović, Phys. Rev. Applied 9, 064041 (2018), Sec. II A, Eqs. (2) and (3) (study of how interface disorder degrades DBRs)", "Taillaert et al., Jpn. J. Appl. Phys. 45, 6071 (2006) (buried oxide thickness, bottom mirror, grating and layers designed together)"]
 });

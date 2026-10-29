@@ -6,8 +6,8 @@ bridge: "All numbers on this page are computed live from textbook formulas with 
 cards: [
 {s: "1. Snell", t: "Bending and trapping light: Snell's law and the critical angle",
 intu: "When light crosses from a dense material (high index) into a thinner one (low index), it bends away from the normal. Tilt the ray more and more. At one angle the refracted ray skims along the surface, and beyond it no light can get out at all: everything is reflected back. That is total internal reflection, and the angle is the critical angle. The bigger the index contrast, the smaller the critical angle, so more ray directions are trapped. GaAs against air traps everything steeper than about 17° from the surface normal.",
-eq: "n<sub>1</sub> sin θ<sub>1</sub> = n<sub>2</sub> sin θ<sub>2</sub> &nbsp;&nbsp;&nbsp; θ<sub>c</sub> = arcsin(n<sub>2</sub>/n<sub>1</sub>) &nbsp;&nbsp; (n<sub>1</sub> > n<sub>2</sub>)",
-sym: [["n₁, n₂", "refractive indices of the core and the cladding"], ["θ₁, θ₂", "angles from the surface normal"], ["θ_c", "critical angle. For θ₁ > θ_c nothing is transmitted"]],
+eq: String.raw`\[ n_{1}\sin\theta_{1} = n_{2}\sin\theta_{2} \qquad \theta_{\mathrm{c}} = \arcsin\!\left(\frac{n_{2}}{n_{1}}\right) \quad (n_{1} \gt n_{2}) \]`,
+sym: [[String.raw`\(n_{1}, n_{2}\)`, "refractive indices of the core and the cladding"], [String.raw`\(\theta_{1}, \theta_{2}\)`, "angles from the surface normal"], [String.raw`\(\theta_{\mathrm{c}}\)`, "critical angle. For θ₁ > θ_c nothing is transmitted"]],
 how: ["Along the interface, the incoming and the transmitted wave must have the same phase pattern, so their wavevector components along the surface match: k₀n₁ sin θ₁ = k₀n₂ sin θ₂.", "sin θ₂ cannot exceed 1. That fails when n₁ sin θ₁ > n₂.", "The limit n₁ sin θ_c = n₂ defines the critical angle.", "Beyond it the transmitted wave cannot propagate. It becomes an evanescent wave (card 2)."],
 say: "Light is confined in the membrane by total internal reflection at both surfaces. The high index contrast of GaAs and air gives a small critical angle, about 17°.",
 num: "GaAs (n ≈ 3.5) to air: θ<sub>c</sub> = arcsin(1/3.5) ≈ <b>16.6°</b><br>Silicon (3.48) to oxide (1.45): <b>24.6°</b><br>GaAs to AlGaAs (about 3.0): <b>59°</b>, much weaker trapping. This is why a low-index layer below GaAs has to be air (card 6).",
@@ -29,8 +29,8 @@ r(fig, ctl) {
 
 {s: "2. Evanescent", t: "Light leaks a little: the evanescent tail",
 intu: "Total internal reflection does not mean the field stops sharply at the surface. On the air side there is a field that does not travel outward but decays exponentially with distance. It carries no power away on average, but it is real: it is the tail you will see on every mode profile in Lessons 2 and 3. Steeper angles (closer to grazing) give a shorter tail, angles just past the critical angle give a long tail. This tail is also why a nearby object, like a substrate or a quantum dot near the surface, can interact with the guided light.",
-eq: "E(z) ∝ e<sup>−γ z</sup> outside, &nbsp;&nbsp; γ = k<sub>0</sub> √(N² − n<sub>c</sub>²), &nbsp;&nbsp; N = n<sub>1</sub> sin θ<sub>1</sub><br>decay length 1/γ",
-sym: [["γ", "decay constant of the field in the cladding (1/nm)"], ["k₀", "2π/λ₀, vacuum wavenumber"], ["N", "n₁ sin θ₁, the effective index of that bounce angle (card 3)"], ["1/γ", "distance over which the field falls by e ≈ 2.7"]],
+eq: String.raw`\[ E(z) \propto e^{-\gamma z} \ \text{outside}, \qquad \gamma = k_{0}\sqrt{N^{2} - n_{\mathrm{c}}^{2}}, \qquad N = n_{1}\sin\theta_{1} \]\[ \text{decay length } 1/\gamma \]`,
+sym: [[String.raw`\(\gamma\)`, "decay constant of the field in the cladding (1/nm)"], [String.raw`\(k_{0}\)`, "2π/λ₀, vacuum wavenumber"], [String.raw`\(N\)`, "n₁ sin θ₁, the effective index of that bounce angle (card 3)"], [String.raw`\(1/\gamma\)`, "distance over which the field falls by e ≈ 2.7"]],
 how: ["The tangential wavevector k₀N is shared by both sides of the interface (Snell).", "In the cladding k_z² = k₀²n_c² − k₀²N². For N > n_c this is negative.", "So k_z is imaginary, k_z = iγ, and e^(ik_z z) becomes e^(−γz), a decaying field.", "The same γ appears as the decay rate in the slab equation of Lesson 2 (Andreani and Gerace call it χ)."],
 say: "Beyond the critical angle the field in the cladding is evanescent. It decays as e^(−γz) with γ = k₀√(N² − n_c²) and carries no net power away from the guide.",
 num: "λ = 800 nm, N = 3.0, air: γ = (2π/800)√(9 − 1) ≈ <b>0.0222 nm⁻¹</b>, decay length ≈ <b>45 nm</b><br>N = 1.2 (near cutoff): decay length ≈ <b>192 nm</b>",
@@ -48,8 +48,8 @@ r(fig, ctl) {
 
 {s: "3. Effective index", t: "One number for the whole mode: the effective index",
 intu: "Picture the guided light as a ray zig-zagging between the two surfaces at angle θ. Along the guide, its phase advances as if it travelled through a material of index N = n₁ sin θ. That number is the effective index. A ray nearly parallel to the guide (θ near 90°) has N close to the core index. A ray near the critical angle has N close to the cladding index. So every guided mode has n<sub>c</sub> < N < n<sub>1</sub>. The propagation constant β = k₀N, the phase velocity c/N and the wavelength in the guide λ₀/N all follow from N.",
-eq: "β = k<sub>0</sub> N = k<sub>0</sub> n<sub>1</sub> sin θ &nbsp;&nbsp;&nbsp; n<sub>c</sub> < N < n<sub>1</sub> (guided)<br>λ<sub>guide</sub> = λ<sub>0</sub>/N, &nbsp;&nbsp; v<sub>phase</sub> = c/N",
-sym: [["β", "propagation constant: phase advance per unit length along the guide"], ["N", "effective index of the mode"], ["θ", "bounce angle from the surface normal"], ["λ_guide", "wavelength measured along the guide"]],
+eq: String.raw`\[ \beta = k_{0} N = k_{0} n_{1} \sin\theta \qquad n_{\mathrm{c}} \lt N \lt n_{1} \ \text{(guided)} \]\[ \lambda_{\mathrm{guide}} = \frac{\lambda_{0}}{N}, \qquad v_{\mathrm{phase}} = \frac{c}{N} \]`,
+sym: [[String.raw`\(\beta\)`, "propagation constant: phase advance per unit length along the guide"], [String.raw`\(N\)`, "effective index of the mode"], [String.raw`\(\theta\)`, "bounce angle from the surface normal"], [String.raw`\(\lambda_{\mathrm{guide}}\)`, "wavelength measured along the guide"]],
 how: ["The ray's wavevector has length k₀n₁ and makes angle θ with the normal.", "Its component along the guide is k₀n₁ sin θ. That is β.", "Define N = β/k₀ to compare with a plain material.", "Total internal reflection needs θ > θ_c, which means N > n_c. And sin θ < 1 means N < n₁."],
 say: "The effective index is the ratio of the propagation constant of a guided mode to the vacuum wavenumber. Guided modes satisfy n_cladding < N < n_core.",
 num: "λ₀ = 800 nm, N = 3.0: guide wavelength = <b>267 nm</b><br>N = 2.4: <b>333 nm</b><br>A grating period is set by this guide wavelength (Lesson 5).",
@@ -69,8 +69,8 @@ r(fig, ctl) {
 
 {s: "4. Only some angles", t: "Only some angles survive: transverse resonance",
 intu: "Not every bounce angle works. Follow a ray up and back down: it crosses the core twice and reflects twice. If the phase it collects in that round trip is not a whole number of 2π, the ray interferes with itself destructively and dies out. Only a discrete set of angles, the modes, survive. The reflection at each surface adds its own phase, which depends on the angle and on the polarization. Make the core thicker and more angles fit, so more modes appear. The plot shows the round-trip phase against N: wherever it crosses a multiple of 2π there is a mode.",
-eq: "2 κ t − 2 φ<sub>r</sub>(N) = 2π m, &nbsp;&nbsp; κ = k<sub>0</sub>√(n² − N²), &nbsp;&nbsp; φ<sub>r</sub> = 2 arctan(ζγ/κ)<br>⟺ &nbsp; tan(κt/2 − mπ/2) = ζγ/κ &nbsp;(the slab equation of Lesson 2)",
-sym: [["κ", "transverse wavenumber inside the core (Andreani's q)"], ["t", "core thickness"], ["φ_r", "phase lost at one total internal reflection"], ["m", "mode order, 0, 1, 2 …"], ["ζ", "1 for TE, (n/n_c)² for TM"]],
+eq: String.raw`\[ 2\kappa t - 2\varphi_{\mathrm{r}}(N) = 2\pi m, \qquad \kappa = k_{0}\sqrt{n^{2} - N^{2}}, \qquad \varphi_{\mathrm{r}} = 2\arctan\!\left(\frac{\zeta\gamma}{\kappa}\right) \]\[ \Longleftrightarrow\quad \tan\!\left(\frac{\kappa t}{2} - \frac{m\pi}{2}\right) = \frac{\zeta\gamma}{\kappa} \]<div class="eqref">the slab equation of Lesson 2</div>`,
+sym: [[String.raw`\(\kappa\)`, "transverse wavenumber inside the core (Andreani's q)"], [String.raw`\(t\)`, "core thickness"], [String.raw`\(\varphi_{\mathrm{r}}\)`, "phase lost at one total internal reflection"], [String.raw`\(m\)`, "mode order, 0, 1, 2 …"], [String.raw`\(\zeta\)`, "1 for TE, (n/n_c)² for TM"]],
 how: ["Round trip across the core: transverse phase 2κt.", "Each total internal reflection adds a phase shift −φ_r, set by the Fresnel coefficient.", "Self-consistency: total round-trip phase = 2πm.", "Rearranging gives the slab dispersion equation of Lesson 2, which Andreani and Gerace write as their Eqs. (C1) to (C4)."],
 say: "Guided modes are the bounce angles whose round-trip phase is a multiple of 2π, the transverse resonance condition. It is equivalent to the slab dispersion relation.",
 num: "Slab n = 3.5 in air, λ = 800 nm, TE:<br>t = 100 nm: only <b>TE0</b> is guided<br>t = 160 nm: <b>TE0 and TE1</b> (TE1 near cutoff)<br>t = 400 nm: <b>4 TE modes</b> (a new one every 119 nm)",
@@ -94,8 +94,8 @@ r(fig, ctl) {
 
 {s: "5. Light line", t: "The light line: where guided modes live",
 intu: "Plot frequency against propagation constant β. Light in plain air follows the line ω = cβ, the light line. Light in bulk GaAs follows ω = cβ/n, a flatter line. A guided mode of the membrane must lie between the two lines: below the air light line (so it cannot leak into air) and above the GaAs line. Johnson et al. 1999 used exactly this picture to read the band diagrams of photonic crystal slabs: modes above the light cone leak, modes below it are truly guided. The blue curve is the TE0 mode of a slab, computed live. Move the slab thickness: thinner slabs hug the air light line (weakly guided), thicker ones approach the GaAs line.",
-eq: "air light line: &nbsp; ω = c β / n<sub>c</sub> &nbsp;&nbsp;&nbsp; bulk core: &nbsp; ω = c β / n<br>guided: &nbsp; c β / n < ω < c β / n<sub>c</sub> &nbsp;⟺&nbsp; n<sub>c</sub> < N < n",
-sym: [["ω", "angular frequency, plotted here as t/λ₀ (dimensionless)"], ["β", "propagation constant, plotted as β t/2π"], ["light cone", "region above the cladding light line, where light can escape"]],
+eq: String.raw`\[ \text{air light line: } \omega = \frac{c\beta}{n_{\mathrm{c}}} \qquad \text{bulk core: } \omega = \frac{c\beta}{n} \]\[ \text{guided: } \frac{c\beta}{n} \lt \omega \lt \frac{c\beta}{n_{\mathrm{c}}} \;\Longleftrightarrow\; n_{\mathrm{c}} \lt N \lt n \]`,
+sym: [[String.raw`\(\omega\)`, "angular frequency, plotted here as t/λ₀ (dimensionless)"], [String.raw`\(\beta\)`, "propagation constant, plotted as β t/2π"], ["light cone", "region above the cladding light line, where light can escape"]],
 how: ["For any wave, ω = cβ/N, so a mode's point sits on a line of slope c/N.", "N > n_c places it below the cladding light line, so it cannot radiate (Johnson et al., Sec. II).", "N < n places it above the core material line.", "Solving the slab equation at each frequency traces the mode's dispersion curve."],
 say: "Truly guided modes lie below the light line of the cladding. Near the light line they are weakly confined, far below it strongly confined.",
 num: "In these units the slope of the air line is 1 and of GaAs (3.5) is 0.286.<br>Johnson et al. found that the best slab thickness is about half a wavelength in the material, a balance between weak guiding (too thin) and extra modes (too thick).",
@@ -116,8 +116,8 @@ r(fig, ctl) {
 
 {s: "6. Making it", t: "Why the membrane is suspended, and how it is made",
 intu: "Total internal reflection needs a lower index on both sides. For GaAs there is no low-index crystal that can be grown underneath it, so the trick is to grow GaAs on a sacrificial AlGaAs layer and later dissolve that layer, leaving the membrane hanging in air. Midolo et al. 2015 developed a simple version of this process for quantum photonic circuits: one electron-beam lithography step, dry etching straight through the resist (no hard mask), then a wet etch that removes the AlGaAs. Step through their process.",
-eq: "best index contrast: &nbsp; n<sub>GaAs</sub> / n<sub>air</sub> ≈ 3.5 &nbsp;&nbsp;&nbsp; versus GaAs / AlGaAs ≈ 1.2",
-sym: [["GaAs membrane", "the guiding layer, with dots grown in its middle"], ["Al₀.₇₅Ga₀.₂₅As", "sacrificial layer in Midolo et al., removed by acid"], ["ZEP520A", "electron-beam resist used as the etch mask"], ["ICP-RIE", "inductively coupled plasma reactive ion etching (BCl₃/Cl₂/Ar)"], ["HF or HCl", "acids that dissolve the AlGaAs selectively"]],
+eq: String.raw`\[ \text{best index contrast: } \frac{n_{\mathrm{GaAs}}}{n_{\mathrm{air}}} \approx 3.5 \qquad \text{versus } \mathrm{GaAs}/\mathrm{AlGaAs} \approx 1.2 \]`,
+sym: [["GaAs membrane", "the guiding layer, with dots grown in its middle"], [String.raw`\(\mathrm{Al_{0.75}Ga_{0.25}As}\)`, "sacrificial layer in Midolo et al., removed by acid"], ["ZEP520A", "electron-beam resist used as the etch mask"], ["ICP-RIE", "inductively coupled plasma reactive ion etching (BCl₃/Cl₂/Ar)"], ["HF or HCl", "acids that dissolve the AlGaAs selectively"]],
 how: ["Grow the stack: GaAs substrate, AlGaAs sacrificial layer, then the GaAs membrane with dots.", "Spin resist, write the pattern with electron beam, develop.", "Dry etch through the membrane using the resist itself as the mask.", "Strip the resist, then dissolve the AlGaAs underneath so the membrane is released, and clean the surfaces (digital etch)."],
 say: "The membrane is suspended because no low-index layer can be grown epitaxially under GaAs. Following Midolo et al., it is made by electron-beam lithography, dry etching and selective removal of a sacrificial AlGaAs layer.",
 num: "Midolo et al. 2015 (their InAs dots near 940 nm): membrane <b>160 nm</b>, sacrificial layer <b>1350 nm</b> of Al₀.₇₅Ga₀.₂₅As.<br>Below 70 % Al the layer did not etch fully, above 80 % the undercut was too fast to control.<br>Smallest hole etched through: radius <b>56 nm</b>.",
@@ -138,11 +138,11 @@ r(fig, ctl) {
 ],
 summary: "Light is trapped in a high-index layer by total internal reflection, with an evanescent tail outside that decays as e^(−γz). Only bounce angles whose round-trip phase is a multiple of 2π survive. These are the modes, each described by an effective index N between the cladding and core indices, with β = k₀N. Guided modes lie below the cladding light line. GaAs on air gives the largest contrast, which is why the membrane is suspended: it is grown on a sacrificial AlGaAs layer that is dissolved after patterning, as in Midolo et al. 2015.",
 sheet: [
-["n<sub>1</sub> sin θ<sub>1</sub> = n<sub>2</sub> sin θ<sub>2</sub>, &nbsp; θ<sub>c</sub> = arcsin(n<sub>2</sub>/n<sub>1</sub>)", "Snell's law and critical angle"],
-["γ = k<sub>0</sub>√(N² − n<sub>c</sub>²)", "Evanescent decay constant"],
-["β = k<sub>0</sub>N, &nbsp; n<sub>c</sub> < N < n", "Effective index and guiding window"],
-["2κt − 2φ<sub>r</sub> = 2πm", "Transverse resonance"],
-["ω = cβ/n<sub>c</sub>", "Light line of the cladding"]],
+[String.raw`\[ n_{1}\sin\theta_{1} = n_{2}\sin\theta_{2}, \qquad \theta_{\mathrm{c}} = \arcsin\!\left(\frac{n_{2}}{n_{1}}\right) \]`, "Snell's law and critical angle"],
+[String.raw`\[ \gamma = k_{0}\sqrt{N^{2} - n_{\mathrm{c}}^{2}} \]`, "Evanescent decay constant"],
+[String.raw`\[ \beta = k_{0}N, \qquad n_{\mathrm{c}} \lt N \lt n \]`, "Effective index and guiding window"],
+[String.raw`\[ 2\kappa t - 2\varphi_{\mathrm{r}} = 2\pi m \]`, "Transverse resonance"],
+[String.raw`\[ \omega = \frac{c\beta}{n_{\mathrm{c}}} \]`, "Light line of the cladding"]],
 consts: "Examples use n = 3.5 (GaAs-like), n_c = 1 (air), λ₀ = 800 nm.",
 sources: ["Midolo, Pregnolato, Kiršanskė and Stobbe, Nanotechnology 26, 484002 (2015) (soft-mask fabrication of GaAs membranes)", "Johnson et al., Phys. Rev. B 60, 5751 (1999) (light cone, guided modes in slabs)", "Andreani and Gerace, Phys. Rev. B 73, 235114 (2006), App. C (slab equations)"]
 });

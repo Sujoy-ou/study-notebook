@@ -6,8 +6,8 @@ bridge: "This is Ch. 3 Sec. 3.5, design rule check and repair, Eq. (3.18). Tidy3
 cards: [
 {s: "1. The rulebook", t: "Five basic design rules",
 intu: "Hammond et al. list five basic rules that a foundry checks. Three are one-dimensional: minimum linewidth, minimum spacing between features, minimum radius of curvature. Two are two-dimensional: minimum area of an island and minimum enclosed area of a hole. A shape can pass every 1D rule and still fail a 2D rule, for example a round island that is wide enough but too small in area. The thesis checks width, gap and area. Pick a rule to see what it measures.",
-eq: "w ≥ w<sub>min</sub>, &nbsp; g ≥ g<sub>min</sub>, &nbsp; r ≥ r<sub>min</sub>, &nbsp; A<sub>island</sub> ≥ A<sub>min</sub>, &nbsp; A<sub>hole</sub> ≥ A<sub>hole,min</sub>",
-sym: [["w", "width of a GaAs feature"], ["g", "width of an air gap"], ["r", "radius of curvature of the outline"], ["A", "area of an island or hole"]],
+eq: String.raw`\[ w \ge w_{\mathrm{min}} \qquad g \ge g_{\mathrm{min}} \qquad r \ge r_{\mathrm{min}} \]\[ A_{\mathrm{island}} \ge A_{\mathrm{min}} \qquad A_{\mathrm{hole}} \ge A_{\mathrm{hole,min}} \]`,
+sym: [[String.raw`\(w\)`, "width of a GaAs feature"], [String.raw`\(g\)`, "width of an air gap"], [String.raw`\(r\)`, "radius of curvature of the outline"], [String.raw`\(A\)`, "area of an island or hole"]],
 how: ["Lithography resolution limits how narrow a line can be.", "Proximity effects and etch limits set how narrow a gap can be.", "Resist and etching round corners.", "Small islands lift off and small holes do not open, hence area rules."],
 say: "The design rule check verifies minimum width, minimum gap and minimum area, and a layout that fails any rule is not accepted for fabrication.",
 num: "Hammond et al. tested rulebooks with widths and spacings of 60 to 120 nm and areas of 0.005 to 0.2 µm². A typical example: 90 nm width and spacing, 0.08 µm² area, 0.2 µm² enclosed area.",
@@ -28,8 +28,8 @@ r(fig, ctl) {
 
 {s: "2. Width and gap", t: "The morphological width and gap check",
 intu: "The layout has two large blocks 90 nm apart, a 60 nm hole, a 60 nm line, a 60 nm island and a 130 nm round island. Choose the rule. The check opens and closes the GaAs with a disk of radius r = rule/2. Red marks GaAs the opening removes, blue marks air the closing fills. Both must be empty. Switch the large blocks to sharp corners: every corner now fails, because a disk cannot fill a sharp tip. So this check also asks for corner radii of at least r. Regions of a few pixels from staircase edges are ignored.",
-eq: "pass &nbsp; ⇔ &nbsp; area(X ∖ open<sub>r</sub>(X)) = 0 &nbsp; and &nbsp; area(close<sub>r</sub>(X) ∖ X) = 0, &nbsp; r = rule/2",
-sym: [["X", "GaAs region of the layout"], ["rule", "minimum width and minimum gap, 120 nm in the thesis"], ["r", "disk radius, half the rule"]],
+eq: String.raw`\[ \text{pass} \;\Longleftrightarrow\; \operatorname{area}\big(X \setminus \operatorname{open}_r(X)\big) = 0 \;\text{ and }\; \operatorname{area}\big(\operatorname{close}_r(X) \setminus X\big) = 0 \]\[ r = \text{rule}/2 \]`,
+sym: [[String.raw`\(X\)`, "GaAs region of the layout"], ["rule", "minimum width and minimum gap, 120 nm in the thesis"], [String.raw`\(r\)`, "disk radius, half the rule"]],
 how: ["Opening with radius r removes every GaAs part narrower than 2r (Lesson 8).", "Closing fills every air gap narrower than 2r.", "So zero removed area means no line below the rule, zero filled area means no gap below it.", "On polygons, Shapely computes the same with buffer operations: an erosion is a negative buffer, a dilation a positive one."],
 say: "The morphological check opens and closes the layout with a disk of half the rule, and the layout passes only if neither operation changes it.",
 num: "With a 120 nm rule: the 90 nm gap, the 60 nm hole, the 60 nm line and the 60 nm island all fail. The 130 nm island passes this check, but see the next card.",
@@ -47,8 +47,8 @@ r(fig, ctl) {
 
 {s: "3. Minimum area", t: "Islands and holes: the area rule",
 intu: "The area rule looks at every connected island of GaAs and every hole in it. Here the minimum area is the square of the rule. Look at the round island of 130 nm diameter. It is wider than a 120 nm rule, so it passes the width check, yet its area, π/4 × 130² ≈ 13 300 nm², is below 120² = 14 400 nm². A disk exactly as wide as the rule always fails a square area rule, because π/4 < 1. Width and area are independent rules.",
-eq: "A<sub>island</sub> ≥ A<sub>min</sub>, &nbsp; A<sub>hole</sub> ≥ A<sub>min</sub>, &nbsp; here A<sub>min</sub> = (rule)², &nbsp; disk of diameter w: A = (π/4)w² ≈ 0.785 w²",
-sym: [["island", "connected GaAs region"], ["hole", "air region enclosed by GaAs"], ["A_min", "minimum area, (120 nm)² = 0.0144 µm² in the thesis"]],
+eq: String.raw`\[ A_{\mathrm{island}} \ge A_{\mathrm{min}} \qquad A_{\mathrm{hole}} \ge A_{\mathrm{min}} \qquad \text{here } A_{\mathrm{min}} = (\text{rule})^2 \]\[ \text{disk of diameter } w\text{:} \quad A = \frac{\pi}{4}\, w^2 \approx 0.785\, w^2 \]`,
+sym: [["island", "connected GaAs region"], ["hole", "air region enclosed by GaAs"], [String.raw`\(A_{\mathrm{min}}\)`, "minimum area, (120 nm)² = 0.0144 µm² in the thesis"]],
 how: ["Find connected regions of GaAs and of enclosed air.", "Measure each area.", "Flag those below A_min (orange).", "Hammond et al. find these contours with marching squares in their optimization."],
 say: "The area rule is checked separately because a feature can be wide enough and still too small in area.",
 num: "Hammond et al. make the area rules their new contribution: minimum area against tiny islands and minimum enclosed area against tiny holes, imposed during the optimization.",
@@ -69,8 +69,8 @@ r(fig, ctl) {
 
 {s: "4. Two independent checks", t: "Edge measurements and the rolling disk",
 intu: "A design is accepted only if two independent checks both find nothing. KLayout measures distances between edges: for width, between edges facing each other across GaAs, for space, across air. Any pair closer than the rule is flagged. The morphological check rolls a disk. The two agree on bars and gaps, but they look at corners differently. An edge check usually ignores a sharp convex corner, since no two facing edges are close. The disk check flags it, because the disk cannot reach the tip. Pick a situation.",
-eq: "edge check: flag edge pairs with distance d &lt; rule &nbsp;&nbsp; morphology: flag area(X ∖ open<sub>r</sub>X) &gt; 0 or area(close<sub>r</sub>X ∖ X) &gt; 0",
-sym: [["edge pair", "two outline segments facing each other"], ["d", "distance between them, measured across GaAs (width) or air (space)"], ["r", "rule/2"]],
+eq: String.raw`<div class="eqnote">edge check</div>\[ \text{flag edge pairs with distance } d \lt \text{rule} \]<div class="eqnote">morphology</div>\[ \text{flag } \operatorname{area}\big(X \setminus \operatorname{open}_r(X)\big) \gt 0 \;\text{ or }\; \operatorname{area}\big(\operatorname{close}_r(X) \setminus X\big) \gt 0 \]`,
+sym: [["edge pair", "two outline segments facing each other"], [String.raw`\(d\)`, "distance between them, measured across GaAs (width) or air (space)"], [String.raw`\(r\)`, "rule/2"]],
 how: ["Run KLayout's width and space checks on the polygon.", "Run the Shapely open and close check on the same polygon.", "Accept only if both report no violation.", "Two methods with different blind spots make an error in one of them much less likely to pass unnoticed."],
 say: "The layout is checked in two independent ways, by edge distances in KLayout and by morphology in Shapely, and is accepted only if both find no violation.",
 num: "Edge checks are what foundry rule decks use. The morphological check is stricter at corners, which is why a layout that passes it also has rounded corners.",
@@ -90,8 +90,8 @@ r(fig, ctl) {
 
 {s: "5. Repair", t: "Healing with a closing, then an opening, and a small margin",
 intu: "A layout that fails is repaired with the same two operations. The closing first fills every gap narrower than 2r, then the opening removes every GaAs feature narrower than 2r, and both round the corners. The radius is slightly larger than half the rule, so that rounding the vertices to a 1 nm grid afterwards cannot bring a feature back below the rule. Change the repair radius and look at what is added (blue) and removed (red), and at the check after repair. Note what repair does not fix: an island that is wide enough but too small in area.",
-eq: "X<sub>healed</sub> = open<sub>r</sub>(close<sub>r</sub>(X)), &nbsp; r = rule/2 + margin &nbsp;&nbsp; (Ch. 3 Eq. 3.18)",
-sym: [["close_r", "fills gaps and holes narrower than 2r"], ["open_r", "removes lines and islands narrower than 2r"], ["margin", "a few nm in the thesis, against grid rounding"]],
+eq: String.raw`\[ X_{\mathrm{healed}} = \operatorname{open}_r\big(\operatorname{close}_r(X)\big) \qquad r = \text{rule}/2 + \text{margin} \]<div class="eqref">Ch. 3 Eq. (3.18)</div>`,
+sym: [[String.raw`\(\operatorname{close}_r\)`, "fills gaps and holes narrower than 2r"], [String.raw`\(\operatorname{open}_r\)`, "removes lines and islands narrower than 2r"], ["margin", "a few nm in the thesis, against grid rounding"]],
 how: ["Closing first, so narrow gaps become solid instead of splitting features.", "Opening second, so thin slivers left over are removed.", "Use r slightly above rule/2, here a fraction of a pixel to a few nanometers.", "Check the healed layout again with r = rule/2. Repair changes the geometry, so the performance must be recomputed."],
 say: "The repair closes then opens the layout with a radius slightly larger than half the rule, which removes every width and gap violation and rounds the corners, at the cost of changing the geometry.",
 num: "In the thesis the rule is 120 nm, so the check radius is 60 nm and the repair radius 63 nm, 3 nm larger so that rounding to a 1 nm grid cannot create a new violation. Here the merged blocks show that repair can join features, which may change the device a lot.",
@@ -110,8 +110,8 @@ r(fig, ctl) {
 
 {s: "6. The DRC-safe stage", t: "Optimizing while staying legal",
 intu: "Repair changes the geometry, which can lower the performance. So the shape optimization continues from the repaired outline, in a stage designed to stay legal. Vertex moves are limited to a small Δ<sub>max</sub>, so a few steps cannot create a new violation of any size. Every few steps the outline is repaired and resampled. Only evaluations of an outline that passes the check are kept as candidates, and the final device is the best passing candidate, validated again on a finer grid. Hammond et al. saw the same pattern in their runs: when rules are switched on, performance drops and is then gradually recovered. Step through the loop.",
-eq: "r<sub>i</sub> = r<sub>i</sub><sup>(0)</sup> + Δ<sub>max</sub>tanh(θ<sub>i</sub>)n̂<sub>i</sub>, &nbsp; small Δ<sub>max</sub>; &nbsp; every m steps: X ← open<sub>r</sub>(close<sub>r</sub>(X)), resample, check",
-sym: [["Δ_max", "small bound on vertex moves, 15 nm in the thesis"], ["m", "steps between repairs, 5 in the thesis"], ["candidate", "an evaluated outline that passed the check"]],
+eq: String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i, \qquad \text{small } \Delta_{\mathrm{max}} \]\[ \text{every } m \text{ steps: } X \leftarrow \operatorname{open}_r\big(\operatorname{close}_r(X)\big), \text{ resample, check} \]`,
+sym: [[String.raw`\(\Delta_{\mathrm{max}}\)`, "small bound on vertex moves, 15 nm in the thesis"], [String.raw`\(m\)`, "steps between repairs, 5 in the thesis"], ["candidate", "an evaluated outline that passed the check"]],
 how: ["Start from the repaired outline, which passes.", "Take shape steps with a small Δ_max and a sharp curvature penalty (Lesson 10).", "Every m steps repair and resample the outline, then check it.", "Keep only passing evaluations, return the best, and validate it on a finer grid."],
 say: "In the DRC-safe stage the outline moves only a little per run, is repaired and checked every few steps, and only outlines that pass are kept as candidates.",
 num: "Hammond et al. also found that too strict constraint weights can trap the optimizer: rerunning their T-splitter with weaker weights raised it from 27 % to 49.5 % per arm.",
@@ -131,11 +131,11 @@ r(fig, ctl) {
 ],
 summary: "The final layout must pass a design rule check with minimum width, minimum gap and minimum area. Width and gap are checked by morphology: the GaAs removed by opening with a disk of radius rule/2 and the air filled by closing must both have zero area, which also requires rounded corners, and independently by KLayout edge-distance checks. Area is checked separately, since a feature can be wide enough yet too small. A failing layout is repaired by X_healed = open_r(close_r(X)) with r slightly above rule/2, so grid rounding cannot recreate a violation. Repair changes the geometry, so the optimization continues in a DRC-safe stage with small vertex moves, repair and resampling every few steps, and only passing outlines kept.",
 sheet: [
-["area(X ∖ open<sub>r</sub>X) = 0, &nbsp; area(close<sub>r</sub>X ∖ X) = 0, &nbsp; r = rule/2", "Morphological width and gap check"],
-["A<sub>island</sub>, A<sub>hole</sub> ≥ A<sub>min</sub>", "Area rule, independent of width"],
-["(π/4)w² &lt; w²", "A disk as wide as the rule fails a square area rule"],
-["X<sub>healed</sub> = open<sub>r</sub>(close<sub>r</sub>(X)), &nbsp; r = rule/2 + margin", "Repair (Ch. 3 Eq. 3.18)"],
-["small Δ<sub>max</sub>, repair every m steps, keep passing outlines", "DRC-safe stage"]],
+[String.raw`\[ \operatorname{area}\big(X \setminus \operatorname{open}_r(X)\big) = 0 \qquad \operatorname{area}\big(\operatorname{close}_r(X) \setminus X\big) = 0 \qquad r = \text{rule}/2 \]`, "Morphological width and gap check"],
+[String.raw`\[ A_{\mathrm{island}},\, A_{\mathrm{hole}} \ge A_{\mathrm{min}} \]`, "Area rule, independent of width"],
+[String.raw`\[ \frac{\pi}{4}\, w^2 \lt w^2 \]`, "A disk as wide as the rule fails a square area rule"],
+[String.raw`\[ X_{\mathrm{healed}} = \operatorname{open}_r\big(\operatorname{close}_r(X)\big) \qquad r = \text{rule}/2 + \text{margin} \]`, "Repair (Ch. 3 Eq. 3.18)"],
+[String.raw`\[ \text{small } \Delta_{\mathrm{max}}, \text{ repair every } m \text{ steps, keep passing outlines} \]`, "DRC-safe stage"]],
 consts: "Layout of 170 × 160 pixels of 5 nm. Exact distance-transform morphology, air beyond the border, regions below 12 pixels (300 nm²) ignored as staircase specks.",
 sources: ["Hammond et al., Opt. Express 29, 23916 (2021) (five foundry rules, minimum area and enclosed area constraints, performance drop and recovery, constraint weights)", "Shapely and KLayout documentation (polygon buffer operations, width and space checks), as used by the thesis code", "Felzenszwalb and Huttenlocher, Theory of Computing 8, 415 (2012) (distance transform used in this page)"]
 });

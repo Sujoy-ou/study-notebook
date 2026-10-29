@@ -6,8 +6,8 @@ bridge: "This is Ch. 3 Sec. 3.3, Eq. (3.10), and the projection continuation of 
 cards: [
 {s: "1. The projection", t: "A smooth step with sharpness β and threshold η",
 intu: "The projection maps a filtered density ρ̃ to ρ̂. For β near 1 it is almost the identity (dotted). As β grows, values above η are pushed toward 1 and values below toward 0, and the curve approaches a step at η. The normalization keeps ρ̂(0) = 0 and ρ̂(1) = 1 for any β and η. Move β and η.",
-eq: "ρ̂ = [tanh(βη) + tanh(β(ρ̃ − η))] / [tanh(βη) + tanh(β(1 − η))] &nbsp;&nbsp; (Ch. 3 Eq. 3.10, Christiansen Eq. 18)",
-sym: [["ρ̃", "filtered density, input"], ["ρ̂", "projected density, sets ε (Eq. 3.11)"], ["β", "sharpness"], ["η", "threshold, 0.5 for the nominal design"]],
+eq: String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]<div class="eqref">Ch. 3 Eq. (3.10), Christiansen Eq. 18</div>`,
+sym: [[String.raw`\(\tilde\rho\)`, "filtered density, input"], [String.raw`\(\hat\rho\)`, "projected density, sets ε (Eq. 3.11)"], [String.raw`\(\beta\)`, "sharpness"], [String.raw`\(\eta\)`, "threshold, 0.5 for the nominal design"]],
 how: ["tanh(β(ρ̃ − η)) is a smooth step centered at η.", "Adding tanh(βη) makes it zero at ρ̃ = 0.", "Dividing by its value at ρ̃ = 1 makes it one there.", "For β → ∞ it becomes the hard threshold at η."],
 say: "The tanh projection is a smooth threshold whose sharpness β is raised during the optimization, pushing the filtered densities toward 0 or 1.",
 num: "Christiansen and Sigmund: at β = 1 the thresholding has little effect. At β = 100 and η = 0.5, ρ̃ = 0.52 already gives ρ̂ = 0.98.",
@@ -28,8 +28,8 @@ r(fig, ctl) {
 
 {s: "2. Filter then project", t: "The full chain on a map: raw, filtered, projected",
 intu: "The full density chain is raw ρ → filter → ρ̃ → projection → ρ̂ → ε. The filter sets the shapes, the projection decides how sharp they are. At small β the projected map is still grey. Raise β and the same shapes become black and white, with a thin grey edge that shrinks as β grows. The readouts measure how binary the design is.",
-eq: "ρ → ρ̃ = filter(ρ) → ρ̂ = P<sub>β,η</sub>(ρ̃) → ε(ρ̂) &nbsp;&nbsp; binarization: M = (1/N) Σ 4ρ̂(1 − ρ̂)",
-sym: [["M", "0 for a perfectly binary design, 1 if every pixel is 0.5"], ["grey fraction", "share of pixels with 0.05 < ρ̂ < 0.95"]],
+eq: String.raw`\[ \rho \to \tilde\rho = \mathrm{filter}(\rho) \to \hat\rho = P_{\beta,\eta}(\tilde\rho) \to \varepsilon(\hat\rho) \]<div class="eqnote">binarization:</div>\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`,
+sym: [[String.raw`\(M\)`, "0 for a perfectly binary design, 1 if every pixel is 0.5"], ["grey fraction", "share of pixels with 0.05 < ρ̂ < 0.95"]],
 how: ["The raw map is the same random design as in Lesson 6.", "The filter makes it smooth and grey.", "The projection sharpens it again, now with smooth outlines of size about R.", "Only the edge pixels stay grey at large β."],
 say: "Filtering sets the feature shapes and projection makes them binary, with only the edges left grey at large β.",
 num: "The grey edge is about one pixel wide once β is large enough that the filtered value crosses from 0.05 to 0.95 within one pixel.",
@@ -48,8 +48,8 @@ r(fig, ctl) {
 
 {s: "3. The slope", t: "At large β the gradient lives only near the threshold",
 intu: "The gradient reaches the filtered density through the slope of the projection. At small β the slope is close to 1 everywhere, so every pixel can change. At large β the slope is huge near η and almost zero elsewhere. Pixels that are already clearly 0 or 1 hardly feel the gradient any more, and the few that do feel it very strongly. This is what a badly conditioned problem looks like. The readout counts the pixels of the map in card 2 whose slope is still at least a tenth of the peak.",
-eq: "dρ̂/dρ̃ = β sech²(β(ρ̃ − η)) / [tanh(βη) + tanh(β(1 − η))], &nbsp;&nbsp; peak ≈ β/2 at ρ̃ = η = 0.5 for large β",
-sym: [["sech² = 1/cosh²", "a bump of width about 1/β"], ["peak", "slope at ρ̃ = η"], ["active pixels", "pixels whose slope is at least 10 % of the peak"]],
+eq: String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]\[ \text{peak} \approx \beta/2 \text{ at } \tilde\rho = \eta = 0.5 \text{ for large } \beta \]`,
+sym: [[String.raw`\(\operatorname{sech}^2 = 1/\cosh^2\)`, "a bump of width about 1/β"], ["peak", "slope at ρ̃ = η"], ["active pixels", "pixels whose slope is at least 10 % of the peak"]],
 how: ["Differentiate the projection.", "The bump has height about β/2 and width about 1/β.", "So the product of height and width stays about the same, the gradient just concentrates.", "Concentrated gradients make the step size hard to choose: too large for the edge pixels, useless for the rest."],
 say: "At large β the projection slope is large near the threshold and nearly zero elsewhere, so the gradient concentrates on the edges and the problem becomes badly conditioned.",
 num: "At β = 100 the slope at ρ̃ = 0.5 is 50, while at ρ̃ = 0.6 it is below 0.01.",
@@ -72,8 +72,8 @@ r(fig, ctl) {
 
 {s: "4. Continuation", t: "Raising β in stages: a geometric schedule",
 intu: "Continuation runs the optimizer at a fixed β for a number of steps, then raises β and continues. A geometric schedule multiplies β by the same factor at every level, so it spends equal effort on each decade from 1 to β<sub>max</sub>. Early levels shape the layout while the problem is smooth, late levels make it binary. Change the schedule.",
-eq: "β<sub>k</sub> = β<sub>max</sub><sup>k/(L − 1)</sup>, &nbsp; k = 0, …, L − 1, &nbsp; each held for s steps, total L·s steps",
-sym: [["L", "number of levels"], ["s", "optimizer steps per level"], ["β_max", "final sharpness"], ["ratio", "β_{k+1}/β_k = β_max^{1/(L−1)}"]],
+eq: String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L - 1)}, \qquad k = 0, \dots, L - 1 \]\[ \text{each held for } s \text{ steps, total } L \cdot s \text{ steps} \]`,
+sym: [[String.raw`\(L\)`, "number of levels"], [String.raw`\(s\)`, "optimizer steps per level"], [String.raw`\(\beta_{\mathrm{max}}\)`, "final sharpness"], ["ratio", "β_{k+1}/β_k = β_max^{1/(L−1)}"]],
 how: ["Start at β = 1, where the projection is nearly the identity.", "Multiply β by a fixed ratio at each level.", "Stop at β_max, where the projection is close to a step.", "Threshold the final design at ρ̂ = 0.5 to make it exactly binary."],
 say: "β is raised geometrically during the optimization, so the layout forms while the problem is smooth and becomes binary at the end.",
 num: "Example: β from 1 to 100 in 11 levels of 7 steps gives 77 steps, a ratio of 1.585 per level, and the eighth level is β = 25.1. Hammond et al. used three stages, β = 8, 16 and 32, with 70 iterations each.",
@@ -95,7 +95,7 @@ r(fig, ctl) {
 
 {s: "5. Why gradually", t: "How many pixels can still change, as β grows",
 intu: "Combine cards 3 and 4. For the filtered map of card 2, the curve shows the share of pixels whose projection slope is still at least a tenth of the peak, as a function of β. At β = 1 every pixel can move, so holes can open and arms can merge. At β = 100 fewer than a fifth of the pixels respond, and at β = 200 one in ten. This map is still very grey, because it is filtered noise. In a real run the design has moved toward 0 and 1 by then, so even fewer pixels respond: the topology is effectively frozen and only the outlines shift. Raising β slowly gives the layout time to settle before it freezes. Starting at a large β freezes whatever the initial design happens to be.",
-eq: "active share(β) = (1/N) #{ i : dρ̂/dρ̃(ρ̃<sub>i</sub>) ≥ 0.1 · peak }",
+eq: String.raw`\[ \text{active share}(\beta) = \frac{1}{N}\, \#\left\{ i : \frac{d\hat\rho}{d\tilde\rho}(\tilde\rho_i) \ge 0.1 \cdot \text{peak} \right\} \]`,
 sym: [["active share", "fraction of pixels that still receive a useful gradient"], ["freezing", "topology fixed, only boundaries move"]],
 how: ["Use the slope formula of card 3.", "Evaluate it for every pixel of the filtered map.", "Count the pixels above 10 % of the peak.", "Repeat for β from 1 to 200."],
 say: "As β grows, fewer pixels receive a useful gradient, so the topology freezes, which is why β is raised gradually.",
@@ -118,8 +118,8 @@ r(fig, ctl) {
 
 {s: "6. Shifting η", t: "Moving the threshold: eroded, nominal and dilated designs",
 intu: "Keep β large and move η instead. A threshold above 0.5 keeps only pixels whose filtered value is high, deep inside the features: every GaAs feature shrinks, as if over-etched. A threshold below 0.5 keeps more: every feature grows, as if under-etched. Christiansen and Sigmund, and Hammond et al., use these eroded, nominal and dilated designs to make devices robust to etch bias. Pushing η almost to 1 or 0 turns the projection into a morphological erosion or dilation, the subject of the next lesson.",
-eq: "eroded: η = 0.5 + δ, &nbsp; nominal: η = 0.5, &nbsp; dilated: η = 0.5 − δ",
-sym: [["δ", "threshold shift"], ["eroded", "GaAs shrinks, gaps widen (over-etch)"], ["dilated", "GaAs grows, gaps narrow (under-etch)"], ["edge shift", "the boundary moves by roughly δ divided by the slope of ρ̃ across the edge"]],
+eq: String.raw`\[ \text{eroded: } \eta = 0.5 + \delta, \qquad \text{nominal: } \eta = 0.5, \qquad \text{dilated: } \eta = 0.5 - \delta \]`,
+sym: [[String.raw`\(\delta\)`, "threshold shift"], ["eroded", "GaAs shrinks, gaps widen (over-etch)"], ["dilated", "GaAs grows, gaps narrow (under-etch)"], ["edge shift", "the boundary moves by roughly δ divided by the slope of ρ̃ across the edge"]],
 how: ["The filtered map changes smoothly across each edge.", "Moving the threshold up or down moves the 0.5 contour inward or outward.", "Because ρ̃ is smooth on the scale R, the shift is nearly uniform along the outline.", "With η = 0.99 or 0.01 the shift is close to the full filter radius: erosion and dilation (Lesson 8)."],
 say: "Shifting the projection threshold above or below 0.5 erodes or dilates every feature, which models over- and under-etching.",
 num: "Hammond et al. build eroded and dilated designs that differ from the blueprint by a set distance, for example ±20 nm, and optimize the worst of the three. It costs two extra simulations per step.",
@@ -137,11 +137,11 @@ r(fig, ctl) {
 ],
 summary: "The tanh projection ρ̂ = [tanh(βη) + tanh(β(ρ̃ − η))]/[tanh(βη) + tanh(β(1 − η))] pushes filtered densities toward 0 or 1, with sharpness β and threshold η. Large β gives a binary design but concentrates the gradient on the edges and freezes the topology, small β keeps the problem smooth but grey. So β is raised geometrically during the optimization, for example from 1 to 100 in 11 levels, and the result is thresholded at 0.5. Shifting η above or below 0.5 erodes or dilates every feature, which models etch bias and leads to the morphological operations of the next lesson.",
 sheet: [
-["ρ̂ = [tanh(βη) + tanh(β(ρ̃ − η))]/[tanh(βη) + tanh(β(1 − η))]", "Projection (Ch. 3 Eq. 3.10, Christiansen Eq. 18)"],
-["dρ̂/dρ̃ = β sech²(β(ρ̃ − η))/[tanh(βη) + tanh(β(1 − η))]", "Slope, peak ≈ β/2 at η = 0.5"],
-["β<sub>k</sub> = β<sub>max</sub><sup>k/(L−1)</sup>", "Geometric continuation"],
-["M = (1/N)Σ4ρ̂(1 − ρ̂)", "Binarization measure (0 = binary)"],
-["η = 0.5 ± δ", "Eroded and dilated designs"]],
+[String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, "Projection (Ch. 3 Eq. 3.10, Christiansen Eq. 18)"],
+[String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, "Slope, peak ≈ β/2 at η = 0.5"],
+[String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L-1)} \]`, "Geometric continuation"],
+[String.raw`\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`, "Binarization measure (0 = binary)"],
+[String.raw`\[ \eta = 0.5 \pm \delta \]`, "Eroded and dilated designs"]],
 consts: "Maps: 72 × 50 pixels of uniform random values, conic filter radius 3 pixels.",
 sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eq. (18), continuation, eroded, nominal and dilated designs", "Hammond et al., Opt. Express 29, 23916 (2021) (β stages 8, 16, 32 and robustness to ±20 nm etch bias)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/projections.py (tanh_projection)"]
 });

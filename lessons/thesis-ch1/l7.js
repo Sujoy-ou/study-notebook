@@ -6,8 +6,8 @@ bridge: "This lesson puts Lessons 1 to 6 into one story, draws the line between 
 cards: [
 {s: "1. Spin pumping", t: "Spin pumping, step by step",
 intu: "Step through the seven frames. A field splits the levels (Lesson 5). A laser tuned to the σ⁺ frequency excites only a spin-up electron. The trion decays back about 99 times out of 100 (vertical), and the laser excites it again: the dot cycles and glows. Once in about 100 decays the trion takes the diagonal path and lands in spin down. The laser is now off resonance for that spin, so the dot goes dark and stays in |↓⟩. The darkness is the signature that the spin has been prepared.",
-eq: "laser on |↑⟩ ↔ |↑↓, ⇑⟩ &nbsp;&nbsp; decay: vertical Γ, diagonal γ, &nbsp; Γ ≈ 100 γ<br>flip probability per cycle p = γ/(Γ + γ) ≈ 1/101",
-sym: [["Γ", "rate of the vertical (allowed) decay"], ["γ", "rate of the diagonal (weak) decay"], ["p", "chance that one excitation cycle ends with a spin flip"], ["|↓⟩", "the prepared (pumped) spin state"]],
+eq: String.raw`\[ \text{laser on } \lvert \uparrow \rangle \leftrightarrow \lvert \uparrow\downarrow, \Uparrow \rangle \]\[ \text{decay: vertical } \Gamma,\ \text{diagonal } \gamma, \qquad \Gamma \approx 100\,\gamma \]\[ \text{flip probability per cycle } p = \frac{\gamma}{\Gamma + \gamma} \approx \frac{1}{101} \]`,
+sym: [[String.raw`\(\Gamma\)`, "rate of the vertical (allowed) decay"], [String.raw`\(\gamma\)`, "rate of the diagonal (weak) decay"], [String.raw`\(p\)`, "chance that one excitation cycle ends with a spin flip"], [String.raw`\(\lvert \downarrow \rangle\)`, "the prepared (pumped) spin state"]],
 how: ["Zeeman splitting makes the σ⁺ transition unique in frequency (Lesson 5, card 2).", "The laser drives only that transition, so only |↑⟩ is excited.", "Each decay returns to |↑⟩ with probability 1 − p and goes to |↓⟩ with probability p.", "|↓⟩ is not excited by the laser, so population accumulates there."],
 say: "In Faraday geometry, resonant driving of one cycling transition together with the weak diagonal decay channel pumps the electron spin into the undriven state, which is seen as the dot going dark.",
 num: "Average photons emitted before the spin flips: 1/p ≈ <b>100</b><br>Spin preparation fidelity reported in the reference experiment: <b>96 %</b>",
@@ -44,8 +44,8 @@ r(fig, ctl) {
 
 {s: "2. Fidelity", t: "How good is the preparation: pumping versus relaxation",
 intu: "Pumping is not the only thing that changes the spin. The spin also relaxes on its own, flipping randomly in both directions at a rate γ<sub>s</sub>, for example through interaction with nuclear spins or phonons. Pumping pushes population from ↑ to ↓ at a rate R. In steady state the two balance. If pumping is much faster than relaxation, almost all population ends in ↓ and the fidelity is close to 1. Drag the ratio R/γ<sub>s</sub> and watch the two populations settle.",
-eq: "dP<sub>↓</sub>/dt = (R + γ<sub>s</sub>) P<sub>↑</sub> − γ<sub>s</sub> P<sub>↓</sub><br>steady state: &nbsp; F = P<sub>↓</sub> = (R + γ<sub>s</sub>) / (R + 2γ<sub>s</sub>)",
-sym: [["R", "optical pumping rate from ↑ to ↓ (scattering rate × p)"], ["γ_s", "spin relaxation rate, the same in both directions in this simple model"], ["P_↑, P_↓", "populations of the two spin states, P_↑ + P_↓ = 1"], ["F", "preparation fidelity, the population in the target state"]],
+eq: String.raw`\[ \frac{dP_{\downarrow}}{dt} = (R + \gamma_s)\, P_{\uparrow} - \gamma_s P_{\downarrow} \]<div class="eqnote">steady state</div>\[ F = P_{\downarrow} = \frac{R + \gamma_s}{R + 2\gamma_s} \]`,
+sym: [[String.raw`\(R\)`, "optical pumping rate from ↑ to ↓ (scattering rate × p)"], [String.raw`\(\gamma_s\)`, "spin relaxation rate, the same in both directions in this simple model"], [String.raw`\(P_{\uparrow}, P_{\downarrow}\)`, "populations of the two spin states, P_↑ + P_↓ = 1"], [String.raw`\(F\)`, "preparation fidelity, the population in the target state"]],
 how: ["Population leaves ↑ by pumping (R) and by relaxation (γ_s). It leaves ↓ only by relaxation (γ_s).", "In steady state the flows balance: (R + γ_s) P_↑ = γ_s P_↓.", "With P_↑ + P_↓ = 1, solve for P_↓.", "For R ≫ γ_s, F → 1. For R = 0, F = 1/2 (no preparation)."],
 say: "Spin preparation fidelity is set by the competition between the optical pumping rate and the spin relaxation rate. High fidelity needs pumping much faster than relaxation.",
 num: "F = 96 % ⟹ (x + 1)/(x + 2) = 0.96 ⟹ R/γ<sub>s</sub> ≈ <b>23</b> in this model<br>R/γ<sub>s</sub> = 100 ⟹ F ≈ <b>99.0 %</b><br>This is a simple rate model for intuition, not the model used in the paper.",
@@ -64,8 +64,8 @@ r(fig, ctl) {
 
 {s: "3. Time trace", t: "What the detector sees: fluorescence fading out",
 intu: "Turn the laser on at t = 0. At first the dot cycles and the detector counts photons at the scattering rate. Every photon carries a small chance p of flipping the spin, so the signal decays exponentially as the population drains into the dark state. The decay time is the pumping time, about 1/p scattered photons. Drag the scattering rate and the flip probability. A faster scattering rate or a larger p gives faster pumping. The slider for scattering rate is limited by the lifetime: a two-level system cannot scatter faster than Γ/2.",
-eq: "I(t) = I<sub>0</sub> e<sup>−t/τ<sub>p</sub></sup>, &nbsp;&nbsp; τ<sub>p</sub> = 1 / (p R<sub>sc</sub>)<br>R<sub>sc</sub> ≤ Γ/2 (saturation)",
-sym: [["I(t)", "detected fluorescence after the laser turns on"], ["R_sc", "photon scattering rate while the transition is driven"], ["p", "flip probability per scattered photon"], ["τ_p", "pumping time"], ["Γ", "radiative decay rate, 1/τ"]],
+eq: String.raw`\[ I(t) = I_0\, e^{-t/\tau_p}, \qquad \tau_p = \frac{1}{p R_{\mathrm{sc}}} \]\[ R_{\mathrm{sc}} \le \frac{\Gamma}{2}\ (\text{saturation}) \]`,
+sym: [[String.raw`\(I(t)\)`, "detected fluorescence after the laser turns on"], [String.raw`\(R_{\mathrm{sc}}\)`, "photon scattering rate while the transition is driven"], [String.raw`\(p\)`, "flip probability per scattered photon"], [String.raw`\(\tau_p\)`, "pumping time"], [String.raw`\(\Gamma\)`, "radiative decay rate, 1/τ"]],
 how: ["While in |↑⟩, the dot scatters photons at rate R_sc.", "Each scattered photon flips the spin with probability p, so the flip rate is p R_sc.", "Population in |↑⟩, and thus the signal, decays as e^(−p R_sc t).", "A driven two-level system spends at most half its time excited, so R_sc ≤ Γ/2."],
 say: "The fluorescence decays on the optical pumping time 1/(p R_sc). Observing that decay, and its recovery when a second laser repumps the other spin, is how spin pumping is demonstrated.",
 num: "τ = 1 ns, saturated: R<sub>sc</sub> = Γ/2 = <b>5 × 10⁸ s⁻¹</b><br>p = 0.01 ⟹ τ<sub>p</sub> = 1/(5 × 10⁶ s⁻¹) = <b>200 ns</b><br>Photons scattered before dark: about <b>100</b>, only a fraction of which reach the detector.",
@@ -82,7 +82,7 @@ r(fig, ctl) {
 
 {s: "4. Full chain", t: "The whole chain, and where each chapter sits",
 intu: "Click each block. The chain starts with the dot (Lessons 1 to 5), whose light enters a waveguide mode (Lesson 6). From there the light passes the devices your thesis designs: the polarization beam splitter that separates TE and TM, and the tapers and grating couplers that bring the light from the 200 nm strip off the chip. All of them were designed with the same inverse design method. Seeing the chain end to end is the best way to answer 'why does this thesis matter for quantum dots?'",
-eq: "dot → mode (β) → PBS (T, ER) → taper → grating coupler (η<sub>GC</sub>) → fiber or objective",
+eq: String.raw`\[ \text{dot} \to \text{mode } (\beta) \to \text{PBS } (T, \mathrm{ER}) \to \text{taper} \]\[ \to \text{grating coupler } (\eta_{\mathrm{GC}}) \to \text{fiber or objective} \]`,
 sym: [["Ch. 1", "motivation: the quantum dot and why polarization matters (these lessons)"], ["Ch. 2", "membrane, modes, mirror symmetry, simulation basics"], ["Ch. 3", "inverse design method (adjoint, Tidy3D)"], ["Ch. 4", "grating couplers with tapers"], ["Ch. 5", "polarization beam splitter (inverse-designed vs MMI)"]],
 how: ["The dot emits into TE-like and TM-like modes according to its dipole (Lessons 5 and 6).", "The PBS separates the two families into different waveguides.", "Tapers widen the narrow strip to the grating width.", "The grating couplers scatter the light out of plane toward a fiber or objective."],
 say: "My thesis designs the passive photonic chain for a GaAs quantum dot platform at 795 nm: couplers, tapers and a polarization splitter. The quantum dot physics in Chapter 1 explains why separating TE-like and TM-like light is useful. The emitter itself is not simulated.",
@@ -103,7 +103,7 @@ r(fig, ctl) {
 
 {s: "5. Safe to say?", t: "Defending Chapter 1: what is safe to say",
 intu: "At a defense, the danger is not what you don't know. It is a sentence that claims more than your work or your references support. Click each statement to see whether it is safe, and what to say instead when it is not. These follow your own rule: keep novelty claims modest and remove anything you cannot explain.",
-eq: "claim ≤ (what you simulated) + (what your references show)",
+eq: String.raw`\[ \text{claim} \le (\text{what you simulated}) + (\text{what your references show}) \]`,
 sym: [["safe", "supported by your results or a cited reference"], ["careful", "true only with a condition you must state"], ["avoid", "not supported, or wrong"]],
 how: ["Ask: did I compute this, or does a cited paper show it?", "If it holds only for a dot at the mid-plane, or only in Faraday geometry, say the condition.", "If it is about the emitter, it comes from the references, not from your simulations.", "When unsure, describe what you did rather than what it enables."],
 say: "Chapter 1 explains why polarization handling matters for a quantum dot spin–photon interface. The devices in this thesis are the passive photonic part of that interface. The emitter physics is taken from the cited literature.",
@@ -127,7 +127,7 @@ r(fig, ctl) {
 
 {s: "6. Defense quiz", t: "Defense quiz: ten questions",
 intu: "Ten questions in the style a committee might ask, covering all seven lessons. Pick an answer to see whether it is right and why. Your score is shown at the end. Repeat until you can answer each one and explain the reason out loud in one or two sentences.",
-eq: "Lesson 1 → 2 → 3 → 4 → 5 → 6 → 7",
+eq: String.raw`\[ \text{Lesson } 1 \to 2 \to 3 \to 4 \to 5 \to 6 \to 7 \]`,
 sym: [["L1", "bands, effective mass, confinement"], ["L2", "heavy and light hole"], ["L3", "exciton, trion, biexciton"], ["L4", "dipole emission"], ["L5", "selection rules"], ["L6", "dipole to waveguide"], ["L7", "spin pumping"]],
 how: ["Answer without looking at the lessons.", "Say the reason out loud.", "For each wrong answer, reopen that lesson's card.", "Repeat the day before the defense."],
 say: "If a question goes beyond the thesis, say so plainly and answer from the physics you know, without claiming results you do not have.",
@@ -159,10 +159,10 @@ r(fig, ctl) {
 ],
 summary: "With a field along z and a narrow laser on the σ⁺ transition, the trion cycles about 100 times and then a weak diagonal decay flips the spin into the state the laser cannot excite, so the dot goes dark. The preparation fidelity is set by the pumping rate against spin relaxation, 96 % in the reference experiment. Because the strong transitions are in-plane and couple to TE, and only the weak z part couples to TM, separating TE from TM is a meaningful operation on the dot's light. My thesis designs that passive chain, the PBS, tapers and grating couplers, at 795 nm for the group's GaAs dots. It does not model the emitter itself.",
 sheet: [
-["p = γ/(Γ + γ), &nbsp; ⟨n⟩ = 1/p", "Flip probability and photons per flip"],
-["F = (R + γ<sub>s</sub>)/(R + 2γ<sub>s</sub>)", "Steady-state preparation fidelity (simple model)"],
-["τ<sub>p</sub> = 1/(p R<sub>sc</sub>), &nbsp; R<sub>sc</sub> ≤ Γ/2", "Pumping time"],
-["η<sub>total</sub> = β f<sub>dir</sub> η<sub>devices</sub> η<sub>GC</sub>", "Collection chain"]],
+[String.raw`\[ p = \frac{\gamma}{\Gamma + \gamma}, \quad \langle n \rangle = \frac{1}{p} \]`, "Flip probability and photons per flip"],
+[String.raw`\[ F = \frac{R + \gamma_s}{R + 2\gamma_s} \]`, "Steady-state preparation fidelity (simple model)"],
+[String.raw`\[ \tau_p = \frac{1}{p R_{\mathrm{sc}}}, \quad R_{\mathrm{sc}} \le \frac{\Gamma}{2} \]`, "Pumping time"],
+[String.raw`\[ \eta_{\mathrm{total}} = \beta\, f_{\mathrm{dir}}\, \eta_{\mathrm{devices}}\, \eta_{\mathrm{GC}} \]`, "Collection chain"]],
 consts: "Γ ≈ 100 γ and F = 96 % are from the reference experiment (Javadi 2018), not from your dots.",
 sources: ["Javadi et al., Nature Nanotechnology 13, 398 (2018) (thesis ref.)", "Warburton, Nature Materials 12, 483 (2013) (thesis ref.)", "Appel et al., Phys. Rev. Lett. 126, 013602 (2021) (thesis ref.)", "Your Chapters 2 to 5 for the device chain"]
 });

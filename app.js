@@ -64,6 +64,24 @@ function plot(x0, y0, w, h, xs, ys, xmin, xmax, ymin, ymax, col, width, dash) {
 }
 const range = (a, b, n) => Array.from({ length: n }, (_, i) => a + (b - a) * i / (n - 1));
 
+/* Typeset LaTeX in the given elements with MathJax, once it has loaded. */
+function typesetMath(...els) {
+  const M = window.MathJax;
+  if (!M || !M.typesetPromise) return;
+  els = els.filter(Boolean);
+  if (M.typesetClear) M.typesetClear(els);
+  M.typesetPromise(els).then(() => fitMath(els)).catch(() => {});
+}
+/* Shrink display equations that are wider than their box (down to 70 %), so nothing is cut off. */
+function fitMath(els) {
+  els.forEach(el => el.querySelectorAll('mjx-container[display="true"]').forEach(c => {
+    c.style.fontSize = "";
+    const box = c.parentElement.clientWidth - 4, w = c.firstElementChild ? c.firstElementChild.getBoundingClientRect().width : 0;
+    if (box > 0 && w > box) c.style.fontSize = Math.max(70, Math.floor(100 * box / w)) + "%";
+  }));
+}
+window.addEventListener("resize", () => { const v = document.getElementById("view"); if (v && window.MathJax && MathJax.typesetPromise) fitMath([v]); });
+
 let ANIM = null;
 function stopAnim() { if (ANIM) cancelAnimationFrame(ANIM); ANIM = null; }
 function anim(fn) { stopAnim(); const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; const t0 = performance.now(); fn(0); if (reduce) return; const loop = t => { fn((t - t0) / 1000); ANIM = requestAnimationFrame(loop); }; ANIM = requestAnimationFrame(loop); }
@@ -149,9 +167,11 @@ function lesson(id) {
     $("how").innerHTML = c.how.map(h => `<li>${h}</li>`).join("");
     $("say").innerHTML = c.say; $("num").innerHTML = c.num;
     $("fig").innerHTML = ""; $("ctl").innerHTML = "";
+    typesetMath($("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"));
     c.r($("fig"), $("ctl"));
     $("cp").disabled = cardIdx === 0; $("cn").disabled = cardIdx === l.cards.length - 1;
   };
+  typesetMath(...document.querySelectorAll("#view .big, #view .sheet, #view .src"));
   const jump = d => { cardIdx += d; draw(); const t = $("tabs"); if (t.getBoundingClientRect().top < 0) t.scrollIntoView({ block: "start" }); };
   $("cp").onclick = () => jump(-1); $("cn").onclick = () => jump(1);
   draw();

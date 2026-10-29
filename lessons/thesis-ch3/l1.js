@@ -6,8 +6,8 @@ bridge: "This lesson follows Ch. 3 Sec. 3.1. The idea that design rules belong i
 cards: [
 {s: "1. Forward and inverse", t: "Forward design versus inverse design",
 intu: "Forward: a person draws a geometry, the simulator returns the fields, and the person reads off the performance and draws again. The loop runs through a human head, so only a few parameters can be explored. Inverse: the target is written as a figure of merit F, and the loop runs through an optimizer that changes the geometry by itself. The human now decides what to ask for and where to start, not every shape. Switch between the two pictures.",
-eq: "Forward: &nbsp; p → ε(r; p) → Maxwell → E(r) → F(p)<br>Inverse: &nbsp; find p that maximizes J(p) = F(p) − Σ<sub>k</sub> w<sub>k</sub>P<sub>k</sub>(p) &nbsp;&nbsp; (Ch. 3 Eq. 3.1)",
-sym: [["p", "vector of design parameters (widths, vertex moves, pixel densities)"], ["ε(r; p)", "permittivity map that the parameters describe"], ["F", "figure of merit computed from the simulated fields, for example the power in a target mode"], ["J", "the objective the optimizer maximizes"]],
+eq: String.raw`<div class="eqnote">Forward design</div>\[ \mathbf{p} \;\longrightarrow\; \varepsilon(\mathbf{r};\mathbf{p}) \;\xrightarrow{\text{Maxwell}}\; \mathbf{E}(\mathbf{r}) \;\longrightarrow\; F(\mathbf{p}) \]<div class="eqnote">Inverse design</div>\[ \max_{\mathbf{p}}\; J(\mathbf{p}) = F(\mathbf{p}) - \sum_k w_k\, P_k(\mathbf{p}) \]<div class="eqref">Ch. 3 Eq. (3.1)</div>`,
+sym: [[String.raw`\(\mathbf{p}\)`, "vector of design parameters (widths, vertex moves, pixel densities)"], [String.raw`\(\varepsilon(\mathbf{r};\mathbf{p})\)`, "permittivity map that the parameters describe"], [String.raw`\(F\)`, "figure of merit computed from the simulated fields, for example the power in a target mode"], [String.raw`\(J\)`, "the objective the optimizer maximizes"]],
 how: ["The simulation is the same in both cases: Maxwell's equations for a given ε(r).", "Forward design asks what a geometry does.", "Inverse design asks which geometry does what we want.", "That question has no closed answer, so it is solved iteratively, one improving step at a time."],
 say: "In inverse design the device function is written as a figure of merit, and a gradient-based optimizer changes the geometry to maximize it.",
 num: "A forward search over 10 values for each of 18 parameters would need 10<sup>18</sup> simulations. A gradient-based optimizer typically needs tens to a few hundred steps of two simulations each.",
@@ -27,8 +27,8 @@ r(fig, ctl) {
 
 {s: "2. The loop", t: "One optimization step, stage by stage",
 intu: "Every device in the thesis is designed with the same loop (Ch. 3 Fig. 3.1a). The parameters build a geometry. A forward simulation gives the fields and the figure of merit. An adjoint simulation, with a source placed where the light should arrive, gives a second set of fields. Their overlap gives the gradient with respect to every parameter. The optimizer turns the gradient into a step, and the loop repeats until F stops improving. Step through the stages.",
-eq: "p<sup>(k)</sup> → ε → E<sub>fwd</sub>, F → E<sub>adj</sub> → ∂J/∂p → p<sup>(k+1)</sup> = p<sup>(k)</sup> + Δp(∂J/∂p)",
-sym: [["k", "iteration number"], ["E_fwd", "fields of the forward simulation (source at the input)"], ["E_adj", "fields of the adjoint simulation (source at the output monitor)"], ["Δp", "the step chosen by the optimizer, here Adam (Lesson 12)"]],
+eq: String.raw`\[ \mathbf{p}^{(k)} \to \varepsilon \to \mathbf{E}_{\mathrm{fwd}},\, F \to \mathbf{E}_{\mathrm{adj}} \to \frac{\partial J}{\partial \mathbf{p}} \to \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \Delta\mathbf{p}\!\left(\frac{\partial J}{\partial \mathbf{p}}\right) \]`,
+sym: [[String.raw`\(k\)`, "iteration number"], [String.raw`\(\mathbf{E}_{\mathrm{fwd}}\)`, "fields of the forward simulation (source at the input)"], [String.raw`\(\mathbf{E}_{\mathrm{adj}}\)`, "fields of the adjoint simulation (source at the output monitor)"], [String.raw`\(\Delta\mathbf{p}\)`, "the step chosen by the optimizer, here Adam (Lesson 12)"]],
 how: ["Forward simulation: needed anyway to know how good the design is.", "Adjoint simulation: one more run of the same structure with a different source (Lessons 2 and 3).", "Gradient: an overlap of the two field sets, then the chain rule back to the parameters.", "Penalties depend only on the geometry, so their gradients need no simulation."],
 say: "Each iteration needs one forward and one adjoint simulation, and the gradient with respect to all parameters comes from the overlap of their fields.",
 num: "With two input polarizations, as for a polarization splitter, each step needs two forward and two adjoint simulations.",
@@ -51,8 +51,8 @@ r(fig, ctl) {
 
 {s: "3. Objective and penalties", t: "Penalties move the optimum to a buildable shape",
 intu: "Here a single parameter p stands for a whole geometry. The figure of merit F (blue) has its highest peak where the geometry would contain features too small to fabricate. A penalty P (orange) is large exactly there. The optimizer maximizes J = F − wP (black). With w = 0 it heads for the unbuildable peak. As w grows, the maximum of J jumps to the second peak, which is slightly worse in F but can be made. Move the weight.",
-eq: "J(p) = F(p) − Σ<sub>k</sub> w<sub>k</sub> P<sub>k</sub>(p) &nbsp;&nbsp; (Ch. 3 Eq. 3.1)",
-sym: [["F", "figure of merit, between 0 and 1 for one transmission, up to 2 for a two-port sum"], ["P_k", "penalty k: erosion and dilation (Lesson 9) or curvature (Lesson 10)"], ["w_k", "weight of penalty k, sets the trade-off"]],
+eq: String.raw`\[ J(\mathbf{p}) = F(\mathbf{p}) - \sum_k w_k\, P_k(\mathbf{p}) \]<div class="eqref">Ch. 3 Eq. (3.1)</div>`,
+sym: [[String.raw`\(F\)`, "figure of merit, between 0 and 1 for one transmission, up to 2 for a two-port sum"], [String.raw`\(P_k\)`, "penalty k: erosion and dilation (Lesson 9) or curvature (Lesson 10)"], [String.raw`\(w_k\)`, "weight of penalty k, sets the trade-off"]],
 how: ["Fabrication limits are not part of Maxwell's equations, so the solver cannot know them.", "Writing them as smooth penalties keeps J differentiable, so the gradient still works.", "Hammond et al. argue the rules must be inside the optimization, because changing an optimized device afterwards ruins the geometry that was optimized.", "Penalties are soft: they discourage violations but do not forbid them. A hard check comes at the end (Lesson 11)."],
 say: "The objective is the figure of merit minus weighted penalties, so the optimizer trades a little performance for a geometry that can be fabricated.",
 num: "Hammond et al. saw the same in their simulations: when the design rules are switched on, the performance drops and then partly recovers as the optimizer adapts. Their bends kept above 89 % transmission for all nine rulebooks they tested.",
@@ -76,8 +76,8 @@ r(fig, ctl) {
 
 {s: "4. Local optima", t: "A gradient method finds the nearest hill",
 intu: "A gradient-based optimizer only sees the local slope. It climbs the hill it starts on and stops at the top, even if a higher hill exists elsewhere. Pick a starting point and run the climb. This is why every design in the thesis starts from a simple device that already works partly: a uniform grating, a linear or earlier taper, a Y-shaped splitter. A good start puts the optimizer on a good hill.",
-eq: "p<sup>(k+1)</sup> = p<sup>(k)</sup> + α ∂J/∂p &nbsp;&nbsp; (plain gradient ascent, for illustration)",
-sym: [["α", "step size (learning rate)"], ["∂J/∂p", "local slope, the only information the method uses"], ["local optimum", "a point where the slope is zero and every nearby step goes down"]],
+eq: String.raw`\[ \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \alpha\, \frac{\partial J}{\partial \mathbf{p}} \]<div class="eqref">plain gradient ascent, for illustration</div>`,
+sym: [[String.raw`\(\alpha\)`, "step size (learning rate)"], [String.raw`\(\partial J/\partial \mathbf{p}\)`, "local slope, the only information the method uses"], ["local optimum", "a point where the slope is zero and every nearby step goes down"]],
 how: ["The gradient points uphill locally.", "Small steps along it increase J until the slope vanishes.", "Nothing in the method looks beyond the current hill.", "Inverse design problems are not convex, so many local optima exist (Kingma and Ba note their theory covers only convex problems)."],
 say: "The optimizer finds a local optimum that depends on the starting design, so each device starts from a simple design that already works in part.",
 num: "Hammond et al. found that looser design rules did not always give a better device, because each run ends in a different local optimum.",
@@ -102,8 +102,8 @@ r(fig, ctl) {
 
 {s: "5. Three descriptions", t: "How a geometry is described: numbers, outlines, pixels",
 intu: "The optimizer only sees numbers, so the geometry has to be described by a vector p. The thesis uses three kinds of description. A few physical numbers, like the widths of grating teeth and gaps or the DBR layer thicknesses. An outline, given by the positions of points or polygon vertices. Or pixels, each with a density between air and GaAs, which lets even the number of holes change (topology optimization). More freedom finds more unusual devices but is harder to keep fabricable. Pick one.",
-eq: "grating: p = (w<sub>1</sub>, …, w<sub>2N</sub>) &nbsp;&nbsp; outline: p = (θ<sub>1</sub>, …, θ<sub>M</sub>) &nbsp;&nbsp; topology: p = (ρ<sub>1</sub>, …, ρ<sub>N<sub>p</sub></sub>)",
-sym: [["w_i", "widths of teeth and gaps"], ["θ_i", "vertex move variables (Lesson 5)"], ["ρ_i", "pixel density between 0 (air) and 1 (GaAs), Lesson 6"], ["N_p", "number of pixels"]],
+eq: String.raw`\[ \text{grating: } \mathbf{p} = (w_1, \dots, w_{2N}) \qquad \text{outline: } \mathbf{p} = (\theta_1, \dots, \theta_M) \]\[ \text{topology: } \mathbf{p} = (\rho_1, \dots, \rho_{N_p}) \]`,
+sym: [[String.raw`\(w_i\)`, "widths of teeth and gaps"], [String.raw`\(\theta_i\)`, "vertex move variables (Lesson 5)"], [String.raw`\(\rho_i\)`, "pixel density between 0 (air) and 1 (GaAs), Lesson 6"], [String.raw`\(N_p\)`, "number of pixels"]],
 how: ["Few numbers: easy to fabricate, limited freedom.", "Outline: smooth edges, controllable corners, fixed topology.", "Pixels: full freedom, needs filters, projection and penalties to stay fabricable (Lessons 6 to 9).", "A common sequence is pixels first, then trace the outline and refine it as a shape (Michaels and Yablonovitch suggest exactly this fine-tuning)."],
 say: "The parameterization decides how much freedom the optimizer has: a few widths, a set of outline points, or a density per pixel.",
 num: "Typical counts: tens of parameters for a grating, around a hundred outline points for a taper, and tens of thousands of pixels for a free-topology region of a few micrometers at about 10 nm pixels.",
@@ -123,8 +123,8 @@ r(fig, ctl) {
 
 {s: "6. Cost of a gradient", t: "Why finite differences are hopeless and the adjoint method is not",
 intu: "To know which way to change M parameters you need M partial derivatives. By finite differences, each one costs a new simulation with one parameter nudged, so a gradient costs M + 1 simulations. The adjoint method gets all M derivatives from one forward and one adjoint simulation. Slide the number of parameters and watch the two bars. On a log scale the adjoint bar never moves.",
-eq: "∂F/∂p<sub>i</sub> ≈ [F(p + h e<sub>i</sub>) − F(p)] / h &nbsp; → &nbsp; M + 1 simulations<br>adjoint method &nbsp; → &nbsp; 2 simulations, for any M &nbsp;&nbsp; (Michaels and Yablonovitch, Sec. 2)",
-sym: [["M", "number of design parameters"], ["h", "small nudge of one parameter"], ["e_i", "unit vector of parameter i"]],
+eq: String.raw`\[ \frac{\partial F}{\partial p_i} \approx \frac{F(\mathbf{p} + h\,\mathbf{e}_i) - F(\mathbf{p})}{h} \quad\Longrightarrow\quad M + 1 \text{ simulations} \]\[ \text{adjoint method} \quad\Longrightarrow\quad 2 \text{ simulations, for any } M \]<div class="eqref">Michaels and Yablonovitch, Sec. 2</div>`,
+sym: [[String.raw`\(M\)`, "number of design parameters"], [String.raw`\(h\)`, "small nudge of one parameter"], [String.raw`\(\mathbf{e}_i\)`, "unit vector of parameter i"]],
 how: ["Finite differences: one simulation per nudged parameter, plus the unperturbed one.", "Michaels and Yablonovitch write this as M + 1 simulations per gradient.", "The adjoint method reorganizes the chain rule so that the expensive part does not depend on i (Lesson 2).", "So the cost stays at two simulations, and for many parameters the saving is enormous."],
 say: "Finite differences need one simulation per parameter, while the adjoint method gives the full gradient from two simulations, independent of the number of parameters.",
 num: "Christiansen and Sigmund make the same point in their tutorial: finite differences need one extra solve per design variable, the adjoint needs one extra solve in total.",
@@ -146,10 +146,10 @@ r(fig, ctl) {
 ],
 summary: "Inverse design writes the job of a device as a figure of merit F computed from simulated fields and maximizes J = F − Σw_kP_k, where the penalties discourage geometries that cannot be fabricated. The geometry is described by parameters: a few widths, an outline, or a density per pixel. Each step needs a forward simulation for F and an adjoint simulation, and the overlap of the two field sets gives the gradient with respect to all parameters, at a cost of two simulations instead of M + 1. A gradient method finds a local optimum, so the starting design matters, and fabrication rules have to be built into the optimization rather than applied afterwards.",
 sheet: [
-["max<sub>p</sub> J(p) = F(p) − Σ<sub>k</sub> w<sub>k</sub>P<sub>k</sub>(p)", "Design problem (Ch. 3 Eq. 3.1)"],
-["finite differences: M + 1 simulations per gradient", "Michaels and Yablonovitch, Sec. 2"],
-["adjoint method: 2 simulations per gradient, independent of M", "Michaels and Yablonovitch, Sec. 2"],
-["p<sup>(k+1)</sup> = p<sup>(k)</sup> + Δp(∂J/∂p)", "One optimizer step (Adam in Lesson 12)"]],
+[String.raw`\[ \max_{\mathbf{p}}\, J(\mathbf{p}) = F(\mathbf{p}) - \sum_k w_k P_k(\mathbf{p}) \]`, "Design problem (Ch. 3 Eq. 3.1)"],
+[String.raw`\[ \text{finite differences: } M + 1 \text{ simulations per gradient} \]`, "Michaels and Yablonovitch, Sec. 2"],
+[String.raw`\[ \text{adjoint method: } 2 \text{ simulations per gradient, independent of } M \]`, "Michaels and Yablonovitch, Sec. 2"],
+[String.raw`\[ \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \Delta\mathbf{p}\!\left(\frac{\partial J}{\partial \mathbf{p}}\right) \]`, "One optimizer step (Adam in Lesson 12)"]],
 consts: "The curves in cards 3 and 4 are illustrative functions, not simulations.",
 sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (adjoint method in matrix form, curvature penalty, shape optimization of a silicon taper)", "Hammond et al., Opt. Express 29, 23916 (2021) (foundry design rules inside photonic topology optimization, robustness to etch bias; simulations only)", "Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021) (tutorial on density-based topology optimization for photonics)", "Kingma and Ba, ICLR 2015 (Adam)"]
 });

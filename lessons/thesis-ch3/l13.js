@@ -8,8 +8,8 @@ bridge: "Methods from all of Ch. 3: Eqs. (3.1) to (3.4) for the loop and gradien
 cards: [
 {s: "1. The toy problem", t: "A 1D stack designed pixel by pixel",
 intu: "The design region is 1.5 µm long, 150 pixels of 10 nm, embedded in AlGaAs. Each pixel can be AlGaAs (ρ = 0, ε = 9) or GaAs (ρ = 1, ε = 12.19). A source on the left launches light, a probe on the right measures the transmission. Two goals are available. Mirror: reflect a band around 800 nm, J = Σw<sub>i</sub>[1 − T(λ<sub>i</sub>)]. Dichroic: pass a band around 1000 nm and reflect one around 700 nm, J = Σw<sub>i</sub>T(pass) + Σw<sub>i</sub>[1 − T(stop)], maximum 2. Every block of the loop is one of the earlier lessons.",
-eq: "ρ → ρ̃ = filter(ρ) → ρ̂ = P<sub>β</sub>(ρ̃) → ε = 9 + 3.19ρ̂ → A(ε)x = b → T(λ<sub>i</sub>) → J → A<sup>T</sup>y = (∂J/∂x)<sup>T</sup> → ∂J/∂ρ → Adam",
-sym: [["filter", "1D cone, radius 3 pixels (Lesson 6)"], ["P_β", "tanh projection, β from 1 to 64 in 8 levels of 10 steps (Lesson 7)"], ["A x = b", "1D Helmholtz solver (Lesson 2)"], ["w_i", "normalized Gaussian band weights (Lesson 4)"], ["Adam", "learning rate 0.05 by default (Lesson 12)"]],
+eq: String.raw`\[ \rho \to \tilde\rho = \operatorname{filter}(\rho) \to \hat\rho = P_\beta(\tilde\rho) \to \varepsilon = 9 + 3.19\,\hat\rho \]\[ \to A(\varepsilon)\,x = b \to T(\lambda_i) \to J \]\[ \to A^{T} y = \left(\frac{\partial J}{\partial x}\right)^{T} \to \frac{\partial J}{\partial \rho} \to \text{Adam} \]`,
+sym: [["filter", "1D cone, radius 3 pixels (Lesson 6)"], [String.raw`\(P_\beta\)`, "tanh projection, β from 1 to 64 in 8 levels of 10 steps (Lesson 7)"], [String.raw`\(A x = b\)`, "1D Helmholtz solver (Lesson 2)"], [String.raw`\(w_i\)`, "normalized Gaussian band weights (Lesson 4)"], ["Adam", "learning rate 0.05 by default (Lesson 12)"]],
 how: ["Forward: build ε from ρ, solve once per wavelength, compute J.", "Adjoint: one more solve per wavelength with the source at the probe.", "Gradient: field products per pixel, summed with the weights, then back through projection and filter.", "Step with Adam, clip ρ to [0, 1], raise β every 10 steps."],
 say: "The toy run uses exactly the thesis loop: filtered and projected densities, a forward and an adjoint solve per wavelength, the chain rule back to the pixels, and Adam with β continuation.",
 num: "Per step: 5 wavelengths × 2 solves = 10 solves of a 230-unknown system for the mirror. A 3D device needs the same two simulations per input, each with millions of cells (card 5).",
@@ -25,8 +25,8 @@ r(fig, ctl) {
 
 {s: "2. Run it", t: "Watch the design form",
 intu: "Press run. The top stripe is the raw density ρ, the second the projected density ρ̂ that the solver sees. At first everything is grey and the structure appears as a soft modulation. Each time β rises the stripes sharpen, and by the end the design is black and white. The plot shows J against the step, with the β levels as faint steps. Try the dichroic goal, switch off continuation to start directly at β = 64, or add the erosion and dilation penalty.",
-eq: "J<sub>k</sub> vs step k, &nbsp; β<sub>level</sub> = 64<sup>level/7</sup>, &nbsp; levels of 10 steps",
-sym: [["ρ", "raw design variables, clipped to [0, 1]"], ["ρ̂", "what the solver sees"], ["J", "objective, without the penalty"], ["P_ED", "erosion and dilation penalty, when switched on, weight min(1, β/25)"]],
+eq: String.raw`\[ J_k \text{ vs step } k \qquad \beta_{\mathrm{level}} = 64^{\,\mathrm{level}/7} \qquad \text{levels of 10 steps} \]`,
+sym: [[String.raw`\(\rho\)`, "raw design variables, clipped to [0, 1]"], [String.raw`\(\hat\rho\)`, "what the solver sees"], [String.raw`\(J\)`, "objective, without the penalty"], [String.raw`\(P_{\mathrm{ED}}\)`, "erosion and dilation penalty, when switched on, weight min(1, β/25)"]],
 how: ["Start from ρ = 0.5 with a tiny random perturbation.", "Each step: forward and adjoint solves at every wavelength, chain rule, Adam.", "Every 10 steps β is multiplied by 64^(1/7) ≈ 1.81.", "At the end the design is thresholded at 0.5 (card 3)."],
 say: "With β continuation the design develops as a grey modulation and then sharpens into a binary layout as β rises.",
 num: "The mirror reaches about 0.9 reflection in this length. Without continuation the run starts at β = 64 and is nearly binary from the first step. In this easy 1D problem it still ends close to the continuation result. For 2D and 3D problems with many local optima, Christiansen and Sigmund recommend continuation.",
@@ -55,8 +55,8 @@ r(fig, ctl) {
 
 {s: "3. The result", t: "The final design and its spectrum",
 intu: "The last run of card 2 (or a default mirror run if you have not run one) is thresholded at 0.5 and its spectrum computed from 600 to 1100 nm. Shaded bands mark what was asked for. For the mirror, the dashed curve is a stack of the same length built by hand from the Chapter 2 recipe, rounded to the 10 nm grid: 6 pixels of GaAs and 7 of AlGaAs. The optimizer finds the same kind of periodic stack from a grey start, without being told what a Bragg mirror is. It even does better on this grid: it mixes layer widths so that the stopband is centered at 800 nm, while the rounded hand-built stack is centered near 840 nm.",
-eq: "final design: ρ̂<sub>final</sub> = 1 if ρ̂ &gt; 0.5, else 0 &nbsp;&nbsp; quarter-wave: d = λ<sub>0</sub>/(4n): 57 nm GaAs, 67 nm AlGaAs",
-sym: [["shaded band", "wavelengths with weight in J"], ["R = 1 − T", "reflectance, the stack is lossless"], ["quarter-wave stack", "Chapter 2, Lesson 6"]],
+eq: String.raw`\[ \text{final design: } \hat\rho_{\mathrm{final}} = \begin{cases} 1 & \text{if } \hat\rho \gt 0.5 \\ 0 & \text{else} \end{cases} \]\[ \text{quarter-wave: } d = \frac{\lambda_0}{4n}\text{: } 57\,\mathrm{nm}\ \text{GaAs},\ 67\,\mathrm{nm}\ \text{AlGaAs} \]`,
+sym: [["shaded band", "wavelengths with weight in J"], [String.raw`\(R = 1 - T\)`, "reflectance, the stack is lossless"], ["quarter-wave stack", "Chapter 2, Lesson 6"]],
 how: ["Threshold the projected design.", "Solve at 251 wavelengths.", "Compare with the target bands.", "For the mirror, compare with the hand-built Bragg stack."],
 say: "Asked for a mirror, the optimizer converges to a periodic quarter-wave-like stack, the Bragg mirror that physics predicts, tuned to the target wavelength on the given grid.",
 num: "Both stacks peak near 0.9. With an index ratio of only 3.49/3.0, Chapter 2 explains why about a dozen pairs are needed for strong reflection, and 1.5 µm holds about twelve.",
@@ -81,7 +81,7 @@ r(fig, ctl) {
 
 {s: "4. A free-topology device", t: "The stage sequence for a free-topology device",
 intu: "A device whose topology is free, like a polarization splitter, goes through several stages, each built from a lesson of this chapter. It starts from a rough density drawing. The topology stage runs with filter, projection, β continuation and the erosion and dilation penalty. The result is thresholded and traced into a single polygon. Shape stages then move its vertices with a curvature penalty, the layout is checked against the design rules, repaired if needed, and refined in a DRC-safe stage. A final run on a finer grid gives the reported numbers. Step through.",
-eq: "density → topology (β: 1 → β<sub>max</sub>, P<sub>ED</sub>) → threshold → polygon → shape (P<sub>κ</sub>) → DRC → repair → DRC-safe shape → validation",
+eq: String.raw`\[ \text{density} \to \text{topology } (\beta\text{: } 1 \to \beta_{\mathrm{max}},\ P_{\mathrm{ED}}) \to \text{threshold} \to \text{polygon} \]\[ \to \text{shape } (P_{\kappa}) \to \text{DRC} \to \text{repair} \to \text{DRC-safe shape} \to \text{validation} \]`,
 sym: [["topology stage", "Lessons 6, 7, 9"], ["shape stage", "Lessons 5, 10"], ["DRC, repair, DRC-safe", "Lesson 11"], ["validation", "finer grid, no gradients, Chapter 2 convergence"]],
 how: ["Each stage hands a fabricable-looking design to the next.", "Pixels give freedom, outlines give smooth edges and control of corners.", "The hard check comes last, because penalties are soft.", "The reported performance is always from a separate validation run, not from the objective."],
 say: "A free-topology device is designed in stages, from a density with continuation and penalties, through a traced outline with curvature control, to a layout that passes the design rule check and is validated on a finer grid.",
@@ -100,8 +100,8 @@ r(fig, ctl) {
 
 {s: "5. From 1D to 3D", t: "Same loop, very different cost",
 intu: "Nothing in the method changes in 3D: two simulations per gradient, field products, chain rule, Adam. What changes is the size of each simulation. The design region of a waveguide device is a few micrometers on a side and the membrane is 160 nm thick, inside a simulation box with air and absorbing layers around it. With FDTD the number of time steps also grows as the cells shrink (Chapter 2, Lesson 10). Set the resolution and the box size and compare the cell counts.",
-eq: "cells ≈ (L<sub>x</sub>/Δ)(L<sub>y</sub>/Δ)(L<sub>z</sub>/Δ), &nbsp; Δ = λ<sub>0</sub>/(N<sub>λ</sub> n<sub>GaAs</sub>), &nbsp; cost ∝ cells × time steps ∝ N<sub>λ</sub><sup>4</sup>",
-sym: [["N_λ", "steps per wavelength in GaAs"], ["Δ", "cell size, uniform here for simplicity"], ["L_x, L_y, L_z", "simulation box"], ["time steps", "∝ 1/Δ through the Courant limit"]],
+eq: String.raw`\[ \text{cells} \approx \left(\frac{L_x}{\Delta}\right)\!\left(\frac{L_y}{\Delta}\right)\!\left(\frac{L_z}{\Delta}\right) \qquad \Delta = \frac{\lambda_0}{N_\lambda\, n_{\mathrm{GaAs}}} \]\[ \text{cost} \propto \text{cells} \times \text{time steps} \propto N_\lambda^4 \]`,
+sym: [[String.raw`\(N_\lambda\)`, "steps per wavelength in GaAs"], [String.raw`\(\Delta\)`, "cell size, uniform here for simplicity"], [String.raw`\(L_x, L_y, L_z\)`, "simulation box"], ["time steps", "∝ 1/Δ through the Courant limit"]],
 how: ["Fix the box and the resolution.", "Count cells in 1D, 2D and 3D.", "Time steps scale like 1/Δ too, so the 3D cost scales like the fourth power of the resolution.", "Halving the cell size makes a 3D FDTD run about 16 times more expensive."],
 say: "The method is the same in 1D and 3D, but a 3D simulation has millions of cells and its cost grows with the fourth power of the resolution.",
 num: "At 795 nm and 20 steps per wavelength in GaAs, Δ = 11.4 nm. A 6 × 6 × 2 µm box then has about 50 million cells. Tidy3D's non-uniform grid puts fine cells only where the GaAs is, which reduces this a lot.",
@@ -121,7 +121,7 @@ r(fig, ctl) {
 
 {s: "6. Quiz", t: "Chapter 3 quiz: twelve questions",
 intu: "Twelve questions across the chapter. Answer, read why, and say the reason out loud as you would in your defense. If a question goes beyond these lessons into your own results, answer from your thesis chapters.",
-eq: "Lessons 1 to 13",
+eq: `<div class="eqnote">Lessons 1 to 13</div>`,
 sym: [["L1 to L4", "problem, adjoint, Tidy3D, objectives"], ["L5 to L7", "parameters, filter, projection"], ["L8 to L11", "morphology, penalties, DRC"], ["L12, L13", "Adam, full run"]],
 how: ["Answer without looking.", "Explain the reason in one sentence.", "Reopen the lesson for any miss.", "Repeat before the defense."],
 say: "When a question goes beyond what you did, say so and answer from the method you know.",
@@ -155,11 +155,11 @@ r(fig, ctl) {
 ],
 summary: "The whole chapter in one loop: densities are filtered and projected with β continuation, the permittivity is interpolated, a forward solve per wavelength gives the band-weighted objective, an adjoint solve gives field products for every pixel, the chain rule carries the gradient back through projection and filter, and Adam takes the step. Asked for a mirror, the 1D toy rediscovers the quarter-wave Bragg stack. A free-topology device follows the stage sequence density, topology with penalties, threshold, polygon, shape with curvature control, design rule check, repair, DRC-safe refinement and validation on a finer grid. In 3D the method is unchanged, only each simulation is millions of cells.",
 sheet: [
-["ρ → ρ̃ → ρ̂ → ε → A x = b → J → Aᵀy = (∂J/∂x)ᵀ → ∂J/∂ρ → Adam", "The full loop"],
-["β<sub>level</sub> = β<sub>max</sub><sup>level/(L−1)</sup>", "Continuation"],
-["J = F − min(1, β/25)P<sub>ED</sub>, &nbsp; J = F − w<sub>κ</sub>P<sub>κ</sub>", "Penalties in the topology and shape stages"],
-["X<sub>healed</sub> = open<sub>r</sub>(close<sub>r</sub>X)", "Repair before the DRC-safe stage"],
-["cost<sub>3D FDTD</sub> ∝ N<sub>λ</sub><sup>4</sup>", "Resolution cost"]],
+[String.raw`\[ \rho \to \tilde\rho \to \hat\rho \to \varepsilon \to A x = b \to J \]\[ \to A^{T} y = \left(\frac{\partial J}{\partial x}\right)^{T} \to \frac{\partial J}{\partial \rho} \to \text{Adam} \]`, "The full loop"],
+[String.raw`\[ \beta_{\mathrm{level}} = \beta_{\mathrm{max}}^{\,\mathrm{level}/(L-1)} \]`, "Continuation"],
+[String.raw`\[ J = F - \min\!\left(1, \frac{\beta}{25}\right) P_{\mathrm{ED}} \qquad J = F - w_{\kappa} P_{\kappa} \]`, "Penalties in the topology and shape stages"],
+[String.raw`\[ X_{\mathrm{healed}} = \operatorname{open}_r\big(\operatorname{close}_r(X)\big) \]`, "Repair before the DRC-safe stage"],
+[String.raw`\[ \mathrm{cost}_{\text{3D FDTD}} \propto N_\lambda^4 \]`, "Resolution cost"]],
 consts: "Toy: 150 pixels of 10 nm, ε from 9 (AlGaAs) to 12.19 (GaAs), embedded in AlGaAs, 1D Helmholtz solver with exact one-way boundaries, filter radius 3 pixels, β from 1 to 64 in 8 levels of 10 steps.",
 sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018)", "Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021)", "Hammond et al., Opt. Express 29, 23916 (2021)", "Kingma and Ba, ICLR 2015", "Flexcompute, Tidy3D 2.11.2"]
 });

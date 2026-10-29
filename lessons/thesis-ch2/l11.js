@@ -6,8 +6,8 @@ bridge: "Oskooi et al. 2010 describe all of these pieces for MEEP: sources, PML 
 cards: [
 {s: "1. The pulse", t: "A Gaussian pulse: short in time, wide in frequency",
 intu: "A source switched on as a short Gaussian pulse contains a band of frequencies around its centre. The shorter the pulse, the wider its spectrum: duration and bandwidth trade off exactly. Tidy3D's GaussianPulse is specified by its centre frequency and fwidth, the standard deviation of its frequency content. Drag the relative bandwidth. A wide band lets one run cover a whole spectrum, but the run must last long enough for the pulse to pass and for the device to ring down. A narrow band gives a long pulse and a long run.",
-eq: "s(t) ∝ exp[−(t − t<sub>0</sub>)²/(2τ²)] sin(2πf<sub>0</sub>t) &nbsp;&nbsp;&nbsp; |S(f)| ∝ exp[−(f − f<sub>0</sub>)²/(2σ<sub>f</sub>²)]<br>τ σ<sub>f</sub> = 1/(2π)",
-sym: [["f₀", "centre frequency (c/λ₀)"], ["σ_f", "standard deviation of the spectrum (Tidy3D's fwidth)"], ["τ", "standard deviation of the pulse envelope in time"], ["t₀", "delay so the pulse starts smoothly from zero"]],
+eq: String.raw`\[ s(t) \propto \exp\!\left[-\frac{(t - t_0)^2}{2\tau^2}\right] \sin(2\pi f_0 t) \qquad |S(f)| \propto \exp\!\left[-\frac{(f - f_0)^2}{2\sigma_f^2}\right] \]\[ \tau\,\sigma_f = \frac{1}{2\pi} \]`,
+sym: [[String.raw`\(f_0\)`, "centre frequency (c/λ₀)"], [String.raw`\(\sigma_f\)`, "standard deviation of the spectrum (Tidy3D's fwidth)"], [String.raw`\(\tau\)`, "standard deviation of the pulse envelope in time"], [String.raw`\(t_0\)`, "delay so the pulse starts smoothly from zero"]],
 how: ["The Fourier transform of a Gaussian is a Gaussian.", "Their widths are inversely related: τσ_f = 1/(2π) for these definitions.", "Multiplying by the carrier sin(2πf₀t) shifts the spectrum to f₀.", "So the spectral band and the pulse length are set together by one parameter."],
 say: "A Gaussian pulse source covers a band of frequencies set by its spectral width. A wider band means a shorter pulse, and one FDTD run then yields the response across that band.",
 num: "λ₀ = 800 nm, f₀ = 375 THz. fwidth = f₀/10 = 37.5 THz ⟹ τ = 1/(2π × 37.5 THz) ≈ <b>4.2 fs</b>.<br>±2σ<sub>f</sub> (300 to 450 THz) covers about <b>667 to 1000 nm</b>.",
@@ -27,8 +27,8 @@ r(fig, ctl) {
 
 {s: "2. PML", t: "Absorbing boundaries: why a PML works",
 intu: "The simulation box is finite, but the device sits in open space. Whatever reaches the edge must vanish without coming back. A hard wall reflects everything. A layer that simply absorbs, switched on abruptly, also reflects, because the sudden change in material is itself an interface. A perfectly matched layer absorbs gradually, with electric and magnetic losses matched so that its impedance equals that of the medium, and the loss rises smoothly from zero. Oskooi et al. describe PML in their Sec. 4.2 as making the finite domain behave like open space with almost no reflection. Pick a boundary and watch the pulse come back, or not.",
-eq: "matched layer: &nbsp; σ<sub>e</sub>/ε = σ<sub>m</sub>/μ &nbsp;⟹&nbsp; impedance unchanged, no reflection at its face<br>graded loss: &nbsp; σ(d) = σ<sub>max</sub>(d/L)<sup>m</sup>, &nbsp; m ≈ 3",
-sym: [["σ_e, σ_m", "electric and magnetic conductivities in the layer"], ["d", "depth into the layer"], ["L", "layer thickness"], ["m", "grading order"], ["reflection (dB)", "10 log₁₀ of reflected over incident power"]],
+eq: String.raw`<div class="eqnote">matched layer</div>\[ \frac{\sigma_e}{\varepsilon} = \frac{\sigma_m}{\mu} \;\Longrightarrow\; \text{impedance unchanged, no reflection at its face} \]<div class="eqnote">graded loss</div>\[ \sigma(d) = \sigma_{\mathrm{max}}\left(\frac{d}{L}\right)^m, \qquad m \approx 3 \]`,
+sym: [[String.raw`\(\sigma_e, \sigma_m\)`, "electric and magnetic conductivities in the layer"], [String.raw`\(d\)`, "depth into the layer"], [String.raw`\(L\)`, "layer thickness"], [String.raw`\(m\)`, "grading order"], ["reflection (dB)", "10 log₁₀ of reflected over incident power"]],
 how: ["An interface reflects when the wave impedance changes.", "With matched electric and magnetic losses, the impedance stays the same as the medium's, so a normally incident wave enters without reflection.", "On a grid, a sudden jump in loss still reflects a little, so the loss is graded smoothly.", "The wave decays in the layer, reflects from the outer wall, and decays again on the way back."],
 say: "A perfectly matched layer absorbs outgoing waves with almost no reflection, because its electric and magnetic losses are matched and graded smoothly. It lets a small simulation box represent open space.",
 num: "Readout below: reflected power from each boundary, measured by this 1D simulation.<br>Hard wall: <b>0 dB</b> (everything returns). A graded PML is typically tens of dB better than an abrupt absorber.",
@@ -50,8 +50,8 @@ r(fig, ctl) {
 
 {s: "3. Monitors", t: "How a frequency monitor builds a spectrum",
 intu: "A frequency-domain monitor does not store the whole time history. At every step it multiplies the current field by e<sup>i2πfnΔt</sup> for each requested frequency and adds it to a running sum. When the run ends, the sums are the Fourier transform. Drag the time slider to stop the sum early. While the pulse is still passing, the spectrum is wrong. If the device rings (here, a resonant slab) and the run stops before the ringing dies, the spectrum shows ripples. That is why a run must last until the fields have decayed, and why solvers stop on a decay criterion.",
-eq: "Ẽ(f) = Σ<sub>n=0</sub><sup>M</sup> E<sup>n</sup> e<sup>i2πf nΔt</sup> Δt &nbsp;&nbsp; (running sum, updated every step)<br>valid only once E<sup>n</sup> has decayed to ≈ 0 for n > M",
-sym: [["Ẽ(f)", "running Fourier transform at frequency f"], ["M", "number of steps so far"], ["ring-down", "slow decay of fields trapped in resonances"]],
+eq: String.raw`\[ \tilde{E}(f) = \sum_{n=0}^{M} E^{\,n}\, e^{i2\pi f n\Delta t}\, \Delta t \quad \text{(running sum, updated every step)} \]<div class="eqnote">valid only once \(E^{\,n}\) has decayed to \(\approx 0\) for \(n \gt M\)</div>`,
+sym: [[String.raw`\(\tilde{E}(f)\)`, "running Fourier transform at frequency f"], [String.raw`\(M\)`, "number of steps so far"], ["ring-down", "slow decay of fields trapped in resonances"]],
 how: ["The continuous Fourier transform is an integral over all time.", "On the grid it becomes a sum over time steps, which can be accumulated as the simulation runs.", "Stopping early truncates the integral, like multiplying the signal by a window, which smears and ripples the spectrum.", "High-Q resonators ring for a long time, so they need long runs."],
 say: "Frequency monitors accumulate a running discrete Fourier transform of the fields. The result is correct only when the run continues until the fields have decayed, so the run time must cover the device's ring-down.",
 num: "In this demo the slab is ε = 9 and 40 cells thick, so it rings for several round trips. Stopping at about a third of the run leaves visible ripples in the spectrum.",
@@ -75,8 +75,8 @@ r(fig, ctl) {
 
 {s: "4. Mode overlap", t: "From fields to a number: projecting onto a mode",
 intu: "At the output of a device the field is some mixture: the wanted mode, other modes, radiation. The transmission into the wanted mode is the overlap of the output field with that mode's profile, normalized by power. This card uses a real slab TE0 profile (computed live) as the mode and a Gaussian as the incoming field. Shift it off-centre or change its width and the overlap drops, even though all the power arrives. This is exactly why a device can 'transmit' lots of power but still have low efficiency into the mode, and why mode decomposition, not total flux, is the right measure.",
-eq: "a<sub>m</sub> = ¼ ∫ (E × H<sub>m</sub>* + E<sub>m</sub>* × H) · x̂ dA &nbsp;&nbsp; with &nbsp; ½ Re∫ E<sub>m</sub> × H<sub>m</sub>* · x̂ dA = 1<br>T<sub>m</sub> = |a<sub>m</sub>|² &nbsp;&nbsp;&nbsp; scalar estimate: &nbsp; η = |∫ E ψ<sub>m</sub>|² / (∫|E|² ∫|ψ<sub>m</sub>|²)",
-sym: [["a_m", "complex amplitude of mode m in the output field"], ["E_m, H_m", "mode fields normalized to unit power"], ["T_m", "power transmitted into mode m"], ["η", "simplified overlap for one field component"]],
+eq: String.raw`\[ a_m = \frac{1}{4}\int \left(\mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H}\right) \cdot \hat{\mathbf{x}}\, dA \]<div class="eqnote">with</div>\[ \frac{1}{2}\,\mathrm{Re}\int \mathbf{E}_m \times \mathbf{H}_m^{*} \cdot \hat{\mathbf{x}}\, dA = 1 \]\[ T_m = |a_m|^2 \]<div class="eqnote">scalar estimate</div>\[ \eta = \frac{\left|\int E\,\psi_m\right|^2}{\int |E|^2 \int |\psi_m|^2} \]`,
+sym: [[String.raw`\(a_m\)`, "complex amplitude of mode m in the output field"], [String.raw`\(\mathbf{E}_m, \mathbf{H}_m\)`, "mode fields normalized to unit power"], [String.raw`\(T_m\)`, "power transmitted into mode m"], [String.raw`\(\eta\)`, "simplified overlap for one field component"]],
 how: ["Guided modes of a waveguide are orthogonal under this cross-product integral.", "So the output field can be expanded in modes, and each coefficient is found by projecting onto that mode.", "With unit-power modes, |a_m|² is the power carried by mode m.", "Your Chapter 3 defines transmission this way, as power in the fundamental mode only (any other light counts as loss)."],
 say: "Transmission is computed by projecting the output field onto the target mode with the mode orthogonality integral. Power in other modes or radiation does not count, so mode overlap and total flux can differ.",
 num: "A Gaussian of the right width centred on the slab: overlap close to <b>100 %</b>. Offset by half the slab thickness: noticeably less (see the readout).",
@@ -96,8 +96,8 @@ r(fig, ctl) {
 
 {s: "5. Convergence", t: "How do you know the grid is fine enough?",
 intu: "No single run proves that a result is right. The standard check is to repeat the simulation at several resolutions and watch the result settle. For a second-order method like Yee, the error falls roughly as 1/N² once the grid is fine enough, so the curve flattens. Two resolutions in that regime even let you estimate the converged value by Richardson extrapolation. The curve here is an illustrative example of that behaviour, not a thesis result. Pick the two resolutions used for the estimate. This is the logic behind the rule in your Chapter 2: report every result with the resolution it was computed at.",
-eq: "Q(N) ≈ Q<sub>∞</sub> + C/N² &nbsp;&nbsp; (second order)<br>Richardson: &nbsp; Q<sub>∞</sub> ≈ (N<sub>2</sub>² Q(N<sub>2</sub>) − N<sub>1</sub>² Q(N<sub>1</sub>)) / (N<sub>2</sub>² − N<sub>1</sub>²)",
-sym: [["Q(N)", "result (for example a transmission) at N steps per wavelength"], ["Q_∞", "the result an infinitely fine grid would give"], ["C", "unknown error constant"], ["N₁, N₂", "two resolutions used for the estimate"]],
+eq: String.raw`\[ Q(N) \approx Q_\infty + \frac{C}{N^2} \quad \text{(second order)} \]<div class="eqnote">Richardson</div>\[ Q_\infty \approx \frac{N_2^2\, Q(N_2) - N_1^2\, Q(N_1)}{N_2^2 - N_1^2} \]`,
+sym: [[String.raw`\(Q(N)\)`, "result (for example a transmission) at N steps per wavelength"], [String.raw`\(Q_\infty\)`, "the result an infinitely fine grid would give"], [String.raw`\(C\)`, "unknown error constant"], [String.raw`\(N_1, N_2\)`, "two resolutions used for the estimate"]],
 how: ["The phase error is ∝ (kΔx)², so smooth quantities have errors ∝ 1/N² (Lesson 10).", "Write Q(N) = Q_∞ + C/N² at two resolutions.", "Two equations, two unknowns: eliminate C to get Q_∞.", "If the extrapolation changes a lot when you swap in a third resolution, the grid is not yet in the 1/N² regime."],
 say: "Convergence is shown by refining the grid until the result stops changing. For a second-order scheme the error falls as 1/N², and two fine resolutions give a Richardson estimate of the converged value.",
 num: "Illustrative curve: Q(N) = 0.70 − 9/N². At N = 20: <b>0.6775</b>, at 30: <b>0.6900</b>. Richardson from 20 and 30: <b>0.7000</b>.",
@@ -116,7 +116,7 @@ r(fig, ctl) {
 
 {s: "6. The workflow", t: "One FDTD transmission simulation, start to finish",
 intu: "Click through the steps of a typical device simulation. Each step uses something from Lessons 1 to 11. This is the order in which a simulation of a grating, taper or splitter is set up, and the questions to ask at each stage. It is also a good outline for explaining your methods chapter in a defense.",
-eq: "geometry → grid → source → symmetry → boundaries → run → monitors → mode decomposition → result + resolution",
+eq: String.raw`\[ \text{geometry} \to \text{grid} \to \text{source} \to \text{symmetry} \to \text{boundaries} \]\[ \to \text{run} \to \text{monitors} \to \text{mode decomposition} \to \text{result + resolution} \]`,
 sym: [["geometry", "ε(r) of the structure"], ["grid", "steps per wavelength in the highest index"], ["source", "mode source or Gaussian beam, with a pulse band"], ["symmetry", "PEC or PMC planes that match the launched mode"]],
 how: ["Draw the structure and choose the domain with space around it.", "Pick a resolution (Lesson 10) and let the time step follow from Courant.", "Launch a mode or beam with a pulse covering the band, and add symmetry only if structure and source allow it.", "Absorb with PML, run until fields decay, record with frequency monitors, project onto the target mode, and repeat at a finer grid to check."],
 say: "An FDTD transmission is obtained by launching a broadband source into a discretized structure surrounded by PML, recording Fourier-transformed fields at the output, and projecting them onto the target mode. Each result is reported with its grid resolution and checked by refinement.",
@@ -136,7 +136,7 @@ r(fig, ctl) {
 
 {s: "7. Quiz", t: "Chapter 2 quiz: ten questions",
 intu: "Ten questions covering all eleven lessons. Answer, read why, and say the reason out loud. Questions that go beyond these lessons belong to your own chapters, so check those separately.",
-eq: "Lessons 1 to 11",
+eq: "<div class=\"eqnote\">Lessons 1 to 11</div>",
 sym: [["L1 to L3", "guiding, slab and strip modes"], ["L4", "symmetry"], ["L5 to L7", "grating, DBR, MMI"], ["L8 to L11", "FDTD"]],
 how: ["Answer without looking.", "Explain the reason in one sentence.", "Reopen the lesson for any miss.", "Repeat before the defense."],
 say: "When a question goes beyond your work, say so and answer from the physics you know.",
@@ -168,11 +168,11 @@ r(fig, ctl) {
 ],
 summary: "A Gaussian pulse source covers a band set by its spectral width, with τσ_f = 1/(2π). A perfectly matched layer absorbs outgoing waves with almost no reflection because its losses are matched and graded. Frequency monitors build spectra from a running Fourier sum, valid only once the fields have decayed. Transmission into a mode comes from projecting the output field onto that mode with the orthogonality integral, so power in other modes counts as loss. A result is trusted only after refining the grid, where for the Yee scheme the error falls as 1/N², and it is reported together with its resolution.",
 sheet: [
-["τσ<sub>f</sub> = 1/(2π)", "Pulse length and bandwidth"],
-["σ<sub>e</sub>/ε = σ<sub>m</sub>/μ, &nbsp; σ(d) = σ<sub>max</sub>(d/L)<sup>m</sup>", "Matched, graded PML"],
-["Ẽ(f) = Σ E<sup>n</sup> e<sup>i2πfnΔt</sup> Δt", "Running DFT monitor"],
-["a<sub>m</sub> = ¼∫(E × H<sub>m</sub>* + E<sub>m</sub>* × H)·x̂ dA, &nbsp; T<sub>m</sub> = |a<sub>m</sub>|²", "Mode decomposition"],
-["Q<sub>∞</sub> ≈ (N<sub>2</sub>²Q<sub>2</sub> − N<sub>1</sub>²Q<sub>1</sub>)/(N<sub>2</sub>² − N<sub>1</sub>²)", "Richardson extrapolation"]],
+[String.raw`\[ \tau\sigma_f = \frac{1}{2\pi} \]`, "Pulse length and bandwidth"],
+[String.raw`\[ \frac{\sigma_e}{\varepsilon} = \frac{\sigma_m}{\mu}, \qquad \sigma(d) = \sigma_{\mathrm{max}}\left(\frac{d}{L}\right)^m \]`, "Matched, graded PML"],
+[String.raw`\[ \tilde{E}(f) = \sum_n E^{\,n}\, e^{i2\pi f n\Delta t}\, \Delta t \]`, "Running DFT monitor"],
+[String.raw`\[ a_m = \frac{1}{4}\int\left(\mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H}\right)\cdot\hat{\mathbf{x}}\, dA, \qquad T_m = |a_m|^2 \]`, "Mode decomposition"],
+[String.raw`\[ Q_\infty \approx \frac{N_2^2 Q_2 - N_1^2 Q_1}{N_2^2 - N_1^2} \]`, "Richardson extrapolation"]],
 consts: "1D simulations in normalized units. The convergence curve is illustrative.",
 sources: ["Oskooi et al., Comput. Phys. Commun. 181, 687 (2010), Sec. 4.2 (PML) and sources, flux and Fourier-transformed output in MEEP", "Tidy3D documentation (GaussianPulse fwidth, mode monitors and symmetry)", "Snyder and Love, Optical Waveguide Theory, Chapman and Hall (1983) (mode orthogonality)"]
 });
