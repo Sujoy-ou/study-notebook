@@ -1,0 +1,6 @@
+{
+  "name": "study-notebook-dev",
+  "private": true,
+  "description": "Test tools for the study notebook (not used by the site)",
+  "dependencies": { "jsdom": "^24.1.3", "mathjax-full": "^3.2.2" }
+}
