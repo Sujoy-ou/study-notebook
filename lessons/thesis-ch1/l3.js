@@ -134,6 +134,66 @@ r(fig, ctl) {
   u();
 }},
 
+{s: "4b. How each emits", t: "How X, X⁻, X⁺ and XX emit light, step by step",
+intu: String.raw`Every complex emits light by the same act: one electron on the dot's electron level drops into one hole on the hole level, and the energy leaves as a photon. What changes from one complex to the next is who stays behind. A neutral exciton leaves an empty dot. A negative trion leaves one electron, which is the ground state \(\lvert \uparrow \rangle\) of Fig. 1.1. A positive trion leaves one hole. A biexciton leaves an exciton, which then emits a second photon. The photon energy is the energy of the state before minus the state after. Because the carriers left behind still feel the Coulomb pull of the ones that recombined, each complex gives its own line, a few meV apart. Spin decides the polarization: the recombining pair must have angular momentum \(\pm 1\), which the photon carries away as \(\sigma^{\pm}\). Pick a complex and step through it, or press Play. The two seats on each level are drawn side by side only for clarity. Both carriers share the same orbital.`,
+eq: String.raw`<div class="eqnote">Photon energy = state before minus state after</div>\[ \hbar\omega_{\mathrm{X}} = E(\mathrm{X}) - E(0) \qquad \hbar\omega_{\mathrm{X}^-} = E(\mathrm{X}^-) - E(e) \]\[ \hbar\omega_{\mathrm{X}^+} = E(\mathrm{X}^+) - E(h) \qquad \hbar\omega_{\mathrm{XX}} = E(\mathrm{XX}) - E(\mathrm{X}) = \hbar\omega_{\mathrm{X}} - \Delta_{\mathrm{XX}} \]<div class="eqnote">Angular momentum carried by the photon</div>\[ s_z + j_z = \pm\tfrac{1}{2} \mp \tfrac{3}{2} = \mp 1 \quad\Longrightarrow\quad \sigma^{\mp} \]`,
+sym: [[String.raw`\(E(\cdot)\)`, "total energy of the dot with those carriers inside, including Coulomb terms"], [String.raw`\(E(0), E(e), E(h)\)`, "empty dot, dot with one electron, dot with one hole"], [String.raw`\(\hbar\omega\)`, "photon energy of that line"], [String.raw`\(\Delta_{\mathrm{XX}}\)`, "biexciton binding energy: how far the XX line sits below X"], [String.raw`\(s_z, j_z\)`, String.raw`spin of the recombining electron (\(\pm\tfrac{1}{2}\)) and of the recombining heavy hole (\(\pm\tfrac{3}{2}\))`], [String.raw`\(\sigma^{\pm}\)`, "circularly polarized photon carrying angular momentum ±1 along z"]],
+how: [String.raw`Only a bright pair can recombine: electron and hole spins opposite, so \(s_z + j_z = \pm 1\). A pair with \(\pm 2\) is dark (card 3).`, String.raw`X: the pair recombines and the dot is empty. One photon, line X.`, String.raw`X⁻: of the two paired electrons, the one whose spin makes a bright pair with the hole recombines. One electron stays. That is the \(\lvert \uparrow\downarrow, \Uparrow \rangle \to \lvert \uparrow \rangle\) transition of Fig. 1.1.`, String.raw`X⁺: the electron recombines with the hole of opposite spin. One hole stays.`, String.raw`XX: one pair recombines and leaves a bright X, which recombines next. The two photons have opposite circular polarization. In a slightly elongated dot both become linear, H with H or V with V, split by the fine-structure splitting.`, String.raw`The lines differ by Coulomb energies: removing one pair changes how the remaining carriers attract and repel. In GaAs dots the spacings are a few meV.`],
+say: String.raw`In every case one electron recombines with one hole of opposite spin and the photon carries angular momentum \(\pm 1\). The photon energy is the energy before minus the energy after, so each charge state gives its own line. The negative trion decays to a single electron, the positive trion to a single hole, and the biexciton to an exciton, which emits a second photon.`,
+num: String.raw`Typical line spacings in GaAs dots: a few meV, far larger than a spectrometer's resolution, so X, X⁻, X⁺ and XX appear as separate lines.<br>The order and spacing of the lines in the small spectrum are schematic. They depend on the dot. Card 6 shows how to tell them apart from the power dependence.`,
+note: String.raw`If asked "how does a trion emit?": exactly like an exciton, one electron drops into the hole. The difference is that one carrier stays behind, so the final state is a single electron (X⁻) or a single hole (X⁺), not an empty dot. For your Fig. 1.1 the dot holds one extra electron, so the emitting state is X⁻ and the final state is \(\lvert \uparrow \rangle\) or \(\lvert \downarrow \rangle\).`,
+r(fig, ctl) {
+  let k = "X", st = 0, playing = false;
+  const B = (e, h, t, extra) => Object.assign({ e, h, t }, extra || {});
+  const SEQ = {
+    "X": [B([[250, "↑"]], [[250, "⇓"]], "Before: one electron ↑ and one hole ⇓. M = +1/2 − 3/2 = −1, so it is bright."),
+      B([[250, "↑"]], [[250, "⇓"]], "The electron drops into the hole. M = −1 leaves with a σ⁻ photon.", { rec: [250, 250], ph: "X photon (σ⁻)", line: "X" }),
+      B([], [], "After: empty dot. One photon, line X.")],
+    "X⁻": [B([[225, "↑"], [275, "↓"]], [[250, "⇑"]], "Before: two paired electrons ↑↓ and one hole ⇑. This is |↑↓, ⇑⟩ of Fig. 1.1."),
+      B([[225, "↑"], [275, "↓"]], [[250, "⇑"]], "The ↓ electron and the ⇑ hole recombine: −1/2 + 3/2 = +1, so a σ⁺ photon.", { rec: [275, 250], ph: "X⁻ photon (σ⁺)", line: "X⁻" }),
+      B([[250, "↑"]], [], "After: one electron ↑ stays. That is the ground state |↑⟩ of Fig. 1.1.")],
+    "X⁺": [B([[250, "↑"]], [[225, "⇑"], [275, "⇓"]], "Before: one electron ↑ and two paired holes ⇑⇓."),
+      B([[250, "↑"]], [[225, "⇑"], [275, "⇓"]], "The ↑ electron and the ⇓ hole recombine: +1/2 − 3/2 = −1, so a σ⁻ photon.", { rec: [250, 275], ph: "X⁺ photon (σ⁻)", line: "X⁺" }),
+      B([], [[250, "⇑"]], "After: one hole ⇑ stays. The dot is left positively charged.")],
+    "XX": [B([[225, "↑"], [275, "↓"]], [[225, "⇓"], [275, "⇑"]], "Before: two electrons and two holes, all paired. Total M = 0."),
+      B([[225, "↑"], [275, "↓"]], [[225, "⇓"], [275, "⇑"]], "One pair (↓ with ⇑) recombines: σ⁺ photon. Its energy is below X by Δ_XX.", { rec: [275, 275], ph: "XX photon (σ⁺)", line: "XX" }),
+      B([[250, "↑"]], [[250, "⇓"]], "Middle: a bright exciton X is left (↑ with ⇓, M = −1)."),
+      B([[250, "↑"]], [[250, "⇓"]], "The second pair recombines: σ⁻ photon, line X. Opposite polarization to the first.", { rec: [250, 250], ph: "X photon (σ⁻)", line: "X" }),
+      B([], [], "After: empty dot. Two photons in a row, XX then X: the cascade of card 5.")]
+  };
+  const LX = { "XX": 505, "X⁻": 545, "X⁺": 595, "X": 630 };
+  ctl.innerHTML = `<div class="row">${Object.keys(SEQ).map(c => `<button data-c="${c}">${c}</button>`).join("")}</div><div class="row"><button id="eb">Back</button><button id="en">Next step</button><button id="ep">Play</button></div><div class="readout" id="ro"></div>`;
+  const xa = 170, xb = 330, Yc = 58, yc = 112, ye = 96, yv = 200, Yv = 254, yh = 216;
+  const draw = () => {
+    ctl.querySelectorAll("button[data-c]").forEach(b => b.classList.toggle("on", b.dataset.c === k));
+    const S = SEQ[k], f = S[st]; $("eb").disabled = st === 0; $("en").disabled = st === S.length - 1;
+    let s = `<rect x="${xa}" y="30" width="${xb - xa}" height="244" fill="#EF9F27" opacity="0.07"/><text class="th" x="250" y="24" text-anchor="middle">GaAs dot</text><text class="ts" x="95" y="24" text-anchor="middle">AlGaAs</text><text class="ts" x="405" y="24" text-anchor="middle">AlGaAs</text>`;
+    s += `<path d="M30 ${Yc} H${xa} V${yc} H${xb} V${Yc} H460" fill="none" stroke="#378ADD" stroke-width="2.5"/><path d="M30 ${Yv} H${xa} V${yv} H${xb} V${Yv} H460" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="34" y="${Yc - 6}">E_c</text><text class="ts" x="34" y="${Yv + 15}">E_v</text>`;
+    s += `<line x1="${xa + 6}" x2="${xb - 6}" y1="${ye}" y2="${ye}" stroke="#378ADD" stroke-dasharray="6 3"/><line x1="${xa + 6}" x2="${xb - 6}" y1="${yh}" y2="${yh}" stroke="#D85A30" stroke-dasharray="6 3"/>`;
+    const rec = f.rec || [];
+    f.e.forEach(([x, sp]) => { const r = x === rec[0]; s += (r ? `<circle cx="${x}" cy="${ye}" r="7" fill="#378ADD" opacity="0.35"/>` : EL(x, ye)) + `<text class="th" x="${x}" y="${ye - 13}" text-anchor="middle">${sp}</text>`; });
+    f.h.forEach(([x, sp]) => { const r = x === rec[1]; s += `<circle cx="${x}" cy="${yh}" r="7" fill="none" stroke="#D85A30" stroke-width="2" ${r ? 'opacity="0.35"' : ""}/><text class="th" x="${x}" y="${yh + 25}" text-anchor="middle">${sp}</text>`; });
+    if (f.rec) {
+      s += `<line x1="${rec[0]}" y1="${ye + 9}" x2="${rec[1]}" y2="${yh - 9}" stroke="var(--t)" stroke-width="1.8" marker-end="url(#ar)"/>`;
+      let w = "M262 156"; for (let i = 1; i <= 36; i++) w += ` L${262 + i * 3} ${(156 - 5 * Math.sin(i * 0.9)).toFixed(1)}`;
+      s += `<path d="${w}" fill="none" stroke="#7F77DD" stroke-width="2.2"/><polygon points="370,151 380,156 370,161" fill="#7F77DD"/><text class="th" x="384" y="152">${f.ph.split(" (")[0]}</text><text class="ts" x="384" y="168">(${f.ph.split(" (")[1]}</text>`;
+    }
+    s += `<line x1="470" y1="40" x2="470" y2="264" stroke="var(--b)"/><text class="th" x="570" y="50" text-anchor="middle">spectrum</text><line x1="485" x2="655" y1="230" y2="230" stroke="var(--p)" marker-end="url(#ar)"/><text class="ts" x="652" y="248" text-anchor="end">energy →</text>`;
+    for (const [n, x] of Object.entries(LX)) { const on = f.line === n, seen = S.slice(0, st + 1).some(g => g.line === n); s += `<line x1="${x}" x2="${x}" y1="230" y2="${on ? 110 : 140}" stroke="${on ? "#7F77DD" : seen ? "#AFA9EC" : "var(--b)"}" stroke-width="${on ? 5 : 3}"/><text class="ts" x="${x}" y="${on ? 102 : 132}" text-anchor="middle" ${on ? 'font-weight="600"' : ""}>${n}</text>`; }
+    s += `<text class="ts" x="570" y="264" text-anchor="middle">line order is schematic</text>`;
+    fig.innerHTML = svg(275, s);
+    $("ro").innerHTML = `<div><span>step ${st + 1} of ${S.length}</span><b>${f.t}</b></div>`;
+    $("ep").textContent = playing ? "Stop" : "Play";
+  };
+  const halt = () => { playing = false; stopAnim(); };
+  ctl.querySelectorAll("button[data-c]").forEach(b => b.onclick = () => { halt(); k = b.dataset.c; st = 0; draw(); });
+  $("eb").onclick = () => { halt(); st = Math.max(0, st - 1); draw(); };
+  $("en").onclick = () => { halt(); st = Math.min(SEQ[k].length - 1, st + 1); draw(); };
+  $("ep").onclick = () => { if (playing) { halt(); draw(); return; } playing = true; st = 0; let last = -1; draw();
+    anim(t => { const i = Math.min(SEQ[k].length - 1, Math.floor(t / 1.6)); if (i !== last) { last = i; st = i; draw(); } if (i === SEQ[k].length - 1 && t > (SEQ[k].length - 1) * 1.6 + 0.1) { halt(); draw(); } }); };
+  draw();
+}},
+
 {s: "5. Biexciton cascade", t: "The biexciton cascade: two photons in a row",
 intu: String.raw`A biexciton XX holds two electrons and two holes. It decays in two steps. First one electron–hole pair recombines and emits the XX photon, leaving a single exciton X behind. Then X recombines and emits the X photon, leaving an empty dot. The two photons have different energies, because the first pair also felt the attraction of the other pair. The difference is the biexciton binding energy \(\Delta_{\mathrm{XX}}\). Step through the cascade and change \(\Delta_{\mathrm{XX}}\) to see the XX line move relative to X.`,
 eq: String.raw`\[ E(\mathrm{XX}) = 2E(\mathrm{X}) - \Delta_{\mathrm{XX}} \]\[ \hbar\omega_{\mathrm{XX}} = E(\mathrm{XX}) - E(\mathrm{X}) = E(\mathrm{X}) - \Delta_{\mathrm{XX}} \qquad \hbar\omega_{\mathrm{X}} = E(\mathrm{X}) \]`,
