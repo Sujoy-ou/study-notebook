@@ -73,16 +73,43 @@ r(fig, ctl) {
 intu: String.raw`A guided mode zigzags along the membrane, but for everything that follows only one thing matters: how fast its phase advances along the guide. That rate is the propagation constant \(\beta\). Dividing it by the vacuum wavenumber gives one plain number, the effective index \(n_{\mathrm{eff}}\). The mode behaves as if it were a plane wave in a material of index \(n_{\mathrm{eff}}\). \(n_{\mathrm{eff}}\) must be larger than the cladding index, or the light would leak out as in card 1, and smaller than the core index, because nothing in the core can travel slower than \(c/n\). On a plot of frequency against \(\beta\) this window is the wedge between the light line of the cladding and the line of the bulk core.`,
 eq: String.raw`\[ \beta = k_{0}n_{\mathrm{eff}} = k_{0}n\sin\theta, \qquad n_{\mathrm{c}} \lt n_{\mathrm{eff}} \lt n \]\[ \lambda_{\mathrm{guide}} = \frac{\lambda_{0}}{n_{\mathrm{eff}}}, \qquad v_{\mathrm{phase}} = \frac{c}{n_{\mathrm{eff}}} \]\[ \text{light line: } \omega = \frac{c\beta}{n_{\mathrm{c}}}, \qquad \text{guided: } \frac{c\beta}{n} \lt \omega \lt \frac{c\beta}{n_{\mathrm{c}}} \]<div class="eqref">Used in Lesson 1, cards 3 and 5</div>`,
 sym: [[String.raw`\(\beta\)`, "propagation constant: phase gained per unit length along the guide, in rad/nm"], [String.raw`\(k_{0}\)`, String.raw`vacuum wavenumber \(2\pi/\lambda_0\)`], [String.raw`\(n_{\mathrm{eff}}\)`, "effective index of the mode, a pure number"], [String.raw`\(\theta\)`, "bounce angle inside the core, from the surface normal"], [String.raw`\(n, n_{\mathrm{c}}\)`, "core index (3.5) and cladding index (1)"], [String.raw`\(\lambda_{\mathrm{guide}}\)`, "wavelength measured along the guide"], [String.raw`\(v_{\mathrm{phase}}\)`, "speed at which the wave crests move along the guide"], [String.raw`\(\omega\)`, String.raw`angular frequency \(2\pi c/\lambda_0\)`], [String.raw`\(c\)`, String.raw`speed of light in vacuum, \(2.998 \times 10^{8}\) m/s`]],
-how: [String.raw`Read it aloud: "beta equals k zero times \(n_{\mathrm{eff}}\), and \(n_{\mathrm{eff}}\) lies between the cladding index and the core index. The guide wavelength is lambda zero over \(n_{\mathrm{eff}}\). The light line is omega equals c beta over n c".`, String.raw`\(k_0 n\) is the full wave vector of light in the core. For a ray bouncing at angle \(\theta\), the part along the guide is \(k_0 n\sin\theta\). So \(n_{\mathrm{eff}} = n\sin\theta\) is the same \(n_{\mathrm{eff}}\) as in card 1.`, String.raw`The lower bound \(n_{\mathrm{eff}} \gt n_{\mathrm{c}}\) is total internal reflection. The upper bound \(n_{\mathrm{eff}} \lt n\) is just \(\sin\theta \lt 1\).`, String.raw`Writing \(n_{\mathrm{eff}} = c\beta/\omega\) turns the window into a wedge on the \(\omega\) against \(\beta\) plot. Above the light line, inside the light cone, light can escape into the cladding.`, String.raw`Used in Lesson 1, cards 3 and 5. The guide wavelength \(\lambda_0/n_{\mathrm{eff}}\) sets the grating period (card 10 here).`],
+how: [String.raw`Read it aloud: "beta equals k zero times \(n_{\mathrm{eff}}\), and \(n_{\mathrm{eff}}\) lies between the cladding index and the core index. The guide wavelength is lambda zero over \(n_{\mathrm{eff}}\). The light line is omega equals c beta over n c".`, String.raw`\(k_0 n\) is the full wave vector of light in the core. For a ray bouncing at angle \(\theta\), the part along the guide is \(k_0 n\sin\theta\). So \(n_{\mathrm{eff}} = n\sin\theta\) is the same \(n_{\mathrm{eff}}\) as in card 1.`, String.raw`The lower bound \(n_{\mathrm{eff}} \gt n_{\mathrm{c}}\) is total internal reflection. The upper bound \(n_{\mathrm{eff}} \lt n\) is just \(\sin\theta \lt 1\).`, String.raw`Writing \(n_{\mathrm{eff}} = c\beta/\omega\) turns the window into a wedge on the \(\omega\) against \(\beta\) plot. Above the light line, inside the light cone, light can escape into the cladding.`, String.raw`Used in Lesson 1, cards 3 and 5. The guide wavelength \(\lambda_0/n_{\mathrm{eff}}\) sets the grating period (card 10 here).`, String.raw`Reading the textbook plot (second button): up is frequency as thickness over wavelength, right is \(\beta\). The green line is the air light line (\(n_{\mathrm{eff}} = 1\)), the purple line the GaAs line (\(n_{\mathrm{eff}} = 3.5\)), the shaded wedge between them the guided window, the solid orange curve TE0, the dashed curve TE1, and the dot your operating point. A point's \(n_{\mathrm{eff}}\) is its \(\beta\) divided by its frequency, so the closer a curve hugs the purple line, the better the light is confined.`],
 say: String.raw`The effective index is the propagation constant divided by the vacuum wavenumber. A guided mode lies below the light line of the cladding, so \(n_{\mathrm{c}} \lt n_{\mathrm{eff}} \lt n\).`,
 num: String.raw`\(\lambda_0 = 800\) nm, \(n_{\mathrm{eff}} = 3.0\): guide wavelength <b>267 nm</b>, phase velocity \(c/3\).<br>\(n_{\mathrm{eff}} = 2.4\): guide wavelength <b>333 nm</b>.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("t", "Membrane thickness t (nm)", 20, 400, 5, 160) + '<div class="readout" id="ro"></div>';
+  let view = "simple";
+  ctl.innerHTML = `<div class="row"><button data-v="simple">Simple: n<sub>eff</sub> ruler</button><button data-v="book">Textbook: ω versus β plot</button></div>` + sl("t", "Membrane thickness t (nm)", 20, 400, 5, 160) + '<div class="readout" id="ro"></div>';
+  const tsA = range(20, 400, 96), te0t = tsA.map(t => C2.slabN(3.5, 1, t, 800, 0, "TE")), te1t = tsA.map(t => C2.slabN(3.5, 1, t, 800, 1, "TE"));
   const box = fbox(fig, String.raw`\underbrace{{\color{#D85A30}{\beta}}}_{\text{phase per length}} = \underbrace{k_{0}}_{2\pi/\lambda_0}\,\underbrace{{\color{#378ADD}{n_{\mathrm{eff}}}}}_{\text{effective index}}, \qquad \underbrace{{\color{#1D9E75}{n_{\mathrm{c}}}}}_{\text{cladding}} \lt {\color{#378ADD}{n_{\mathrm{eff}}}} \lt \underbrace{{\color{#7F77DD}{n}}}_{\text{core}}`);
   const us = range(0.004, 0.5, 125), te0 = us.map(u => C2.slabN(3.5, 1, u, 1, 0, "TE")), te1 = us.map(u => C2.slabN(3.5, 1, u, 1, 1, "TE"));
   const x0 = 80, y0 = 20, w = 540, h = 180, A = ax(x0, y0, w, h, 0, 1.8, 0, 0.5);
+  const simple = t => {
+    const N = C2.slabN(3.5, 1, t, 800, 0, "TE"), N1 = C2.slabN(3.5, 1, t, 800, 1, "TE");
+    const rx0 = 60, rx1 = 640, R = v => rx0 + (v - 0.6) / 3.2 * (rx1 - rx0), ry = 70;
+    let s = `<text class="th" x="20" y="22">Where the mode sits: one axis, n<tspan baseline-shift='sub' font-size='75%'>eff</tspan></text>`;
+    s += `<rect x="${R(0.6)}" y="${ry - 16}" width="${R(1) - R(0.6)}" height="32" fill="${CO}" fill-opacity="0.12"/><rect x="${R(1)}" y="${ry - 16}" width="${R(3.5) - R(1)}" height="32" fill="${TL}" fill-opacity="0.15"/><rect x="${R(3.5)}" y="${ry - 16}" width="${R(3.8) - R(3.5)}" height="32" fill="var(--b)" fill-opacity="0.5"/>`;
+    s += `<line x1="${R(0.6)}" x2="${R(3.8)}" y1="${ry}" y2="${ry}" stroke="var(--t)"/>`;
+    [1, 1.5, 2, 2.5, 3, 3.5].forEach(v => s += `<line x1="${R(v)}" x2="${R(v)}" y1="${ry - 4}" y2="${ry + 4}" stroke="var(--t)"/>` + lab(R(v), ry + 30, v.toFixed(1), "middle"));
+    s += vline(R(1), ry - 24, ry + 18, TL) + vline(R(3.5), ry - 24, ry + 18, PU);
+    s += lab(R(0.8), ry - 22, "leaks", "middle", "ts", CO) + lab(R(1), ry + 46, "air (1)", "middle", "ts", TL) + lab(R(3.5), ry + 46, "GaAs (3.5)", "middle", "ts", PU) + lab((R(1) + R(3.5)) / 2, ry - 22, "guided window: the mode is trapped", "middle", "ts", TL) + lab(R(3.65), ry - 22, "impossible", "middle", "ts");
+    s += dot(R(N), ry, CO, 8) + lab(R(N), ry - 30 > 30 ? ry + 62 : ry + 62, "TE0 = " + N.toFixed(3), "middle", "th", CO);
+    if (N1) s += `<circle cx="${R(N1)}" cy="${ry}" r="6" fill="none" stroke="${CO}" stroke-width="2"/>` + lab(R(N1), ry + 62, "TE1 = " + N1.toFixed(2), "middle", "ts", CO);
+    // n_eff versus thickness
+    const px = 80, py = 150, pw = 540, ph = 120, B = ax(px, py, pw, ph, 20, 400, 0.8, 3.6);
+    s += frame(px, py, pw, ph) + hline(px, px + pw, B.Y(1), TL) + hline(px, px + pw, B.Y(3.5), PU);
+    s += plot(px, py, pw, ph, tsA, te0t, 20, 400, 0.8, 3.6, CO, 2.5) + plot(px, py, pw, ph, tsA.map((v, i) => te1t[i] ? v : NaN), te1t.map(v => v || NaN), 20, 400, 0.8, 3.6, CO, 1.5, "5 3");
+    s += vline(B.X(t), py, py + ph, "var(--t)", "3 3") + dot(B.X(t), B.Y(N), CO, 6);
+    s += lab(px + 6, B.Y(3.5) - 4, "GaAs limit 3.5", "start", "ts", PU) + lab(px + pw - 6, B.Y(1) - 6, "air limit 1", "end", "ts", TL) + lab(B.X(75), B.Y(2.75), "TE0", "end", "ts", CO) + lab(B.X(330), B.Y(2.25), "TE1 (dashed)", "start", "ts", CO);
+    s += xticks(px, py, pw, ph, 20, 400, [50, 100, 160, 200, 300, 400]) + yticks(px, py, pw, ph, 0.8, 3.6, [1, 2, 3, 3.5]);
+    s += lab(px + pw / 2, py + ph + 30, "membrane thickness t (nm), 800 nm light", "middle") + ytitle(30, py + ph / 2, "n_eff".replace("n_eff", "n<tspan baseline-shift='sub' font-size='75%'>eff</tspan>"));
+    s += lab(px + 6, py + ph + 46, "thinner: the dot slides toward 1 and the field spreads into the air. Thicker: toward 3.5, well confined.", "start", "ts");
+    return s;
+  };
   const draw = () => {
+    ctl.querySelectorAll("button[data-v]").forEach(b => b.classList.toggle("on", b.dataset.v === view));
     const t = +$("t").value; $("tv").textContent = t + " nm";
+    if (view === "simple") { const N = C2.slabN(3.5, 1, t, 800, 0, "TE"); box.innerHTML = svg(330, simple(t));
+      $("ro").innerHTML = ro([["TE0 effective index n<sub>eff</sub>", N.toFixed(3)], ["guide wavelength λ₀/n<sub>eff</sub>", (800 / N).toFixed(0) + " nm"], ["decay length 1/γ in air", (800 / (2 * Math.PI * Math.sqrt(N * N - 1))).toFixed(0) + " nm"]]); return; }
     let s = `<polygon points="${A.X(0)},${A.Y(0)} ${A.X(0.5)},${A.Y(0.5)} ${A.X(1.75)},${A.Y(0.5)}" fill="${TL}" fill-opacity="0.12"/>` + frame(x0, y0, w, h);
     s += `<line x1="${A.X(0)}" y1="${A.Y(0)}" x2="${A.X(0.5)}" y2="${A.Y(0.5)}" stroke="${TL}" stroke-width="2"/><line x1="${A.X(0)}" y1="${A.Y(0)}" x2="${A.X(1.75)}" y2="${A.Y(0.5)}" stroke="${PU}" stroke-width="2"/>`;
     s += plot(x0, y0, w, h, us.map((u, i) => te0[i] * u), us, 0, 1.8, 0, 0.5, CO, 2.5);
@@ -97,6 +124,7 @@ r(fig, ctl) {
     box.innerHTML = svg(240, s);
     $("ro").innerHTML = ro([["TE0 effective index n<sub>eff</sub>", N.toFixed(3)], ["guide wavelength λ₀/n<sub>eff</sub>", (800 / N).toFixed(0) + " nm"], ["decay length 1/γ in air", (800 / (2 * Math.PI * Math.sqrt(N * N - 1))).toFixed(0) + " nm"]]);
   };
+  ctl.querySelectorAll("button[data-v]").forEach(b => b.onclick = () => { view = b.dataset.v; draw(); });
   $("t").oninput = draw; draw();
 }},
 
