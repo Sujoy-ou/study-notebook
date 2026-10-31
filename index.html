@@ -157,6 +157,24 @@ svg .c-coral rect,svg rect.c-coral{fill:var(--coral-bg);stroke:var(--coral)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 pre.codebox{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--sunk);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:8px 0;overflow-x:auto;white-space:pre}
 pre.codebox code{background:none;padding:0;font-size:inherit}
+details.shelf{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:14px 0;padding:0 16px}
+details.shelf>summary{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:16px 0;cursor:pointer;list-style:none}
+details.part{border-top:1px solid var(--line);padding:0 0 4px}
+details.part>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;cursor:pointer;list-style:none}
+details.shelf>summary::-webkit-details-marker,details.part>summary::-webkit-details-marker,.tree summary::-webkit-details-marker{display:none}
+details.shelf>summary::before,details.part>summary::before,.tree summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s;flex:none;align-self:center}
+details[open]>summary::before{transform:rotate(45deg)}
+.st{font-family:var(--display);font-size:22px;font-weight:650}
+.pt{font-family:var(--display);font-size:17px;font-weight:600;flex:1;min-width:200px}
+.sm{font-size:13px;color:var(--muted)}
+.pbar{width:90px;height:5px;background:var(--sunk);border-radius:3px;overflow:hidden;flex:none}
+.pbar i{display:block;height:100%;background:var(--ok)}
+.tree summary{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer;list-style:none}
+.tree summary:hover{background:var(--sunk)}
+.tree summary span:first-child{flex:1}
+.tree .tshelf>summary{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:8px}
+.tree .tgrp>summary{font-weight:600}
+.tree .cnt{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none}
 </style>
 </head>
 <body>

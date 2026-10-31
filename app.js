@@ -118,37 +118,52 @@ function setRead(id, v) { try { const r = getRead(); if (v) r[id] = 1; else dele
 /* ---------- views ---------- */
 function findLesson(id) { for (const s of LIBRARY) for (const g of s.groups) for (const l of g.lessons) if (l.id === id) return { s, g, l }; return null; }
 
+const OKEY = "study-notebook-open";
+function getOpen() { try { return JSON.parse(localStorage.getItem(OKEY) || "{}"); } catch (e) { return {}; } }
+function setOpen(k, v) { try { const o = getOpen(); if (v) o[k] = 1; else delete o[k]; localStorage.setItem(OKEY, JSON.stringify(o)); } catch (e) {} }
+function wireOpen(root) {
+  root.querySelectorAll("details[data-k]").forEach(d => d.addEventListener("toggle", () => setOpen(d.dataset.k, d.open)));
+}
+
 function tree(cur) {
-  const rd = getRead();
+  const rd = getRead(), op = getOpen(), f = cur ? findLesson(cur) : null;
   let h = `<li><a href="#" class="${cur ? "" : "cur"}">Library home</a></li>`;
   for (const s of LIBRARY) {
-    h += `<li><p class="lab">${s.title}</p><ul>`;
+    const n = s.groups.reduce((a, g) => a + g.lessons.length, 0);
+    const sOpen = (f && f.s === s) || op["n:" + s.id];
+    h += `<li><details class="tshelf" data-k="n:${s.id}" ${sOpen ? "open" : ""}><summary><span>${s.title}</span><span class="cnt">${n}</span></summary><ul>`;
     for (const g of s.groups) {
-      h += `<li><span class="grp">${g.title}</span><ul>`;
+      const gOpen = (f && f.g === g) || op["n:" + s.id + "/" + g.id];
+      h += `<li><details class="tgrp" data-k="n:${s.id}/${g.id}" ${gOpen ? "open" : ""}><summary><span>${g.title}</span><span class="cnt">${g.lessons.length}</span></summary><ul>`;
       for (const l of g.lessons) h += `<li><a href="#${l.id}" class="${cur === l.id ? "cur" : ""}"><span>${l.short}</span>${rd[l.id] ? '<span class="chk">read</span>' : ""}</a></li>`;
       for (const p of g.planned || []) h += `<li><span class="soon">${p}</span></li>`;
-      h += `</ul></li>`;
+      h += `</ul></details></li>`;
     }
-    h += `</ul></li>`;
+    h += `</ul></details></li>`;
   }
   $("tree").innerHTML = h;
+  wireOpen($("tree"));
 }
 
 function home() {
   document.body.classList.remove("wide");
   const rd = getRead();
-  let h = `<p class="crumb">Library</p><h1>Study Notebook</h1><p class="lead">Each subject has its own shelf. Open a lesson to read the big picture, work through the cards with the picture beside the explanation, and finish with the 30-second summary and the equation sheet.</p>`;
+  let h = `<p class="crumb">Library</p><h1>Study Notebook</h1><p class="lead">Each subject has its own shelf. Click a shelf to see its parts, and a part to see its lessons. Open a lesson to read the big picture, work through the cards with the picture beside the explanation, and finish with the 30-second summary and the equation sheet.</p>`;
+  const op = getOpen();
   for (const s of LIBRARY) {
-    h += `<h2>${s.title}</h2><p class="lead">${s.desc}</p>`;
+    const n = s.groups.reduce((a, g) => a + g.lessons.length, 0), nr = s.groups.reduce((a, g) => a + g.lessons.filter(l => rd[l.id]).length, 0);
+    h += `<details class="shelf" data-k="h:${s.id}" ${op["h:" + s.id] ? "open" : ""}><summary><span class="st">${s.title}</span><span class="sm">${s.groups.length} parts · ${n} lessons · ${nr} read</span></summary><p class="lead">${s.desc}</p>`;
     for (const g of s.groups) {
       const tot = g.lessons.length + (g.planned || []).length, done = g.lessons.filter(l => rd[l.id]).length;
-      h += `<h3 class="gt">${g.title}</h3><p class="src">${g.desc}</p><div class="libgrid">`;
+      h += `<details class="part" data-k="h:${s.id}/${g.id}" ${op["h:" + s.id + "/" + g.id] ? "open" : ""}><summary><span class="pt">${g.title}</span><span class="sm">${done}/${tot} read</span><span class="pbar"><i style="width:${tot ? done / tot * 100 : 0}%"></i></span></summary><p class="src">${g.desc}</p><div class="libgrid">`;
       for (const l of g.lessons) h += `<a class="libcard" href="#${l.id}"><span class="k">${l.level || ""}</span><p class="n">${l.title}</p><p class="d">${rd[l.id] ? "Read" : "Not marked read"} · ${l.cards.length} cards</p></a>`;
-      h += `</div><p class="src">${done} of ${tot} lessons marked read.</p><div class="bar"><i style="width:${tot ? done / tot * 100 : 0}%"></i></div>`;
+      h += `</div></details>`;
     }
+    h += `</details>`;
   }
   h += `<h2>Adding a new subject</h2><p class="addnote">Ask Claude to add a lesson or a new subject to the Study Notebook. It goes onto its own shelf here, under its own name, and this address keeps working.</p>`;
   $("view").innerHTML = h;
+  wireOpen($("view"));
 }
 
 let cardIdx = 0;
