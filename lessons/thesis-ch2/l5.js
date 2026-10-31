@@ -49,6 +49,101 @@ r(fig, ctl) {
   $("N").oninput = u; $("L").oninput = u; u();
 }},
 
+{s: "2b. Fiber to chip, animated", t: "From the fiber into the chip: every vector, step by step",
+intu: String.raw`Run it backward from the fiber's point of view. Light comes down from a fiber tilted by \(\theta\). Only the part of its wavevector that runs along the surface, \(k_x = k_0 n_{\mathrm{c}}\sin\theta\), can talk to the waveguide, because the guided mode only cares about phase along \(x\). That \(k_x\) is far too small to equal the mode's \(\beta = k_0 n_{\mathrm{eff}}\). The grating fixes the mismatch: every period adds a kick \(K = 2\pi/\Lambda\) along \(x\), forward or backward. If one forward kick lands exactly on \(\beta\), the light enters the forward mode. The same kick in the backward direction lands near \(-\beta\) but misses, so almost nothing goes backward. With a vertical fiber the picture becomes symmetric: \(k_x = 0\), so the forward and the backward kick both hit, and the light splits into both directions. Worse, two kicks turn \(\beta\) into \(-\beta\), so the grating also acts as a Bragg mirror for light already in the guide. Press Play, or step through, and switch between tilted and vertical.`,
+eq: String.raw`\[ \underbrace{k_0 n_{\mathrm{c}}\sin\theta}_{\text{fiber, along }x} + \underbrace{\frac{2\pi}{\Lambda}}_{\text{one kick}} = \underbrace{\beta = k_0 n_{\mathrm{eff}}}_{\text{forward mode}} \quad\Longrightarrow\quad \Lambda = \frac{\lambda_0}{n_{\mathrm{eff}} - n_{\mathrm{c}}\sin\theta} \]<div class="eqnote">Vertical fiber, \(\theta = 0\)</div>\[ \Lambda = \frac{\lambda_0}{n_{\mathrm{eff}}}: \qquad 0 \pm \frac{2\pi}{\Lambda} = \pm\beta \ \ (\text{both directions}), \qquad \beta - 2\,\frac{2\pi}{\Lambda} = -\beta \ \ (\text{Bragg reflection}) \]<div class="eqref">Ch. 2 Eqs. (2.3) and (2.4), Taillaert 2006. Same equation as for emission, read in reverse (reciprocity)</div>`,
+sym: [[String.raw`\(k_0 = 2\pi/\lambda_0\)`, "wavenumber in vacuum"], [String.raw`\(n_{\mathrm{c}}\)`, "index of the cladding above the grating, 1 for air"], [String.raw`\(\theta\)`, "fiber tilt from the surface normal"], [String.raw`\(k_x, k_z\)`, "parts of the fiber light's wavevector along the surface and down into the chip"], [String.raw`\(K = 2\pi/\Lambda\)`, "grating vector: the momentum one period can add or remove along x"], [String.raw`\(\beta = k_0 n_{\mathrm{eff}}\)`, "propagation constant of the guided mode, forward. The backward mode has minus beta"], [String.raw`\(\Lambda\)`, "grating period"]],
+how: [String.raw`Split the incoming wavevector \(k_0 n_{\mathrm{c}}\) into \(k_x = k_0 n_{\mathrm{c}}\sin\theta\) along the surface and \(k_z = k_0 n_{\mathrm{c}}\cos\theta\) down into the chip.`, String.raw`The grating is periodic along \(x\), so it can only change \(k_x\), and only by whole numbers of \(K = 2\pi/\Lambda\). \(k_z\) is not conserved because the structure is not uniform along \(z\).`, String.raw`Phase matching to the forward mode: \(k_x + K = \beta\). Divide by \(k_0\): \(n_{\mathrm{c}}\sin\theta + \lambda_0/\Lambda = n_{\mathrm{eff}}\), which gives the period.`, String.raw`Backward check: \(k_x - K = -\beta + 2k_x\). It misses \(-\beta\) by \(2k_x\), so a tilt of a few degrees already separates the two directions.`, String.raw`At \(\theta = 0\) the miss is zero: \(\pm K = \pm\beta\). The light splits forward and backward, and the second order \(\beta - 2K = -\beta\) reflects guided light back. This is why couplers use a small tilt (Taillaert and Zhou use 10°).`],
+say: String.raw`The grating conserves the wavevector along the surface up to whole grating vectors. With a tilted fiber one kick matches the forward mode while the backward direction misses by twice the fiber's in-plane wavevector. With a vertical fiber both directions match and the second order reflects guided light, so couplers are designed for a small tilt.`,
+num: String.raw`Example (round textbook values): \(n_{\mathrm{eff}} = 2.8\), air, \(\lambda_0 = 800\) nm.<br>\(\theta = 10°\): \(\Lambda = 800/(2.8 - 0.174) =\) <b>305 nm</b>. Backward miss \(2k_x = 0.35\,k_0\).<br>\(\theta = 0\): \(\Lambda = 800/2.8 =\) <b>286 nm</b>, backward miss 0.`,
+note: String.raw`If asked "why not a vertical coupler?": with a vertical fiber the structure is mirror symmetric, so a uniform grating couples equally forward and backward, losing half the light, and its second order back-reflects guided light. Perfectly vertical couplers exist, but they need the symmetry broken, for example by a blazed or multi-layer design.`,
+r(fig, ctl) {
+  const RD = "#E24B4A", GR = "#1D9E75", BL = "#378ADD", CO = "#D85A30", TL = "#1D9E75", AM = "#BA7517";
+  let mode = "tilt", step = 1, playing = true, tPlay = 0, last = performance.now();
+  ctl.innerHTML = `<div class="row"><button data-m="tilt">Tilted fiber</button><button data-m="vert">Vertical fiber</button></div>` + sl("th", "Fiber tilt θ (tilted mode)", 2, 20, 0.5, 10) + `<div class="row"><button id="gb">Back</button><button id="gn">Next step</button><button id="gp">Pause</button><span id="gs" style="font-size:13px;color:var(--muted);margin-left:6px"></span></div><div class="readout" id="ro"></div>`;
+  const TERMS = [
+    [1, String.raw`\(\color{#378ADD}{k_0 n_{\mathrm{c}}\sin\theta}\)`],
+    [2, String.raw`\(+\;\color{#BA7517}{\dfrac{2\pi}{\Lambda}}\)`],
+    [3, String.raw`\(=\;\color{#D85A30}{\beta = k_0 n_{\mathrm{eff}}}\)`],
+    [4, String.raw`\(\;\Longrightarrow\;\Lambda = \dfrac{\lambda_0}{n_{\mathrm{eff}} - n_{\mathrm{c}}\sin\theta}\)`]];
+  const T5 = { tilt: String.raw`\(\text{backward: }\ k_x - \dfrac{2\pi}{\Lambda} = -\beta + 2k_x \ne -\beta\ \ \color{#1D9E75}{\checkmark}\)`, vert: String.raw`\(\theta = 0:\ \ 0 \pm \dfrac{2\pi}{\Lambda} = \pm\beta,\qquad \beta - 2\dfrac{2\pi}{\Lambda} = -\beta\ \ \color{#E24B4A}{\text{✗}}\)`};
+  fig.innerHTML = `<style>.gq{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:58px;font-size:17px;padding:6px 10px;background:var(--sunk);border-radius:8px}.gq span{opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s}.gq span.in{opacity:1;transform:none}.gq2{min-height:40px;margin-top:6px;font-size:15px;padding:4px 10px;opacity:0;transition:opacity .6s}.gq2.in{opacity:1}</style><div class="gq">${TERMS.map(([k, tx]) => `<span data-k="${k}">${tx}</span>`).join("")}</div><div class="gq2" id="g5"></div><div id="gsv"></div><p class="note" id="gc" style="font-size:14.5px;color:var(--fg);min-height:44px"></p>`;
+  typesetMath(fig);
+  const CAP = {1: "Step 1. The fiber shines light down at angle θ. Only the part of its wavevector along the surface, k_x (blue), can couple to the guide.",
+    2: "Step 2. The grating is periodic along x, so it adds kicks K = 2π/Λ (amber) forward or backward. It cannot change anything else that matters.",
+    3: "Step 3. One forward kick lands exactly on β (coral): the light enters the forward guided mode. This is phase matching.",
+    4: "Step 4. Solve that line for the period. A tilted fiber needs a slightly longer period than a vertical one.",
+    5: {tilt: "Step 5. The backward kick lands near −β but misses by 2k_x, so almost no light goes backward. All of it goes one way.", vert: "Step 5. Vertical fiber: k_x = 0, so +K hits β and −K hits −β. The light splits both ways, losing half. Two kicks also turn β into −β, a Bragg mirror for guided light."}};
+  const ne = 2.8, nc = 1;
+  const draw = (t) => {
+    const th = mode === "vert" ? 0 : +$("th").value; $("thv").textContent = th.toFixed(1) + "°";
+    const s1 = Math.sin(th * Math.PI / 180), kx = nc * s1, K = ne - kx, L = 800 / K;
+    let s = "";
+    // ---------- side view ----------
+    const cx = 340, gy = 178, mt = 20;
+    s += `<text class="ts" x="20" y="18">side view (not to scale)</text>`;
+    s += `<rect x="60" y="${gy}" width="560" height="${mt}" fill="var(--b)" opacity="0.55"/>`;
+    const per = 34, x0g = 200;
+    for (let i = 0; i < 9; i++) s += `<rect x="${x0g + i * per}" y="${gy - 10}" width="${per * 0.5}" height="10" fill="var(--b)" opacity="0.8"/>`;
+    s += `<text class="ts" x="340" y="${gy + mt + 56}" text-anchor="middle">GaAs membrane with a grating of period Λ (teeth on top)</text>`;
+    // fiber
+    const a = th * Math.PI / 180, fx = cx - 120 * Math.sin(a), fy = gy - 140;
+    s += `<g transform="rotate(${-th} ${cx} ${gy - 12})"><rect x="${cx - 34}" y="${gy - 170}" width="68" height="110" fill="#EEE6D3" opacity="0.7" stroke="var(--t)" stroke-width="0.6"/><rect x="${cx - 10}" y="${gy - 170}" width="20" height="110" fill="#D8C9A6" opacity="0.8"/>`;
+    for (let k = 0; k < 4; k++) { const yy = gy - 170 + ((t * 40 + k * 28) % 112); s += `<line x1="${cx - 30}" x2="${cx + 30}" y1="${yy}" y2="${yy}" stroke="${BL}" stroke-width="1.5" opacity="0.6"/>`; }
+    s += `</g><text class="ts" x="${cx + 44}" y="${gy - 150}">fiber${th ? `, tilted ${th.toFixed(0)}°` : ", vertical"}</text>`;
+    // incoming k vector and components
+    const Lk = 90, px = cx, py = gy - 14, sx = px - Lk * Math.sin(a), sy = py - Lk * Math.cos(a);
+    s += `<line x1="${sx}" y1="${sy}" x2="${px}" y2="${py}" stroke="var(--t)" stroke-width="2.5" marker-end="url(#ar)"/><text class="ts" x="${sx - 6}" y="${sy + 4}" text-anchor="end">k₀n_c</text>`;
+    if (step >= 1 && th > 0.5) s += `<line x1="${sx}" y1="${py}" x2="${px}" y2="${py}" stroke="${BL}" stroke-width="3" marker-end="url(#ar)"/><text class="ts" x="${(sx + px) / 2}" y="${py + 14}" text-anchor="middle" fill="${BL}">k_x</text><line x1="${sx}" y1="${sy}" x2="${sx}" y2="${py}" stroke="var(--muted)" stroke-dasharray="3 3"/><text class="ts" x="${sx - 4}" y="${(sy + py) / 2}" text-anchor="end" fill="var(--muted)">k_z</text>`;
+    if (step >= 1 && th <= 0.5) s += `<text class="ts" x="${px + 8}" y="${py - 40}" fill="${BL}">k_x = 0</text>`;
+    if (step >= 2) for (let i = 0; i < 4; i++) { const xx = x0g + 20 + i * 70; s += `<line x1="${xx}" y1="${gy - 26}" x2="${xx + 34}" y2="${gy - 26}" stroke="${AM}" stroke-width="2.5" marker-end="url(#ar)"/>`; if (i === 3) s += `<text class="ts" x="${xx + 40}" y="${gy - 22}" fill="${AM}">K = 2π/Λ</text>`; }
+    // guided waves
+    if (step >= 3) {
+      const fw = (x) => gy + mt / 2 + 6 * Math.sin((x - t * 90) / 18);
+      let d = ""; for (let x = cx; x <= 610; x += 4) d += (d ? "L" : "M") + x + " " + fw(x).toFixed(1);
+      s += `<path d="${d}" fill="none" stroke="${CO}" stroke-width="2.5"/><line x1="540" y1="${gy + mt + 16}" x2="610" y2="${gy + mt + 16}" stroke="${CO}" stroke-width="3" marker-end="url(#ar)"/><text class="th" x="575" y="${gy + mt + 34}" text-anchor="middle" fill="${CO}">β (forward)</text>`;
+      const back = mode === "vert" ? 1 : 0.15;
+      let d2 = ""; for (let x = cx; x >= 70; x -= 4) d2 += (d2 ? "L" : "M") + x + " " + (gy + mt / 2 + 6 * back * Math.sin((x + t * 90) / 18)).toFixed(1);
+      if (step >= 5) s += `<path d="${d2}" fill="none" stroke="${mode === "vert" ? RD : "var(--muted)"}" stroke-width="${mode === "vert" ? 2.5 : 1}" opacity="${mode === "vert" ? 1 : 0.6}"/><line x1="140" y1="${gy + mt + 16}" x2="70" y2="${gy + mt + 16}" stroke="${mode === "vert" ? RD : "var(--muted)"}" stroke-width="${mode === "vert" ? 3 : 1.5}" marker-end="url(#ar)"/><text class="th" x="105" y="${gy + mt + 34}" text-anchor="middle" fill="${mode === "vert" ? RD : "var(--muted)"}">−β ${mode === "vert" ? "(half the light)" : "(almost none)"}</text>`;
+    }
+    // ---------- k_x axis ----------
+    const ay = 330, X = v => 340 + v * 100;
+    s += `<text class="ts" x="20" y="270">wavevector along the surface, in units of k₀</text>`;
+    s += `<rect x="${X(-nc)}" y="${ay - 14}" width="${X(nc) - X(-nc)}" height="28" fill="${TL}" opacity="0.15"/><text class="ts" x="${X(-nc) - 6}" y="${ay - 18}" text-anchor="end" fill="${TL}">green band: what air can carry, |k_x| ≤ k₀n_c</text>`;
+    s += `<line x1="${X(-3.1)}" x2="${X(3.1)}" y1="${ay}" y2="${ay}" stroke="var(--t)"/>`;
+    [-ne, 0, ne].forEach(v => s += `<line x1="${X(v)}" x2="${X(v)}" y1="${ay - 6}" y2="${ay + 6}" stroke="var(--t)"/>`);
+    s += `<text class="ts" x="${X(ne)}" y="${ay + 22}" text-anchor="middle" fill="${CO}">+β (2.8)</text><text class="ts" x="${X(-ne)}" y="${ay + 22}" text-anchor="middle" fill="${CO}">−β</text>`;
+    if (step >= 1) s += `<circle cx="${X(kx)}" cy="${ay}" r="6" fill="${BL}"/><text class="ts" x="${X(kx)}" y="${ay + 22}" text-anchor="middle" fill="${BL}">k_x = ${kx.toFixed(2)}</text>`;
+    if (step >= 2) { const f = step === 2 ? Math.min(1, (t % 2.5) / 1.5) : 1;
+      s += `<path d="M${X(kx)} ${ay - 8} Q${(X(kx) + X(kx + K * f)) / 2} ${ay - 60} ${X(kx + K * f)} ${ay - 8}" fill="none" stroke="${AM}" stroke-width="2.5" marker-end="url(#ar)"/><text class="ts" x="${(X(kx) + X(kx + K)) / 2}" y="${ay - 52}" text-anchor="middle" fill="${AM}">+K</text>`;
+      if (step >= 5) s += `<path d="M${X(kx)} ${ay + 8} Q${(X(kx) + X(kx - K)) / 2} ${ay + 60} ${X(kx - K)} ${ay + 8}" fill="none" stroke="${AM}" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/><text class="ts" x="${(X(kx) + X(kx - K)) / 2}" y="${ay + 60}" text-anchor="middle" fill="${AM}">−K</text>`; }
+    if (step >= 3) s += `<circle cx="${X(kx + K)}" cy="${ay}" r="9" fill="none" stroke="${GR}" stroke-width="3"/><text class="th" x="${X(kx + K)}" y="${ay + 40}" text-anchor="middle" fill="${GR}">✓ hits β</text>`;
+    if (step >= 5) { const miss = Math.abs(kx - K + ne) > 0.02;
+      s += `<circle cx="${X(kx - K)}" cy="${ay}" r="7" fill="none" stroke="${miss ? "var(--muted)" : RD}" stroke-width="2.5"/><text class="th" x="${X(-ne)}" y="${ay + 40}" text-anchor="middle" fill="${miss ? GR : RD}">${miss ? "misses −β ✓" : "hits −β ✗"}</text>`;
+      if (mode === "vert") s += `<text class="ts" x="${X(0)}" y="${ay + 78}" text-anchor="middle" fill="${RD}">and β − 2K = −β: guided light is reflected back (second order)</text>`; }
+    $("gsv").innerHTML = svg(420, s);
+    fig.querySelectorAll(".gq span").forEach(e => e.classList.toggle("in", +e.dataset.k <= step));
+    $("g5").classList.toggle("in", step >= 5);
+    $("gs").textContent = `step ${step} of 5`;
+    $("gb").disabled = step === 1; $("gn").disabled = step === 5;
+    $("gc").textContent = typeof CAP[step] === "string" ? CAP[step] : CAP[step][mode];
+    $("ro").innerHTML = `<div><span>period Λ = λ₀/(n_eff − n_c sin θ)</span><b>${L.toFixed(0)} nm</b></div><div><span>backward miss 2k_x</span><b>${(2 * kx).toFixed(2)} k₀</b></div>`;
+  };
+  const set5 = () => { $("g5").innerHTML = T5[mode]; typesetMath($("g5")); };
+  const sync = () => ctl.querySelectorAll("button[data-m]").forEach(b => b.classList.toggle("on", b.dataset.m === mode));
+  ctl.querySelectorAll("button[data-m]").forEach(b => b.onclick = () => { mode = b.dataset.m; sync(); set5(); });
+  $("gb").onclick = () => { step = Math.max(1, step - 1); playing = false; $("gp").textContent = "Play"; };
+  $("gn").onclick = () => { step = Math.min(5, step + 1); playing = false; $("gp").textContent = "Play"; };
+  $("gp").onclick = () => { playing = !playing; if (playing && step === 5) step = 1; tPlay = 0; $("gp").textContent = playing ? "Pause" : "Play"; };
+  sync(); set5();
+  anim(t => {
+    if (!fig.isConnected) { stopAnim(); return; }
+    const now = performance.now(), dt = (now - last) / 1000; last = now;
+    if (playing) { tPlay += dt; if (tPlay > 3.2) { tPlay = 0; if (step < 5) step++; else { playing = false; $("gp").textContent = "Play"; } } }
+    draw(t);
+  });
+}},
+
 {s: "3. The period", t: "Choosing the period for a target angle",
 intu: String.raw`Solve phase matching for \(m = -1\) and you get the period that sends light out at angle \(\theta\). For vertical emission it reduces to the simplest possible rule: one period equals one guide wavelength, \(\Lambda = \lambda_0/n_{\mathrm{eff}}\), which Taillaert et al. state directly. Tilting the beam forward needs a slightly longer period, tilting it backward a shorter one. There is a subtlety: in a strong grating, \(n_{\mathrm{eff}}\) is not the index of the plain waveguide. It is an average over the etched and unetched parts, and Zhou et al. point out that for a shallow-etched GaAs grating it is set by the fill factor and etch depth. Change \(n_{\mathrm{eff}}\) to see how much the period moves.`,
 eq: String.raw`\[ \Lambda = \frac{\lambda_{0}}{n_{\mathrm{eff}} - n_{\mathrm{c}}\sin\theta} \qquad \text{vertical: } \Lambda = \frac{\lambda_{0}}{n_{\mathrm{eff}}} \]<div class="eqref">Ch. 2 Eq. (2.4), Taillaert et al.</div>`,
