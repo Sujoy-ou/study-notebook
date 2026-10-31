@@ -27,7 +27,7 @@ const check=(id,where,s,needMath)=>{
   for(const t of ms){count++;try{doc.convert(t,{display:true});}catch(e){bad++;console.log('TEXERR',id,where,'|',e.message,'|',t.slice(0,120));}}
   if(where.endsWith(' eq')){const rest=s.replace(/\\\[[\s\S]*?\\\]/g,'').replace(/<div class="eq(note|ref)">[\s\S]*?<\/div>/g,'').trim();if(rest){console.log('LOOSETEXT',id,where,'|',rest.slice(0,90));bad++;}}
 };
-for(const g of w.__L[0].groups)for(const l of g.lessons){if(only&&!only.split(',').includes(l.id))continue;
+for(const g of w.__L.flatMap(s=>s.groups))for(const l of g.lessons){if(only&&!only.split(',').includes(l.id))continue;
   l.cards.forEach((c,i)=>{const onlyNote=/^\s*<div class="eqnote">[^<]*<\/div>\s*$/.test(c.eq||'');check(l.id,`card${i+1} eq`,c.eq,!onlyNote);c.sym.forEach((sy,j)=>{ if(/\\\(/.test(sy[0])||/[_^\\]|[α-ωΑ-Ω∂Δ∇]/.test(sy[0])) check(l.id,`card${i+1} sym${j+1}`,sy[0],true);});});
   l.sheet.forEach((r,i)=>check(l.id,`sheet${i+1}`,r[0],true));
   if(process.argv.includes('--prose')){

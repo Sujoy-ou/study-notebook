@@ -10,7 +10,7 @@ const files=[...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1])
 w.eval(files.map(f=>fs.readFileSync(path.join(root,f),"utf8")).join("\n;\n")+"\nwindow.__L=LIBRARY;window.route=route;");
 w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
 let errs=0; const t00=Date.now();
-for(const g of w.__L[0].groups){ if(only && g.id!==only) continue; for(const l of g.lessons){ w.location.hash='#'+l.id; w.eval('route()');
+for(const g of w.__L.flatMap(s=>s.groups)){ if(only && g.id!==only) continue; for(const l of g.lessons){ w.location.hash='#'+l.id; w.eval('route()');
   for(let i=0;i<l.cards.length;i++){ const t0=Date.now(); try{ w.document.querySelectorAll('#tabs button')[i].click();
       const fig=w.document.getElementById('fig').innerHTML; if(fig.length<40) throw new Error('empty fig');
       w.document.querySelectorAll('#ctl input[type=range]').forEach(r=>{for(const v of [r.min,r.max,r.value]){r.value=v;r.dispatchEvent(new w.Event('input'));}});

@@ -17,6 +17,24 @@ const LIBRARY = [
         desc: "The adjoint method, parameterizations, filters and projection, erosion and dilation, the erosion-dilation and curvature penalties, design rule checks and repair, Adam, and a full inverse design run computed live in the page. Theory only.",
         lessons: [], planned: [] }
     ]
+  },
+  {
+    id: "pic", title: "Photonic Integrated Circuits",
+    desc: "Integrated photonics for optical interconnects, from a single waveguide to a co-packaged link. Multilayer fabrication and heterogeneous integration, the published papers of Prof. Ning Li, and Tidy3D commands for PIC simulation. Theory and public papers only, computed live in the page.",
+    groups: [
+      { id: "basics", title: "Part 1: PIC basics, an optical link part by part",
+        desc: "What a photonic chip is and why AI computers need it. Platforms, couplers, directional couplers, rings, modulators, photodetectors and lasers on silicon, with link budgets you can play with.",
+        lessons: [], planned: [] },
+      { id: "fab", title: "Part 2: Multilayer fabrication and heterogeneous integration",
+        desc: "How a silicon photonics wafer is made step by step, how a second and third waveguide layer go on top, how light moves between layers, and how III-V material is brought onto silicon.",
+        lessons: [], planned: [] },
+      { id: "li", title: "Part 3: Prof. Ning Li's published work",
+        desc: "The III-V on silicon plasmonic nanolaser, sub-photon-voltage LEDs, epitaxial lift-off and controlled spalling, and phase change memory, from the papers only.",
+        lessons: [], planned: [] },
+      { id: "tidy3d", title: "Part 4: Tidy3D for PICs, the commands",
+        desc: "Building a PIC simulation in Tidy3D 2.12: Simulation, media and geometry, modes, monitors and results, S-parameters and sweeps, and a worked interlayer coupler and ring.",
+        lessons: [], planned: [] }
+    ]
   }
 ];
 
