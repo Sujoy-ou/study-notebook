@@ -35,6 +35,15 @@ const LIBRARY = [
         desc: "Building a PIC simulation in Tidy3D 2.12: Simulation, media and geometry, modes, monitors and results, S-parameters and sweeps, and a worked interlayer coupler and ring.",
         lessons: [], planned: [] }
     ]
+  },
+  {
+    id: "jc", title: "Journal Club",
+    desc: "Papers read for journal club. Each paper gets its own lecture series, from the basic ideas to a full understanding of every figure, with visuals you control.",
+    groups: [
+      { id: "weber", title: "Quantum computing with defects (Weber et al., PNAS 2010)",
+        desc: "Weber, Koehl, Varley, Janotti, Buckley, Van de Walle and Awschalom, PNAS 107, 8513 (2010). Why the NV center in diamond works as a room temperature qubit, the nine criteria for finding others, how density functional theory screens candidates, and the defects it points to in SiC and other hosts.",
+        lessons: [], planned: [] }
+    ]
   }
 ];
 
@@ -206,7 +215,7 @@ function lesson(id) {
     $("sym").innerHTML = c.sym.map(([a, b]) => `<b>${a}</b><span>${b}</span>`).join("");
     $("how").innerHTML = c.how.map(h => `<li>${h}</li>`).join("");
     $("say").innerHTML = c.say; $("num").innerHTML = c.num;
-    $("notewrap").innerHTML = c.note ? `<p class="sec">Note for the defense</p><div class="dnote">${c.note}</div>` : "";
+    $("notewrap").innerHTML = c.note ? `<p class="sec">${(l.labels && l.labels.note) || "Note for the defense"}</p><div class="dnote">${c.note}</div>` : "";
     $("fig").innerHTML = ""; $("ctl").innerHTML = "";
     typesetMath($("ct"), $("eq"), $("sym"), $("intu"), $("how"), $("say"), $("num"), $("notewrap"));
     c.r($("fig"), $("ctl"));
