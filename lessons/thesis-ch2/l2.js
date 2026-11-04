@@ -1,9 +1,64 @@
+/* TODO for this lesson: Thesis Sec. 2.2 first half (Johnson1999, Eq. 2.1). Rewrite big/bridge/summary/sheet. */
 addLesson("thesis", "ch2", {
 level: "Basic",
-id: "thesis-ch2-l2", title: "Slab modes: TE and TM", short: "2. Slab modes, TE and TM",
+id: "thesis-ch2-l2", title: "Mirror symmetry and the TE-like and TM-like modes", short: "2. Symmetry, TE-like and TM-like",
 big: String.raw`A membrane with the same medium above and below supports two families of modes. TE modes have their electric field in the plane of the slab and parallel to the surfaces, so it is continuous across them. TM modes have their main electric field normal to the surfaces, and the boundary condition makes it jump up by \(\varepsilon_{\mathrm{core}}/\varepsilon_{\mathrm{air}}\), about 12, just outside. That jump pushes TM light out of the core and lowers its effective index. One equation, written by Andreani and Gerace in their Appendix C, gives both families.`,
 bridge: "Lesson 1 showed why only certain angles survive. Here the same condition is solved properly, for both polarizations, with the field profiles. All curves are computed live.",
 cards: [
+/* from old ch2 L4 card 1 */
+{s: "1. Mirrors and vectors", t: "What a mirror does to E and to H",
+intu: String.raw`Put a mirror at \(z = 0\) and reflect a field. For the electric field it is simple: the parts parallel to the mirror stay, the part normal to it flips, exactly like an arrow you would see in a real mirror. The magnetic field behaves the opposite way, because it comes from circulating currents. Reflect a current loop and it circulates the other way, so the \(\mathbf{H}\) component normal to the mirror stays and the parallel parts flip. That is why \(\mathbf{E}\) is called a polar vector and \(\mathbf{H}\) an axial (pseudo) vector. Pick \(\mathbf{E}\) or \(\mathbf{H}\) and rotate the arrow to see its mirror image.`,
+eq: String.raw`\[ \text{mirror } z \to -z: \qquad \begin{aligned} (E_{x}, E_{y}, E_{z}) &\to (E_{x}, E_{y}, -E_{z}) \\ (H_{x}, H_{y}, H_{z}) &\to (-H_{x}, -H_{y}, H_{z}) \end{aligned} \]`,
+sym: [["polar vector", String.raw`\(\mathbf{E}\), \(\mathbf{D}\), current density \(\mathbf{J}\): flip the normal component`], ["axial vector", String.raw`\(\mathbf{H}\), \(\mathbf{B}\): flip the tangential components`], [String.raw`\(z = 0\)`, "the mirror plane, here the membrane mid-plane"]],
+how: [String.raw`Reflect a moving charge: its velocity component normal to the mirror flips, the parallel parts stay. So \(\mathbf{J}\) and \(\mathbf{E}\) transform as polar vectors.`, String.raw`\(\mathbf{H}\) is produced by \(\mathbf{J}\) through a curl (Ampère). A curl involves a cross product, and reflecting both factors flips the result's tangential parts.`, String.raw`Check with a current loop in the \(xy\) plane: its mirror image circulates the same way, so \(H_z\) stays, consistent with the rule.`, "These two rules are all that is needed for the rest of the lesson."],
+say: "Under a mirror reflection the electric field flips its normal component, while the magnetic field, being an axial vector, flips its tangential components.",
+num: String.raw`Check: a field \(\mathbf{E} = \hat{\mathbf{z}}\) on one side maps to \(-\hat{\mathbf{z}}\) on the mirror side. A field \(\mathbf{H} = \hat{\mathbf{x}}\) maps to \(-\hat{\mathbf{x}}\). A field \(\mathbf{H} = \hat{\mathbf{z}}\) maps to \(+\hat{\mathbf{z}}\).`,
+r(fig, ctl) {
+  let f = "E";
+  ctl.innerHTML = btns([["E", "electric field E"], ["H", "magnetic field H"]], "f") + sl("an", "Arrow angle from x", 0, 360, 1, 60);
+  const u = () => {
+    pick(ctl, "f", f); const an = +$("an").value * Math.PI / 180; $("anv").textContent = $("an").value + "°";
+    const vx = Math.cos(an), vz = Math.sin(an), mx = f === "E" ? vx : -vx, mz = f === "E" ? -vz : vz, L = 60;
+    const col = f === "E" ? "#378ADD" : "#D85A30";
+    fig.innerHTML = svg(280, `<rect x="40" y="138" width="600" height="4" fill="var(--p)" opacity="0.6"/><text class="ts" x="640" y="132" text-anchor="end">mirror plane z = 0</text><line x1="340" y1="80" x2="${340 + L * vx}" y2="${80 - L * vz}" stroke="${col}" stroke-width="4" marker-end="url(#ar)"/><circle cx="340" cy="80" r="4" fill="${col}"/><text class="ts" x="250" y="60">original at z = +d</text><line x1="340" y1="200" x2="${340 + L * mx}" y2="${200 - L * mz}" stroke="${col}" stroke-width="4" marker-end="url(#ar)" opacity="0.8"/><circle cx="340" cy="200" r="4" fill="${col}"/><text class="ts" x="250" y="250">mirror image at z = −d</text>${axes(70, 260).replace(/>y</, '>y<')}<text class="ts" x="560" y="80">${f}x: ${vx.toFixed(2)} → ${mx.toFixed(2)}</text><text class="ts" x="560" y="100">${f}z: ${vz.toFixed(2)} → ${mz.toFixed(2)}</text>`);
+  };
+  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { f = b.dataset.f; u(); });
+  $("an").oninput = u; u();
+}},
+
+/* from old ch2 L4 card 2 */
+{s: "2. Even and odd", t: "Even and odd modes: apply the mirror and compare",
+intu: String.raw`A mode is even if its mirror image is identical to itself, and odd if its mirror image is exactly minus itself. Here the arrows show the electric field in a cross-section of the membrane. TE0 points sideways (along \(y\)) with the same direction above and below the mid-plane. Mirror it: tangential arrows do not flip, so you get the same field. It is even. TM0 points up (along \(z\)) everywhere. Mirror it: normal arrows flip, so every arrow now points down, which is minus the original. It is odd. Press 'apply mirror' to see it happen. Johnson et al. 1999 used exactly this classification for photonic crystal slabs: the two classes do not interact.`,
+eq: String.raw`\[ \text{even } (\sigma = +1): \ M[\mathbf{E}] = +\mathbf{E} \qquad \text{odd } (\sigma = -1): \ M[\mathbf{E}] = -\mathbf{E} \]\[ \text{at } z = 0: \quad \text{even} \Rightarrow E_{z} = 0, \qquad \text{odd} \Rightarrow E_{x} = E_{y} = 0 \]`,
+sym: [[String.raw`\(M[\mathbf{E}]\)`, String.raw`the field after applying the mirror (card 1 rules) and moving each point \(z \to -z\)`], [String.raw`\(\sigma\)`, "parity eigenvalue, +1 even, −1 odd"], ["TE-like", "even family"], ["TM-like", "odd family"]],
+how: [String.raw`The structure equals its mirror image, so if \(\mathbf{E}\) is a mode, \(M[\mathbf{E}]\) is also a mode at the same frequency.`, String.raw`For a single (non-degenerate) mode, \(M[\mathbf{E}]\) must be \(\mathbf{E}\) times a constant. Applying the mirror twice gives the original, so the constant is \(\pm 1\).`, String.raw`At \(z = 0\) the point maps to itself. For an even mode \(E_z(0) = -E_z(0)\), so \(E_z = 0\). For an odd mode the in-plane parts vanish.`, "This is why Johnson et al. call them TE-like and TM-like: exactly TE and TM at the mid-plane."],
+say: String.raw`Because the membrane is symmetric, every mode is even or odd under the mid-plane mirror. Even modes have only in-plane electric field at the mid-plane and are TE-like. Odd modes have only \(E_z\) there and are TM-like.`,
+num: "Two eigenvalues only: <b>+1</b> or <b>−1</b>, because mirroring twice is the identity.<br>Over a DBR or substrate on one side, the mirror symmetry is broken and the two classes mix (card 6).",
+r(fig, ctl) {
+  let md = "TE", mir = false;
+  ctl.innerHTML = btns([["TE", "TE0 (even)"], ["TM", "TM0 (odd)"]], "m") + `<div class="row"><button id="mr">Apply mirror</button></div>` + '<div class="readout" id="ro"></div>';
+  const u = () => {
+    pick(ctl, "m", md); $("mr").textContent = mir ? "Show original" : "Apply mirror";
+    let a = ""; const zsp = [-100, -55, -15, 15, 55, 100], ys = [120, 220, 320, 420, 520];
+    zsp.forEach(z => ys.forEach(y => {
+      const inside = Math.abs(z) <= 80, amp = inside ? Math.cos(z / 80 * 0.9) : 0.35 * Math.exp(-(Math.abs(z) - 80) / 40) * (md === "TM" ? 3 : 1);
+      const yy = 140 - z * 0.9;
+      let dx = 0, dz = 0;
+      if (md === "TE") dx = 28 * amp; else dz = 22 * Math.min(1.4, amp);
+      if (mir) { if (md === "TM") dz = -dz; }
+      a += `<line x1="${y - dx / 2}" y1="${yy + dz / 2}" x2="${y + dx / 2}" y2="${yy - dz / 2}" stroke="${md === "TE" ? "#378ADD" : "#D85A30"}" stroke-width="2" marker-end="url(#ar)"/>`;
+    }));
+    fig.innerHTML = svg(270, `<rect x="80" y="${140 - 72}" width="480" height="144" fill="var(--blue-bg)"/><line x1="70" x2="570" y1="140" y2="140" stroke="var(--t)" stroke-dasharray="5 4"/><text class="ts" x="574" y="144">mid-plane</text>${a}<text class="th" x="340" y="252" text-anchor="middle">${mir ? (md === "TE" ? "mirror image = original: even (+1)" : "mirror image = minus original: odd (−1)") : "original field"}</text>`);
+    $("ro").innerHTML = `<div><span>main field</span><b>${md === "TE" ? "E_y (tangential)" : "E_z (normal)"}</b></div><div><span>parity</span><b>${md === "TE" ? "+1" : "−1"}</b></div>`;
+  };
+  ctl.querySelectorAll("button[data-m]").forEach(b => b.onclick = () => { md = b.dataset.m; mir = false; u(); });
+  $("mr").onclick = () => { mir = !mir; u(); }; u();
+}},
+
+/* NEW CARD: On the mid-plane even modes are purely TE and odd modes purely TM (Johnson 1999), so TE-like and TM-like */
+{s: "3. On the mid-plane", t: "TODO: On the mid-plane even modes are purely TE and odd modes purely TM (Johnson 1999), so TE-like and TM-like", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* from old ch2 L2 card 1 */
 {s: "1. The jump", t: "Boundary conditions: why the TM field jumps",
 intu: String.raw`At a surface between two materials, Maxwell's equations fix two things. The field component parallel to the surface is the same on both sides. The normal component of the displacement field \(\mathbf{D} = \varepsilon\mathbf{E}\) is the same on both sides, so the normal component of \(\mathbf{E}\) itself must jump by the ratio of permittivities. For GaAs to air that ratio is \(n^2 \approx 12\). A TE mode has its \(\mathbf{E}\) field parallel to the surfaces, so nothing jumps. A TM mode has its \(\mathbf{E}\) field mostly normal to the surfaces, so just outside the membrane its field is about 12 times stronger than just inside. Drag the index and watch the jump grow.`,
 eq: String.raw`\[ E_{\parallel}^{\mathrm{air}} = E_{\parallel}^{\mathrm{core}} \qquad \varepsilon_{\mathrm{air}} E_{z}^{\mathrm{air}} = \varepsilon_{\mathrm{core}} E_{z}^{\mathrm{core}} \]\[ \Longrightarrow\quad E_{z}^{\mathrm{air}} = \frac{\varepsilon_{\mathrm{core}}}{\varepsilon_{\mathrm{air}}}\, E_{z}^{\mathrm{core}} \]`,
@@ -25,31 +80,7 @@ r(fig, ctl) {
   $("n").oninput = u; u();
 }},
 
-{s: "2. Solving it", t: "Solving the slab equation graphically",
-intu: String.raw`The slab equation has the mode's \(n_{\mathrm{eff}}\) on both sides, so it cannot be solved with algebra. Plot both sides against \(n_{\mathrm{eff}}\) and look for crossings. The left side, \(\tan(\kappa t/2 - m\pi/2)\), climbs through branches. The right side, \(\zeta\gamma/\kappa\), rises smoothly from zero. Each crossing is one mode. For TM the right side is multiplied by \(\zeta = (n/n_{\mathrm{c}})^2\), about 12, so it rises much faster and the crossing moves to a lower \(n_{\mathrm{eff}}\). That is the whole reason TM modes have lower effective index. Andreani and Gerace 2006 studied photonic crystal slabs with a guided-mode expansion method that builds patterned-slab fields out of these plain slab modes, and their Appendix C states these equations for a slab in the same medium on both sides.`,
-eq: String.raw`\[ \tan\!\left(\frac{\kappa t}{2} - \frac{m\pi}{2}\right) = \zeta\,\frac{\gamma}{\kappa} \]\[ \kappa = k_{0}\sqrt{n^{2} - n_{\mathrm{eff}}^{2}}, \qquad \gamma = k_{0}\sqrt{n_{\mathrm{eff}}^{2} - n_{\mathrm{c}}^{2}} \]\[ \zeta = 1 \ \text{(TE)}, \qquad \zeta = \left(\frac{n}{n_{\mathrm{c}}}\right)^{2} \ \text{(TM)} \]<div class="eqref">Andreani and Gerace, Eqs. (C1) to (C4)</div>`,
-sym: [[String.raw`\(\kappa\)`, String.raw`transverse wavenumber in the core (their \(q\))`], [String.raw`\(\gamma\)`, String.raw`decay constant in the cladding (their \(\chi_1\))`], [String.raw`\(m\)`, String.raw`mode order. Even \(m\): (C1) and (C4). Odd \(m\): (C2) and (C3)`], [String.raw`\(\zeta\)`, "boundary factor from card 1"], [String.raw`\(k_{0}\)`, String.raw`\(2\pi/\lambda_0\)`]],
-how: [String.raw`Inside the core the field is \(\cos(\kappa z)\) (even \(m\)) or \(\sin(\kappa z)\) (odd \(m\)). Outside it decays as \(e^{-\gamma|z|}\).`, String.raw`Match the main field and its derivative at \(z = t/2\), with the right boundary condition.`, String.raw`For TE, \(E_y\) and \(dE_y/dz\) are continuous. For TM, \(H_y\) and \((1/\varepsilon)\,dH_y/dz\) are continuous, which brings in \(\zeta\).`, String.raw`The ratio of the two matching conditions gives \(\tan(\kappa t/2 - m\pi/2) = \zeta\gamma/\kappa\). Andreani writes the four cases separately.`],
-say: String.raw`The slab modes satisfy \(\tan(\kappa t/2 - m\pi/2) = \zeta\gamma/\kappa\), with \(\zeta = 1\) for TE and \((n/n_{\mathrm{c}})^2\) for TM. This is the symmetric-slab result of Andreani and Gerace, Appendix C, written as one line.`,
-num: String.raw`\(n = 3.5\), \(t = 160\) nm, \(\lambda = 800\) nm, air:<br>TE0 \(n_{\mathrm{eff}} \approx\) <b>3.08</b>, TM0 \(n_{\mathrm{eff}} \approx\) <b>2.58</b> (computed by this page)<br>Watch out: Andreani call the fundamental mode 'first-order'. Here \(m = 0\) is the fundamental.`,
-r(fig, ctl) {
-  let pol = "TE";
-  ctl.innerHTML = btns([["TE", "TE (ζ = 1)"], ["TM", "TM (ζ = n²)"]], "p") + sl("t", "Thickness t", 60, 400, 5, 160) + '<div class="readout" id="ro"></div>';
-  const u = () => {
-    pick(ctl, "p", pol); const t = +$("t").value, n = 3.5, lam = 800, k0 = 2 * Math.PI / lam, z = pol === "TM" ? n * n : 1; $("tv").textContent = t + " nm";
-    const Ns = range(1.001, 3.499, 500), X = N => 60 + (N - 1) / 2.5 * 560, Y = v => 130 - Math.max(-5, Math.min(5, v)) * 19;
-    let rhs = "", lhs = ["", "", ""];
-    Ns.forEach((N, i) => { const ka = k0 * Math.sqrt(n * n - N * N), ga = k0 * Math.sqrt(N * N - 1); const r = z * ga / ka; rhs += (i ? "L" : "M") + X(N).toFixed(1) + " " + Y(r).toFixed(1); });
-    for (let m = 0; m < 3; m++) { let d = "", prev = null; Ns.forEach(N => { const ka = k0 * Math.sqrt(n * n - N * N); const v = Math.tan(ka * t / 2 - m * Math.PI / 2); if (Math.abs(v) > 5) { prev = null; return; } const cmd = (prev === null || Math.abs(v - prev) > 8) ? "M" : "L"; d += cmd + X(N).toFixed(1) + " " + Y(v).toFixed(1) + " "; prev = v; }); lhs[m] = d; }
-    const sols = []; for (let m = 0; m < 3; m++) { const N = C2.slabN(n, 1, t, lam, m, pol); if (N) sols.push([m, N]); }
-    const cols = ["#378ADD", "#7F77DD", "#1D9E75"];
-    fig.innerHTML = svg(270, `<line x1="60" x2="620" y1="130" y2="130" stroke="var(--p)" stroke-width="0.5"/>${lhs.map((d, m) => `<path d="${d}" fill="none" stroke="${cols[m]}" stroke-width="1.5" opacity="0.8"/>`).join("")}<path d="${rhs}" fill="none" stroke="#D85A30" stroke-width="2.5"/>${sols.map(([m, N]) => `<circle cx="${X(N)}" cy="${Y(z * k0 * Math.sqrt(N * N - 1) / (k0 * Math.sqrt(n * n - N * N)))}" r="6" fill="#EF9F27" stroke="#854F0B"/><text class="ts" x="${X(N)}" y="250" text-anchor="middle">${pol}${m}</text><line x1="${X(N)}" x2="${X(N)}" y1="236" y2="226" stroke="#854F0B"/>`).join("")}<line x1="60" x2="620" y1="236" y2="236" stroke="var(--p)"/><text class="ts" x="60" y="264">n<tspan baseline-shift='sub' font-size='75%'>eff</tspan> = 1</text><text class="ts" x="620" y="264" text-anchor="end">n<tspan baseline-shift='sub' font-size='75%'>eff</tspan> = 3.5</text><text class="ts" x="66" y="28">coral: right side ζγ/κ. Blue, purple, teal: left side for m = 0, 1, 2</text>`);
-    $("ro").innerHTML = sols.map(([m, N]) => `<div><span>${pol}${m}</span><b>N = ${N.toFixed(3)}</b></div>`).join("") || `<div><span>modes</span><b>none</b></div>`;
-  };
-  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { pol = b.dataset.p; u(); });
-  $("t").oninput = u; u();
-}},
-
+/* from old ch2 L2 card 3 */
 {s: "3. Profiles", t: "What the modes look like across the slab",
 intu: String.raw`Each mode has a field shape across the thickness. Even modes (TE0, TM0) have no zero inside the core. Odd modes (TE1, TM1) have one zero at the mid-plane, so their field is positive on one side and negative on the other. Outside, every mode decays exponentially. Pick a mode and change the thickness. For TM, the curve shown is \(E_z\), so you can see the jump at the two surfaces. Notice that near cutoff (thin slab, or a higher-order mode) the tails get long: most of the light is then in the air.`,
 eq: String.raw`\[ \text{inside: } f(z) = \begin{cases} \cos(\kappa z) & m \text{ even} \\ \sin(\kappa z) & m \text{ odd} \end{cases} \qquad \text{outside: } f(t/2)\, e^{-\gamma(|z| - t/2)} \]\[ \text{TE: } f = E_{y} \qquad \text{TM: } f = H_{y}, \quad E_{z} = \frac{\beta H_{y}}{\omega\varepsilon} \propto \frac{H_{y}}{n^{2}(z)} \]`,
@@ -73,50 +104,7 @@ r(fig, ctl) {
   $("t").oninput = u; u();
 }},
 
-{s: "4. Versus thickness", t: "How n<sub>eff</sub> changes with thickness, and cutoffs",
-intu: String.raw`Plot the effective index of each mode against slab thickness. Every curve starts at the cladding index (\(n_{\mathrm{eff}} = 1\)) at its cutoff thickness and climbs toward the core index as the slab gets thicker, because more and more of the light sits inside the GaAs. Higher-order modes switch on one by one. TE curves always lie above the TM curve of the same order. Johnson et al. 1999 gave the design rule for photonic crystal slabs: too thin and modes hug the light line (weak guiding), too thick and higher-order modes appear. The best thickness is about half a wavelength in the material.`,
-eq: String.raw`\[ \text{cutoff (symmetric slab): } \quad t_m = \frac{m\lambda_{0}}{2\sqrt{n^{2} - n_{\mathrm{c}}^{2}}} \quad \text{(TE and TM)} \]<div class="eqnote">fundamental modes have no cutoff</div>`,
-sym: [[String.raw`\(t_m\)`, String.raw`thickness at which mode \(m\) appears`], [String.raw`\(n_{\mathrm{eff}}(t)\)`, "effective index versus thickness"], [String.raw`\(\lambda_{0}/(2n)\)`, "half a wavelength in the core, Johnson's rule of thumb"]],
-how: [String.raw`At cutoff \(n_{\mathrm{eff}} = n_{\mathrm{c}}\), so \(\gamma = 0\) and the right side of the slab equation is zero.`, String.raw`Then \(\kappa t/2 - m\pi/2 = 0\) with \(\kappa = k_0\sqrt{n^2 - n_{\mathrm{c}}^2}\).`, String.raw`Solving gives \(t_m\). The fundamental (\(m = 0\)) has \(t_0 = 0\): a symmetric slab always guides it.`, String.raw`Above cutoff \(n_{\mathrm{eff}}\) rises toward \(n\) as the field concentrates in the core.`],
-say: String.raw`In a symmetric slab the fundamental TE and TM modes have no cutoff. Mode \(m\) appears at \(t_m = m\lambda_0/(2\sqrt{n^2 - n_{\mathrm{c}}^2})\). Thickness is chosen to give strong guiding without too many higher-order modes.`,
-num: String.raw`\(n = 3.5\) in air at 800 nm: \(t_1 = 800/(2\sqrt{11.25}) \approx\) <b>119 nm</b>, \(t_2 \approx\) <b>239 nm</b><br>Half a wavelength in the core: \(800/(2 \times 3.5) \approx\) <b>114 nm</b><br>A 160 nm membrane is just above \(t_1\), so TE1 and TM1 exist but are weakly guided.`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("t", "Marker at thickness", 20, 500, 5, 160) + '<div class="readout" id="ro"></div>';
-  const ts = range(10, 500, 120), modes = [["TE", 0, "#378ADD", ""], ["TM", 0, "#D85A30", ""], ["TE", 1, "#378ADD", "5 4"], ["TM", 1, "#D85A30", "5 4"], ["TE", 2, "#378ADD", "2 3"], ["TM", 2, "#D85A30", "2 3"]];
-  const curves = modes.map(([p, m]) => ts.map(t => C2.slabN(3.5, 1, t, 800, m, p)));
-  const u = () => {
-    const tt = +$("t").value; $("tv").textContent = tt + " nm";
-    const X = t => 60 + (t - 10) / 490 * 560, Y = N => 230 - (N - 1) / 2.5 * 200;
-    let s = ""; curves.forEach((c, i) => { let d = ""; c.forEach((N, j) => { if (!N) return; d += (d ? "L" : "M") + X(ts[j]).toFixed(1) + " " + Y(N).toFixed(1); }); s += `<path d="${d}" fill="none" stroke="${modes[i][2]}" stroke-width="2" ${modes[i][3] ? `stroke-dasharray="${modes[i][3]}"` : ""}/>`; });
-    const now = modes.map(([p, m]) => [p + m, C2.slabN(3.5, 1, tt, 800, m, p)]).filter(x => x[1]);
-    fig.innerHTML = svg(270, `${s}<line x1="${X(tt)}" x2="${X(tt)}" y1="30" y2="230" stroke="#EF9F27" stroke-width="2"/><line x1="60" x2="620" y1="230" y2="230" stroke="var(--p)"/><line x1="60" x2="60" y1="30" y2="230" stroke="var(--p)"/><text class="ts" x="54" y="234" text-anchor="end">1</text><text class="ts" x="54" y="34" text-anchor="end">3.5</text><text class="ts" x="340" y="252" text-anchor="middle">slab thickness, 10 to 500 nm</text><text class="ts" x="66" y="44">blue TE, coral TM. Solid m = 0, dashed m = 1, dotted m = 2</text>`);
-    $("ro").innerHTML = now.map(([nm, N]) => `<div><span>${nm}</span><b>${N.toFixed(3)}</b></div>`).join("");
-  };
-  $("t").oninput = u; u();
-}},
-
-{s: "5. Confinement", t: "How much light is inside the GaAs",
-intu: "The fraction of power that travels inside the core is the confinement factor. It decides how strongly the mode feels the GaAs: how much it is slowed down, how strongly a grating etched into it scatters, how strongly a dot in the core couples. A thin slab lets most of the mode leak into the air. A thick one holds almost all of it. Johnson et al. found that in their slab more than 90 % of the energy of the lowest modes sat inside the slab height. Move the thickness and compare TE0 with TE1.",
-eq: String.raw`\[ \Gamma_{\mathrm{core}} = \frac{\int_{\mathrm{core}} |E_{y}|^{2}\, \mathrm{d}z}{\int |E_{y}|^{2}\, \mathrm{d}z} \]<div class="eqref">TE, a good estimate of the power fraction</div>`,
-sym: [[String.raw`\(\Gamma_{\mathrm{core}}\)`, "confinement factor, fraction of the mode inside the core"], [String.raw`\(E_{y}\)`, "TE field profile from card 3"]],
-how: [String.raw`For a TE slab mode, the power flow along the guide is proportional to \(|E_y|^2\) at every \(z\).`, String.raw`Integrate \(|E_y|^2\) over the core and over all \(z\).`, "Their ratio is the fraction of power inside the core.", String.raw`The evanescent tail length \(1/\gamma\) controls how much is outside.`],
-say: "The confinement factor of the fundamental mode grows with thickness. Near cutoff a mode is mostly in the cladding and weakly guided.",
-num: String.raw`\(n = 3.5\), \(\lambda = 800\) nm, TE0: \(t = 80\) nm ≈ <b>70 %</b>, \(t = 160\) nm ≈ <b>91 %</b>, \(t = 300\) nm ≈ <b>98 %</b> (computed by this page)`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("t", "Thickness t", 20, 400, 5, 160) + '<div class="readout" id="ro"></div>';
-  const ts = range(20, 400, 60);
-  const g0 = ts.map(t => { const N = C2.slabN(3.5, 1, t, 800, 0, "TE"); return N ? C2.slabConfinement(3.5, 1, t, 800, 0, N) : NaN; });
-  const g1 = ts.map(t => { const N = C2.slabN(3.5, 1, t, 800, 1, "TE"); return N ? C2.slabConfinement(3.5, 1, t, 800, 1, N) : NaN; });
-  const u = () => {
-    const t = +$("t").value; $("tv").textContent = t + " nm";
-    const N0 = C2.slabN(3.5, 1, t, 800, 0, "TE"), N1 = C2.slabN(3.5, 1, t, 800, 1, "TE");
-    const c0 = N0 ? C2.slabConfinement(3.5, 1, t, 800, 0, N0) : 0, c1 = N1 ? C2.slabConfinement(3.5, 1, t, 800, 1, N1) : 0;
-    fig.innerHTML = svg(260, `${plot(60, 30, 560, 190, ts, g0, 20, 400, 0, 1, "#378ADD", 2.5)}${plot(60, 30, 560, 190, ts, g1, 20, 400, 0, 1, "#7F77DD", 2, "5 4")}<line x1="${60 + (t - 20) / 380 * 560}" x2="${60 + (t - 20) / 380 * 560}" y1="30" y2="220" stroke="#EF9F27" stroke-width="2"/><line x1="60" x2="620" y1="220" y2="220" stroke="var(--p)"/><line x1="60" x2="60" y1="30" y2="220" stroke="var(--p)"/><text class="ts" x="54" y="34" text-anchor="end">100 %</text><text class="ts" x="54" y="224" text-anchor="end">0</text><text class="ts" x="340" y="244" text-anchor="middle">thickness, 20 to 400 nm. Solid TE0, dashed TE1</text>`);
-    $("ro").innerHTML = `<div><span>TE0 in core</span><b>${(c0 * 100).toFixed(1)} %</b></div><div><span>TE1 in core</span><b>${N1 ? (c1 * 100).toFixed(1) + " %" : "cut off"}</b></div>`;
-  };
-  $("t").oninput = u; u();
-}},
-
+/* from old ch2 L2 card 6 */
 {s: "6. TE above TM", t: "Why TE is always above TM, and why it matters",
 intu: String.raw`Card 2 showed the reason in the equation: \(\zeta = (n/n_{\mathrm{c}})^2\) makes the TM right-hand side climb faster, which lowers its solution. Physically, TM light is pushed out into the air by the field jump of card 1, and light that travels more in air has a lower effective index. The gap between TE and TM grows with index contrast. Drag the core index from a weak waveguide to GaAs and watch the gap open. This gap is useful and harmful at once: it makes grating couplers strongly polarization selective (Lesson 5), and it gives the two polarizations different beat lengths in an MMI (Lesson 7), which is how an MMI can split them.`,
 eq: String.raw`\[ n_{\mathrm{eff},m}^{\mathrm{TM}} \lt n_{\mathrm{eff},m}^{\mathrm{TE}} \qquad \text{gap grows with contrast } n/n_{\mathrm{c}} \ \text{(through } \zeta\text{)} \]`,
@@ -137,6 +125,7 @@ r(fig, ctl) {
   };
   $("n").oninput = u; $("t").oninput = u; u();
 }}
+
 ],
 summary: String.raw`At a surface the tangential \(\mathbf{E}\) field and the normal \(\mathbf{D}\) field are continuous, so a field normal to the membrane jumps by \(\varepsilon_{\mathrm{core}}/\varepsilon_{\mathrm{air}} \approx 12\). TE modes have their field parallel to the surfaces, TM modes normal to them. Both obey \(\tan(\kappa t/2 - m\pi/2) = \zeta\gamma/\kappa\), with \(\zeta = 1\) for TE and \((n/n_{\mathrm{c}})^2\) for TM, as in Andreani and Gerace's Appendix C. The TM factor lowers the TM effective index. Fundamental modes have no cutoff, mode \(m\) appears at \(t_m = m\lambda_0/(2\sqrt{n^2 - n_{\mathrm{c}}^2})\), and the confinement factor grows with thickness.`,
 sheet: [

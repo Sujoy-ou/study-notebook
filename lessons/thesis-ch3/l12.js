@@ -1,127 +1,91 @@
-/* helpers for the Adam lesson: a stretched quadratic bowl f = (x - 1)^2 + S^2 (y - 0.5)^2 to MINIMIZE */
-const C3A = {
-  grad: (p, S) => [2 * (p[0] - 1), 2 * S * S * (p[1] - 0.5)],
-  f: (p, S) => (p[0] - 1) ** 2 + S * S * (p[1] - 0.5) ** 2,
-  gd: (S, lr, n) => { let p = [-1.5, -0.7]; const path = [p]; for (let i = 0; i < n; i++) { const g = C3A.grad(p, S); p = [p[0] - lr * g[0], p[1] - lr * g[1]]; if (!isFinite(p[0]) || Math.abs(p[1]) > 50) break; path.push(p); } return path; },
-  adam: (S, lr, n) => { let p = [-1.5, -0.7]; const path = [p], A = new C3.Adam(2, lr); for (let i = 0; i < n; i++) { const g = C3A.grad(p, S), s = A.step([-g[0], -g[1]]); p = [p[0] + s[0], p[1] + s[1]]; path.push(p); } return path; },
-  view: (paths, S, cols) => {
-    const X = C3.X(40, 600, -2, 2), Y = C3.Y(10, 230, -1.3, 1.3);
-    let s = `<rect x="40" y="10" width="600" height="230" fill="none" stroke="var(--b)"/><clipPath id="cpA"><rect x="40" y="10" width="600" height="230"/></clipPath><g clip-path="url(#cpA)">`;
-    for (const lv of [0.05, 0.25, 0.75, 1.75, 3.5, 6]) { const rx = Math.sqrt(lv), ry = Math.sqrt(lv) / S; s += `<ellipse cx="${X(1)}" cy="${Y(0.5)}" rx="${(X(1 + rx) - X(1)).toFixed(1)}" ry="${(Y(0.5) - Y(0.5 + ry)).toFixed(1)}" fill="none" stroke="var(--b)"/>`; }
-    paths.forEach((P, k) => { let d = ""; P.forEach((p, i) => d += (i ? "L" : "M") + X(C3.clamp(p[0], -5, 5)).toFixed(1) + " " + Y(C3.clamp(p[1], -5, 5)).toFixed(1)); s += `<path d="${d}" fill="none" stroke="${cols[k]}" stroke-width="1.8"/>`; const e = P[P.length - 1]; s += `<circle cx="${X(C3.clamp(e[0], -5, 5))}" cy="${Y(C3.clamp(e[1], -5, 5))}" r="4" fill="${cols[k]}"/>`; });
-    s += `</g><circle cx="${X(1)}" cy="${Y(0.5)}" r="5" fill="none" stroke="var(--t)" stroke-width="2"/><circle cx="${X(-1.5)}" cy="${Y(-0.7)}" r="4" fill="var(--t)"/><text class="ts" x="${X(-1.5) + 8}" y="${Y(-0.7) + 14}">start</text><text class="ts" x="${X(1) + 8}" y="${Y(0.5) - 8}">optimum</text>`;
-    return s;
-  }
-};
+/* TODO for this lesson: NEW LESSON, thesis Sec. 3.6. Write big/bridge/summary/sheet/sources from scratch (head and tail were copied from the Adam lesson as a placeholder). */
 addLesson("thesis", "ch3", {
-level: "Core",
-id: "thesis-ch3-l12", title: "The optimizer: Adam", short: "12. Adam",
+level: "Advanced",
+id: "thesis-ch3-l12", title: "Simulation settings: grid, symmetry, sources and boundaries", short: "12. Simulation settings",
 big: String.raw`The adjoint method delivers a gradient. The optimizer decides how big a step to take along it. Plain gradient descent steps in proportion to the gradient, which fails when parameters differ greatly in sensitivity: a step small enough for the most sensitive parameter barely moves the others. Adam keeps, for every parameter, a running average of its gradient and of its squared gradient, and steps by the ratio of the two. Each parameter thus gets its own effective step size, about the learning rate \(\alpha\), whatever the scale of its gradient. Grating widths, DBR scales, taper points and pixel densities all have very different sensitivities, and Adam treats them on an equal footing.`,
 bridge: "This is Ch. 3 Sec. 3.6, the optimizer paragraph, which cites Algorithm 1 of Kingma and Ba 2015 (University of Amsterdam and University of Toronto). All thesis optimizations use Adam through the optax library with its default decay rates 0.9 and 0.999. Michaels and Yablonovitch used BFGS instead. The paths below are computed live on a stretched quadratic bowl.",
 cards: [
-{s: "1. Plain gradient descent", t: "Gradient descent in a stretched valley",
-intu: String.raw`The bowl is stretched: moving along \(y\) is \(S\) times more sensitive than along \(x\), so the contours are long ellipses. Gradient descent steps along \(-\nabla f\). The step size must be small enough for the steep direction, otherwise it overshoots and diverges. But then the shallow direction crawls. Raise \(S\) and see the path zigzag across the valley or blow up, and need ever more steps to reach the optimum.`,
-eq: String.raw`\[ \mathbf{p}_{k+1} = \mathbf{p}_k - \alpha\, \nabla f(\mathbf{p}_k) \qquad f = (x - 1)^2 + S^2 (y - 0.5)^2 \]\[ \text{stable only if } \alpha \lt 1/S^2 \]`,
-sym: [[String.raw`\(\alpha\)`, "learning rate"], [String.raw`\(S\)`, "sensitivity ratio between the two parameters"], [String.raw`\(1/S^2\)`, "largest stable step, set by the steep direction"]],
-how: [String.raw`Along \(y\) the update is \(y \leftarrow y - 2\alpha S^2(y - 0.5)\), stable only if \(2\alpha S^2 \lt 2\).`, String.raw`Along \(x\) it is \(x \leftarrow x - 2\alpha(x - 1)\), which needs \(\alpha\) near ½ to be fast.`, String.raw`Both cannot hold when \(S\) is large.`, String.raw`So the number of steps grows like \(S^2\): the condition number problem.`],
-say: "Plain gradient descent struggles when parameters differ in sensitivity, because the step that is stable for the steepest one is too small for the rest.",
-num: String.raw`At \(S = 10\) the stable step is below 0.01, and the \(x\) direction then needs hundreds of steps.`,
+/* NEW CARD: Non-uniform grid set by steps per wavelength in each material, quoted for GaAs, nominal cell lambda0/(N n); pixel matched to cell */
+{s: "1. Steps per wavelength", t: "TODO: Non-uniform grid set by steps per wavelength in each material, quoted for GaAs, nominal cell lambda0/(N n); pixel matched to cell", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* NEW CARD: Gratings designed in 2D in the x-z plane containing the fiber, tapers and PBS in 3D, why */
+{s: "2. 2D and 3D", t: "TODO: Gratings designed in 2D in the x-z plane containing the fiber, tapers and PBS in 3D, why", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* from old ch2 L4 card 3 */
+{s: "3. PEC and PMC", t: "Replacing the mirror by a wall: PEC and PMC",
+intu: String.raw`If a mode is even, we know \(E_z\) and the tangential \(\mathbf{H}\) are zero on the mid-plane. If it is odd, the tangential \(\mathbf{E}\) is zero there. Both are exactly the conditions at an ideal wall. A perfect electric conductor (PEC) forces tangential \(\mathbf{E}\) to zero. A perfect magnetic conductor (PMC), its magnetic twin, forces tangential \(\mathbf{H}\) to zero. So you can delete half the membrane, put a PMC on the cut, and the remaining half carries exactly the even modes. Put a PEC there instead and it carries exactly the odd modes. Choose a mode and a wall and see whether the wall is compatible.`,
+eq: String.raw`\[ \begin{aligned} \text{PEC:}\quad \hat{\mathbf{n}} \times \mathbf{E} &= 0 \quad (\text{tangential } \mathbf{E} = 0) \\ \text{PMC:}\quad \hat{\mathbf{n}} \times \mathbf{H} &= 0 \quad (\text{tangential } \mathbf{H} = 0) \end{aligned} \]\[ \text{even (TE-like)} \longleftrightarrow \text{PMC} \qquad \text{odd (TM-like)} \longleftrightarrow \text{PEC} \]`,
+sym: [[String.raw`\(\hat{\mathbf{n}}\)`, "unit normal of the wall"], ["PEC", "perfect electric conductor, ideal metal"], ["PMC", "perfect magnetic conductor, a mathematical dual of PEC"]],
+how: [String.raw`Even mode: by card 1, \(\mathbf{H}\)'s tangential parts flip under the mirror, so on the plane \(\mathbf{H}_{\mathrm{tan}} = -\mathbf{H}_{\mathrm{tan}} = 0\). That is a PMC condition.`, String.raw`Odd mode: \(\mathbf{E}\)'s tangential parts must equal minus themselves on the plane, so \(\mathbf{E}_{\mathrm{tan}} = 0\). That is a PEC condition.`, "A wall that matches the field's own symmetry changes nothing for that family.", "A wall of the wrong type forbids that family entirely: only the other family survives."],
+say: "A PMC plane at the mid-plane keeps the even, TE-like modes, and a PEC plane keeps the odd, TM-like modes. This is how a symmetry plane in an FDTD simulation selects one mode family.",
+num: String.raw`PEC: tangential \(\mathbf{E} = 0\) on the wall. PMC: tangential \(\mathbf{H} = 0\) on the wall.<br>Even modes satisfy the PMC condition automatically on the mid-plane, odd modes satisfy the PEC condition.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("S", "Sensitivity ratio S", 1, 12, 0.5, 6) + sl("a", "Learning rate α (log)", -3, -0.3, 0.05, -1.7) + '<div class="readout" id="ro"></div>';
+  let md = "TE", wl = "PMC";
+  ctl.innerHTML = `<div class="row"><label>Mode</label><button data-m="TE">TE0 (even)</button><button data-m="TM">TM0 (odd)</button></div><div class="row"><label>Wall at z = 0</label><button data-w="PMC">PMC</button><button data-w="PEC">PEC</button></div><div class="readout" id="ro"></div>`;
   const u = () => {
-    const S = +$("S").value, a = Math.pow(10, +$("a").value); $("Sv").textContent = S; $("av").textContent = a.toFixed(4);
-    const P = C3A.gd(S, a, 60), e = P[P.length - 1], div = P.length < 61 || Math.abs(e[1]) > 5;
-    fig.innerHTML = svg(250, C3A.view([P], S, ["#D85A30"]));
-    $("ro").innerHTML = `<div><span>stable if α <</span><b>${(1 / (S * S)).toFixed(4)}</b></div><div><span>after 60 steps f</span><b>${div ? "diverged" : C3A.f(e, S).toExponential(2)}</b></div>`;
+    pick(ctl, "m", md); pick(ctl, "w", wl);
+    const ok = (md === "TE" && wl === "PMC") || (md === "TM" && wl === "PEC");
+    let a = ""; [-15, 30, 75].forEach(z => [140, 240, 340, 440, 540].forEach(y => { const yy = 150 - z; const amp = Math.cos(z / 80 * 0.9); if (md === "TE") a += `<line x1="${y - 14 * amp}" y1="${yy}" x2="${y + 14 * amp}" y2="${yy}" stroke="#378ADD" stroke-width="2" marker-end="url(#ar)"/>`; else a += `<line x1="${y}" y1="${yy + 11}" x2="${y}" y2="${yy - 11}" stroke="#D85A30" stroke-width="2" marker-end="url(#ar)"/>`; }));
+    fig.innerHTML = svg(260, `<rect x="100" y="70" width="480" height="80" fill="var(--blue-bg)"/><rect x="90" y="150" width="500" height="8" fill="${wl === "PEC" ? "#888780" : "#7F77DD"}"/><text class="ts" x="596" y="158">${wl} wall</text>${a}<text class="ts" x="340" y="182" text-anchor="middle">simulated half only. The other half is implied by symmetry.</text><text class="th" x="340" y="222" text-anchor="middle">${ok ? "compatible: this mode family is kept" : "incompatible: this mode family is removed"}</text>`);
+    $("ro").innerHTML = `<div><span>field on the plane</span><b>${md === "TE" ? "E tangential ≠ 0, H tangential = 0" : "E tangential = 0, E_z ≠ 0"}</b></div><div><span>${wl} requires</span><b>${wl === "PEC" ? "E tangential = 0" : "H tangential = 0"}</b></div>`;
   };
-  $("S").oninput = u; $("a").oninput = u; u();
+  ctl.querySelectorAll("button[data-m]").forEach(b => b.onclick = () => { md = b.dataset.m; u(); });
+  ctl.querySelectorAll("button[data-w]").forEach(b => b.onclick = () => { wl = b.dataset.w; u(); }); u();
 }},
 
-{s: "2. Adam", t: "Adam in the same valley",
-intu: String.raw`Same valley, now with Adam. Each coordinate is stepped by its own averaged gradient divided by the root of its own averaged squared gradient. The ratio is about ±1 in each direction, so both coordinates move by about \(\alpha\) per step regardless of \(S\). The path heads almost diagonally toward the optimum. Compare with gradient descent (grey) at the same \(\alpha\).`,
-eq: String.raw`\[ m_t = \beta_1 m_{t-1} + (1 - \beta_1)\, g_t \qquad v_t = \beta_2 v_{t-1} + (1 - \beta_2)\, g_t^2 \]\[ \hat m_t = \frac{m_t}{1 - \beta_1^t} \qquad \hat v_t = \frac{v_t}{1 - \beta_2^t} \]\[ \theta_t = \theta_{t-1} - \alpha\, \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} \]<div class="eqref">Kingma and Ba, Alg. 1</div>`,
-sym: [[String.raw`\(g_t\)`, String.raw`gradient at step \(t\), per parameter`], [String.raw`\(m_t\)`, "first moment: running mean of the gradient"], [String.raw`\(v_t\)`, "second moment: running mean of the squared gradient"], [String.raw`\(\beta_1 = 0.9,\ \beta_2 = 0.999\)`, "decay rates, the optax defaults"], [String.raw`\(\epsilon = 10^{-8}\)`, "avoids division by zero"]],
-how: [String.raw`Average the gradient over recent steps: \(m_t\).`, String.raw`Average its square: \(v_t\), a measure of its typical size.`, "Correct both for starting at zero (card 3).", String.raw`Step by \(\hat m/\sqrt{\hat v}\): a signed, size-free number of order one, times \(\alpha\).`],
-say: "Adam steps each parameter by its averaged gradient divided by the root of its averaged squared gradient, so every parameter moves by about the learning rate whatever its sensitivity.",
-num: String.raw`Kingma and Ba's defaults: \(\alpha = 0.001\), \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\epsilon = 10^{-8}\). In photonic inverse design \(\alpha\) is usually raised to between about 0.005 and 0.1.`,
+/* from old ch2 L4 card 4 */
+{s: "4. Symmetry in Tidy3D", t: "Which symmetry value keeps which mode",
+intu: String.raw`A strip has two mirror planes: the mid-plane \(z = 0\) and the axis plane \(y = 0\) (\(x\) is the propagation direction). For each plane the rule is the same: look at which electric field components are tangential to the plane and ask whether they vanish there for your mode. If they vanish, the mode is compatible with a PEC (−1). If they do not, it needs a PMC (+1). For \(z = 0\) the tangential components are \(E_x, E_y\). For \(y = 0\) they are \(E_x, E_z\). Pick a plane and a mode to get the value. In Tidy3D's Simulation.symmetry, +1 means even (PMC) and −1 means odd (PEC).`,
+eq: String.raw`<div class="eqnote">Tidy3D:</div>\[ \texttt{symmetry} = (s_{x}, s_{y}, s_{z}) \]\[ +1 = \text{even} = \text{PMC}, \qquad -1 = \text{odd} = \text{PEC}, \qquad 0 = \text{none} \]\[ z = 0:\ \text{TE0} \to +1,\ \text{TM0} \to -1 \qquad y = 0:\ \text{TE0} \to -1,\ \text{TM0} \to +1 \]`,
+sym: [[String.raw`\(s_{y}, s_{z}\)`, String.raw`symmetry setting for the plane through the simulation center normal to \(y\) or \(z\)`], [String.raw`tangential \(\mathbf{E}\)`, "components lying in the plane"], ["TE0", String.raw`main field \(E_y\)`], ["TM0", String.raw`main field \(E_z\)`]],
+how: [String.raw`Plane \(z = 0\), TE0: \(E_y\) is large on the mid-plane, so tangential \(\mathbf{E} \neq 0\) → not PEC → PMC, +1.`, String.raw`Plane \(z = 0\), TM0: \(E_x\) and \(E_y\) vanish on the mid-plane → PEC, −1.`, String.raw`Plane \(y = 0\), TE0: the tangential parts are \(E_x\) and \(E_z\), both zero on the axis (\(E_x\) vanishes on axis, see Chapter 1, Lesson 6) → PEC, −1. \(E_y\) itself is normal to this plane.`, String.raw`Plane \(y = 0\), TM0: \(E_z\) is large on the axis → PMC, +1.`],
+say: "In Tidy3D the symmetry value +1 is a PMC plane and keeps fields whose tangential electric field is nonzero on the plane, −1 is a PEC plane and keeps fields whose tangential electric field vanishes there. Which value keeps TE0 depends on the plane.",
+num: String.raw`A common surprise: the same TE0 mode needs <b>+1</b> at \(z = 0\) but <b>−1</b> at \(y = 0\), because \(E_y\) is tangential to the first plane and normal to the second.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("S", "Sensitivity ratio S", 1, 12, 0.5, 6) + sl("a", "Learning rate α", 0.01, 0.3, 0.005, 0.08) + '<div class="readout" id="ro"></div>';
+  let pl = "z", md = "TE";
+  ctl.innerHTML = `<div class="row"><label>Plane</label><button data-p="z">z = 0 (mid-plane)</button><button data-p="y">y = 0 (axis plane)</button></div><div class="row"><label>Mode</label><button data-m="TE">TE0</button><button data-m="TM">TM0</button></div><div class="readout" id="ro"></div>`;
   const u = () => {
-    const S = +$("S").value, a = +$("a").value; $("Sv").textContent = S; $("av").textContent = a.toFixed(3);
-    const A = C3A.adam(S, a, 60), G = C3A.gd(S, a, 60), eA = A[A.length - 1], eG = G[G.length - 1], dG = G.length < 61 || Math.abs(eG[1]) > 5;
-    fig.innerHTML = svg(250, C3A.view([G, A], S, ["var(--b)", "#1D9E75"]));
-    $("ro").innerHTML = `<div><span>Adam, f after 60 steps</span><b>${C3A.f(eA, S).toExponential(2)}</b></div><div><span>gradient descent, same α</span><b>${dG ? "diverged" : C3A.f(eG, S).toExponential(2)}</b></div>`;
+    pick(ctl, "p", pl); pick(ctl, "m", md);
+    const val = (pl === "z") === (md === "TE") ? 1 : -1;
+    const cx = 340, cy = 130, w = 200, h = 80;
+    let arr = ""; for (let i = -2; i <= 2; i++) for (let j = -1; j <= 1; j++) { const x = cx + i * 40, y = cy + j * 26; if (md === "TE") arr += `<line x1="${x - 14}" y1="${y}" x2="${x + 14}" y2="${y}" stroke="#378ADD" stroke-width="2" marker-end="url(#ar)"/>`; else arr += `<line x1="${x}" y1="${y + 11}" x2="${x}" y2="${y - 11}" stroke="#D85A30" stroke-width="2" marker-end="url(#ar)"/>`; }
+    const plane = pl === "z" ? `<line x1="${cx - 180}" x2="${cx + 180}" y1="${cy}" y2="${cy}" stroke="#7F77DD" stroke-width="4" opacity="0.7"/>` : `<line x1="${cx}" x2="${cx}" y1="${cy - 90}" y2="${cy + 90}" stroke="#7F77DD" stroke-width="4" opacity="0.7"/>`;
+    const tang = pl === "z" ? "E_x, E_y" : "E_x, E_z";
+    const tz = (pl === "z" && md === "TM") || (pl === "y" && md === "TE");
+    fig.innerHTML = svg(270, `<rect x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}" fill="var(--blue-bg)" stroke="var(--p)"/>${arr}${plane}<text class="ts" x="${cx}" y="${cy + 110}" text-anchor="middle">strip cross-section (y across, z up). Purple: symmetry plane</text><text class="th" x="${cx}" y="34" text-anchor="middle">symmetry value ${val > 0 ? "+1 (PMC)" : "−1 (PEC)"}</text><text class="ts" x="${cx}" y="258" text-anchor="middle">tangential E on the plane: ${tang}, which ${tz ? "vanish" : "do not vanish"} for ${md}0</text>`);
+    $("ro").innerHTML = `<div><span>tangential E</span><b>${tang}</b></div><div><span>on the plane</span><b>${tz ? "zero" : "nonzero"}</b></div><div><span>Tidy3D value</span><b>${val > 0 ? "+1" : "−1"}</b></div>`;
   };
-  $("S").oninput = u; $("a").oninput = u; u();
+  ctl.querySelectorAll("button[data-p]").forEach(b => b.onclick = () => { pl = b.dataset.p; u(); });
+  ctl.querySelectorAll("button[data-m]").forEach(b => b.onclick = () => { md = b.dataset.m; u(); }); u();
 }},
 
-{s: "3. Moments and bias correction", t: "The running averages and why they are corrected",
-intu: String.raw`Both averages start at zero. In the first steps they are therefore too small: after one step \(m\) is only 10 % of the gradient and \(v\) only 0.1 % of its square. Dividing by \(1 - \beta^t\) removes this start-up bias exactly for a constant gradient. Here the gradient is a constant 1 plus noise. Watch the raw averages creep up, the corrected ones sit near the true values from the start, and the step ratio \(\hat m/\sqrt{\hat v}\) stay near 1.`,
-eq: String.raw`\[ \mathbb{E}[m_t] \approx (1 - \beta_1^t)\, \mathbb{E}[g] \qquad \mathbb{E}[v_t] \approx (1 - \beta_2^t)\, \mathbb{E}[g^2] \]\[ \Longrightarrow\quad \text{divide by } 1 - \beta^t \]`,
-sym: [[String.raw`\(1 - \beta_1^t\)`, String.raw`0.1 at \(t = 1\), 0.65 at \(t = 10\), 0.99 at \(t = 44\)`], [String.raw`\(1 - \beta_2^t\)`, String.raw`0.001 at \(t = 1\), 0.095 at \(t = 100\), 0.63 at \(t = 1000\)`], ["noise", "spread of the gradient around its mean"]],
-how: [String.raw`Unroll the recursion: \(m_t = (1 - \beta_1)\sum \beta_1^{t-i} g_i\).`, String.raw`For a constant gradient the weights sum to \(1 - \beta_1^t\).`, String.raw`So \(m_t/(1 - \beta_1^t)\) is an unbiased average.`, String.raw`The same holds for \(v_t\), which matters longer because \(\beta_2\) is close to 1.`],
-say: "Adam's averages start at zero, so it divides them by one minus the decay rate to the power of the step number to remove the start-up bias.",
-num: String.raw`Without the correction the first steps would be far too large: \(m_1/\sqrt{v_1} = 0.1g/(0.032\lvert g \rvert) \approx 3.2\) instead of 1.`,
+/* from old ch2 L4 card 5 */
+{s: "5. Half the work", t: "Cutting the simulation in half, and the rules",
+intu: String.raw`Each symmetry plane halves the number of grid cells, and with it the memory and the run time. Two planes give a quarter, three an eighth. The price is that the whole problem must be symmetric: the structure, the source and the boundary conditions. The monitors can be anywhere, since the solver reconstructs the other half by mirroring. And the value must match the mode you launch. If you put a PMC at \(y = 0\) and launch TE0, the source cannot excite anything in the kept family and the transmission comes out near zero. That near-zero result is a useful check that the value really selects the family you think. Choose the number of planes and toggle a wrong value.`,
+eq: String.raw`\[ \text{cells with } s \text{ symmetry planes: } \frac{N_{\mathrm{cells}}}{2^{s}}, \qquad s = 0, 1, 2, 3 \]<div class="eqnote">requirement: \(\varepsilon(\mathbf{r})\) and the source are symmetric under every chosen mirror</div>`,
+sym: [[String.raw`\(s\)`, "number of symmetry planes used"], [String.raw`\(N_{\mathrm{cells}}\)`, "grid cells of the full domain"], ["wrong value", "symmetry value of the other family, which removes the mode you launch"]],
+how: ["The fields in the missing half are fixed by the mirror rule, so they need not be stored or updated.", "The symmetry plane acts as a PEC or PMC wall for the fields in the kept half.", "If the structure or source is not symmetric, the true field is not even or odd, and forcing a symmetry gives a wrong answer.", "A good habit is to compare one case with and without symmetry. They should agree."],
+say: "Each symmetry plane halves the simulated volume. It is valid only when the structure and source share the symmetry, and the value must select the mode family that is launched. A full-domain check confirms the setting.",
+num: "1 plane: <b>50 %</b> of the cells. 2 planes: <b>25 %</b>. 3 planes: <b>12.5 %</b>.<br>A wrong value gives a transmission near <b>zero</b>, because the launched mode belongs to the removed family.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("n", "Gradient noise", 0, 1.5, 0.05, 0.5) + sl("T", "Steps shown", 20, 300, 10, 120);
+  let s = 1, wrong = false;
+  ctl.innerHTML = `<div class="row"><label>Symmetry planes</label>${[0, 1, 2, 3].map(v => `<button data-s="${v}">${v}</button>`).join("")}</div><div class="row"><button id="wr">Use the wrong value</button></div><div class="readout" id="ro"></div>`;
   const u = () => {
-    const nz = +$("n").value, T = +$("T").value; $("nv").textContent = nz.toFixed(2); $("Tv").textContent = T;
-    const r = C3.rng(4); let m = 0, v = 0; const M = [], V = [], Mh = [], Vh = [], R = [], ts = [];
-    for (let t = 1; t <= T; t++) { const g = 1 + nz * (2 * r() - 1) * 1.7; m = 0.9 * m + 0.1 * g; v = 0.999 * v + 0.001 * g * g; const mh = m / (1 - Math.pow(0.9, t)), vh = v / (1 - Math.pow(0.999, t)); ts.push(t); M.push(m); V.push(v); Mh.push(mh); Vh.push(vh); R.push(mh / Math.sqrt(vh)); }
-    const ym = 2.2;
-    let s = C3.frame(70, 15, 560, 200, 1, T, 0, ym, [1, Math.round(T / 2), T], [0, 1, 2], "step t", "value") + plot(70, 15, 560, 200, ts, M, 1, T, 0, ym, "#378ADD", 1.5, "4 3") + plot(70, 15, 560, 200, ts, Mh, 1, T, 0, ym, "#378ADD", 2.5) + plot(70, 15, 560, 200, ts, V, 1, T, 0, ym, "#D85A30", 1.5, "4 3") + plot(70, 15, 560, 200, ts, Vh, 1, T, 0, ym, "#D85A30", 2.5) + plot(70, 15, 560, 200, ts, R, 1, T, 0, ym, "#1D9E75", 1.5);
-    s += C3.legend(70, 262, [["m raw", "#378ADD", "4 3"], ["m̂", "#378ADD"], ["v raw", "#D85A30", "4 3"], ["v̂", "#D85A30"], ["m̂/√v̂", "#1D9E75"]]);
-    fig.innerHTML = svg(272, s);
+    pick(ctl, "s", s); $("wr").textContent = wrong ? "Use the right value" : "Use the wrong value"; $("wr").disabled = s === 0;
+    const ox = 230, oy = 60, a = 150, b = 110, d = 60;
+    const box = (x0, y0, ww, hh, dd, op) => `<path d="M${x0} ${y0 + dd} L${x0 + ww} ${y0 + dd} L${x0 + ww} ${y0 + dd + hh} L${x0} ${y0 + dd + hh} Z" fill="#378ADD" opacity="${op}" stroke="var(--p)"/><path d="M${x0} ${y0 + dd} L${x0 + dd} ${y0} L${x0 + ww + dd} ${y0} L${x0 + ww} ${y0 + dd} Z" fill="#378ADD" opacity="${op * 0.7}" stroke="var(--p)"/><path d="M${x0 + ww} ${y0 + dd} L${x0 + ww + dd} ${y0} L${x0 + ww + dd} ${y0 + hh} L${x0 + ww} ${y0 + dd + hh} Z" fill="#378ADD" opacity="${op * 0.5}" stroke="var(--p)"/>`;
+    const fx = s >= 1 ? 0.5 : 1, fy = s >= 2 ? 0.5 : 1, fz = s >= 3 ? 0.5 : 1;
+    const T = s > 0 && wrong ? 0.002 : 0.9;
+    fig.innerHTML = svg(270, `${box(ox, oy, a, b, d, 0.08)}${box(ox + a * (1 - fx), oy + d * (1 - fz) * 0 + b * 0 + (1 - fy) * 0, a * fx, b * fz, d * fy, 0.55)}<text class="ts" x="${ox + a / 2}" y="${oy + b + d + 24}" text-anchor="middle">dark: simulated part. Light: rebuilt by mirroring</text><text class="th" x="560" y="80" text-anchor="middle">transmission</text><rect x="535" y="${230 - T * 130}" width="50" height="${Math.max(1, T * 130)}" fill="${wrong && s ? "#D85A30" : "#1D9E75"}"/><line x1="520" x2="600" y1="230" y2="230" stroke="var(--p)"/><text class="ts" x="560" y="250" text-anchor="middle">${wrong && s ? "≈ 0: wrong family" : "correct"}</text>`);
+    $("ro").innerHTML = `<div><span>cells simulated</span><b>${(100 / Math.pow(2, s)).toFixed(1)} %</b></div><div><span>speed-up</span><b>about ${Math.pow(2, s)}×</b></div>`;
   };
-  $("n").oninput = u; $("T").oninput = u; u();
+  ctl.querySelectorAll("button[data-s]").forEach(b => b.onclick = () => { s = +b.dataset.s; if (!s) wrong = false; u(); });
+  $("wr").onclick = () => { wrong = !wrong; u(); }; u();
 }},
 
-{s: "4. Scale invariance", t: "Rescaling one gradient changes nothing for Adam",
-intu: String.raw`Kingma and Ba stress that Adam's step does not change when a gradient is multiplied by a constant: the factor appears in \(m\) and in \(\sqrt{v}\) and cancels. Here one parameter's sensitivity is multiplied by a factor from 1 to 1000. The readouts count the steps each method needs to bring both parameters within 1 % of the optimum, with gradient descent given its best stable learning rate. Adam's count barely moves, gradient descent's explodes.`,
-eq: String.raw`\[ g \to c\,g \quad\Longrightarrow\quad m \to c\,m, \qquad \sqrt{v} \to \lvert c \rvert \sqrt{v} \]\[ \Longrightarrow\quad \frac{\hat m}{\sqrt{\hat v}} \text{ unchanged} \quad \left(\text{for } \epsilon \ll \sqrt{\hat v}\right) \]`,
-sym: [[String.raw`\(c\)`, "rescaling factor of one parameter's gradient"], ["steps to 1 %", "iterations until both parameters are within 0.01 of the optimum"]],
-how: [String.raw`Multiply all gradients of one parameter by \(c\).`, String.raw`Its first moment scales by \(c\), its second moment by \(c^2\).`, String.raw`The ratio \(\hat m/\sqrt{\hat v}\) is unchanged, so the step is unchanged.`, String.raw`For gradient descent the stable step falls like \(1/c^2\), so the other parameter slows down by \(c^2\).`],
-say: "Adam's update is invariant to rescaling a parameter's gradient, which is why it copes with parameters of very different sensitivity.",
-num: "Ch. 3 cites exactly this property: Adam is robust to large differences in sensitivity between parameters.",
-r(fig, ctl) {
-  ctl.innerHTML = sl("c", "Sensitivity factor (log)", 0, 3, 0.05, 1) + '<div class="readout" id="ro"></div>';
-  const steps = (S, adam) => { let p = [-1.5, -0.7]; const A = new C3.Adam(2, 0.05), lr = 0.9 / (S * S + 1); for (let i = 1; i <= 200000; i++) { const g = C3A.grad(p, S); if (adam) { const s = A.step([-g[0], -g[1]]); p = [p[0] + s[0], p[1] + s[1]]; } else p = [p[0] - lr * g[0], p[1] - lr * g[1]]; if (Math.abs(p[0] - 1) < 0.01 && Math.abs(p[1] - 0.5) < 0.01) return i; if (adam && i > 5000) return Infinity; } return Infinity; };
-  const cs = range(0, 3, 13), sa = cs.map(l => steps(Math.pow(10, l), true)), sg = cs.map(l => steps(Math.pow(10, l), false));
-  const u = () => {
-    const l = +$("c").value, S = Math.pow(10, l); $("cv").textContent = S.toFixed(S < 10 ? 2 : 0);
-    const a = steps(S, true), g = steps(S, false), Y = v => 200 - Math.log10(Math.max(1, v)) / 6 * 180, X = C3.X(70, 560, 0, 3);
-    let s = `<rect x="70" y="20" width="560" height="180" fill="none" stroke="var(--b)"/>`;
-    [1, 2, 3, 4, 5, 6].forEach(e => s += `<text class="ts" x="64" y="${Y(Math.pow(10, e)) + 4}" text-anchor="end">10${["", "¹", "²", "³", "⁴", "⁵", "⁶"][e]}</text>`);
-    [0, 1, 2, 3].forEach(e => s += `<text class="ts" x="${X(e)}" y="218" text-anchor="middle">${Math.pow(10, e)}</text>`);
-    s += plot(70, 20, 560, 180, cs, sa.map(v => 6 * (200 - Y(v)) / 180), 0, 3, 0, 6, "#1D9E75", 2.5) + plot(70, 20, 560, 180, cs, sg.map(v => 6 * (200 - Y(Math.min(v, 2e5))) / 180), 0, 3, 0, 6, "#D85A30", 2.5);
-    s += `<line x1="${X(l)}" x2="${X(l)}" y1="20" y2="200" stroke="var(--p)" stroke-dasharray="3 3"/><text class="ts" x="350" y="236" text-anchor="middle">sensitivity factor S (log)</text>` + C3.legend(90, 258, [["Adam, α = 0.05", "#1D9E75"], ["gradient descent, best stable α", "#D85A30"]]);
-    fig.innerHTML = svg(268, s);
-    $("ro").innerHTML = `<div><span>Adam: steps to 1 %</span><b>${a}</b></div><div><span>gradient descent: steps to 1 %</span><b>${isFinite(g) ? g.toLocaleString("en-US") : "> 200 000"}</b></div>`;
-  };
-  $("c").oninput = u; u();
-}},
+/* NEW CARD: PML around the domain, mode source launching TE or TM mode, mode monitors, Gaussian beam for the fiber: MFD, tilt 5 deg, 0.5 um above, E along y for TE, in plane of incidence for TM */
+{s: "6. Sources and boundaries", t: "TODO: PML around the domain, mode source launching TE or TM mode, mode monitors, Gaussian beam for the fiber: MFD, tilt 5 deg, 0.5 um above, E along y for TE, in plane of incidence for TM", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }}
 
-{s: "5. The learning rate", t: "α bounds the step, and too large an α makes the design jump",
-intu: String.raw`Because \(\hat m/\sqrt{\hat v}\) is of order one, Adam's step per parameter is roughly bounded by \(\alpha\). That makes \(\alpha\) easy to interpret: in the units of the free variables, it is the largest change per step. Too small and the run is slow. Too large and the parameters keep jumping around the optimum, or a design hops from one hill to another. The curves show the distance to the optimum versus step for three learning rates on the stretched bowl. Change \(\alpha\).`,
-eq: String.raw`\[ \lvert \Delta\theta_t \rvert \lesssim \alpha \]<div class="eqref">Kingma and Ba, Sec. 2.1, for typical gradients</div>`,
-sym: [[String.raw`\(\Delta\theta_t\)`, String.raw`step of one parameter at iteration \(t\)`], [String.raw`\(\alpha\)`, "learning rate, in the units of the free variable"]],
-how: [String.raw`The step is \(\alpha \hat m/\sqrt{\hat v}\), and \(\lvert \hat m/\sqrt{\hat v} \rvert\) is close to 1 when gradients are consistent.`, String.raw`So \(\alpha\) sets the scale of the step.`, String.raw`Near the optimum the gradient changes sign, \(\hat m\) shrinks and the steps shrink.`, String.raw`With large \(\alpha\) the decay is slow and the iterate oscillates. In a non-convex problem it can even leave a good basin.`],
-say: String.raw`Adam's step is roughly bounded by the learning rate, so \(\alpha\) directly sets how far the design can move per iteration.`,
-num: "Adam was designed for noisy objectives, and its convergence theory covers convex problems. Inverse design objectives are deterministic and non-convex, so Adam finds a local optimum that depends on the start, and a learning rate that is too large can make a run diverge.",
-r(fig, ctl) {
-  ctl.innerHTML = sl("a", "α (middle curve)", 0.01, 0.5, 0.01, 0.1) + '<div class="readout" id="ro"></div>';
-  const u = () => {
-    const a = +$("a").value; $("av").textContent = a.toFixed(2); const T = 150, S = 6;
-    const runs = [a / 4, a, a * 4].map(lr => C3A.adam(S, lr, T).map(p => Math.hypot(p[0] - 1, p[1] - 0.5)));
-    const ts = [...Array(T + 1).keys()], Y = v => C3.clamp(Math.log10(Math.max(v, 1e-4)), -4, 1);
-    let s = C3.frame(70, 15, 560, 200, 0, T, -4, 1, [0, 50, 100, 150], [-4, -2, 0], "step", "distance to optimum", v => v, v => "10" + ({ "-4": "⁻⁴", "-2": "⁻²", "0": "⁰" })[v]);
-    ["#378ADD", "#1D9E75", "#D85A30"].forEach((c, k) => s += plot(70, 15, 560, 200, ts, runs[k].map(Y), 0, T, -4, 1, c, 2));
-    s += C3.legend(80, 262, [[`α/4 = ${(a / 4).toFixed(3)}`, "#378ADD"], [`α = ${a.toFixed(2)}`, "#1D9E75"], [`4α = ${(4 * a).toFixed(2)}`, "#D85A30"]]);
-    fig.innerHTML = svg(272, s);
-    $("ro").innerHTML = runs.map((r, k) => `<div><span>${["α/4", "α", "4α"][k]}: distance after ${T}</span><b>${r[T].toExponential(1)}</b></div>`).join("");
-  };
-  $("a").oninput = u; u();
-}}
 ],
 summary: String.raw`Adam keeps per-parameter running averages of the gradient (decay 0.9) and of its square (decay 0.999), corrects them for starting at zero, and steps by \(\alpha \hat m/(\sqrt{\hat v} + \epsilon)\). The ratio \(\hat m/\sqrt{\hat v}\) is of order one and unchanged when a gradient is rescaled, so every parameter moves by about \(\alpha\) regardless of its sensitivity. That suits inverse design, where widths, layer scales, outline points and pixels differ greatly in sensitivity, and where plain gradient descent would need a step small enough for the most sensitive parameter. \(\alpha\) sets the step size, too large an \(\alpha\) makes the design jump, and like any gradient method Adam finds a local optimum.`,
 sheet: [

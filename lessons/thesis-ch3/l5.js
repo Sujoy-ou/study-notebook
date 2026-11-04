@@ -1,167 +1,149 @@
 addLesson("thesis", "ch3", {
 level: "Core",
-id: "thesis-ch3-l5", title: "Bounded parameterizations: widths, layers, tapers and outlines", short: "5. Bounded parameters",
-big: String.raw`An optimizer like Adam takes steps of any size in any direction, but a geometry has limits: a tooth cannot be thinner than the smallest feature that can be written, a taper cannot be narrower than its input waveguide, and an outline should stay near the shape it started from. The thesis handles all of this the same way. Each bounded quantity is written as a smooth function of an unbounded variable \(q\), using tanh, which maps the whole real line into a finite interval. The optimizer moves \(q\) freely, and the geometry stays inside its limits automatically. The price is that a quantity near its bound responds less to a change of \(q\).`,
-bridge: String.raw`This is Ch. 3 Sec. 3.3: the grating widths of Eq. (3.7), the DBR scale \(1 + \tfrac{1}{2}\tanh q\), the taper half-widths of Eq. (3.8) and the vertex moves of Eq. (3.12). The DBR reflectance below uses the transfer matrix method of Chapter 2, Lesson 6. Michaels and Yablonovitch optimized a taper outline in the same spirit, with polygon vertices as parameters.`,
+id: "thesis-ch3-l5", title: "Density topology: pixels and the conic filter", short: "5. Pixels and the filter",
+big: String.raw`In topology optimization the design region is a grid of pixels, each with a density \(\rho\) between 0 (air) and 1 (GaAs), and the permittivity is interpolated linearly between the two materials. This gives the optimizer complete freedom, including the freedom to make single-pixel features and grey pixels that are neither air nor GaAs, which cannot be fabricated and have no physical meaning. The first fix is a filter: each pixel is replaced by a weighted average over a disk of radius \(R\), with weights that fall off linearly like a cone. The filter removes pixel-scale noise and gives the design a weak sense of length scale. On its own it makes the design greyer, which is why a projection follows (Lesson 7).`,
+bridge: String.raw`This is Ch. 3 Sec. 3.3, Eqs. (3.9) and (3.11). Christiansen and Sigmund 2021 (DTU, the Sigmund group) is a tutorial on exactly this recipe for photonics: their Eqs. (9) and (19) give the linear interpolation, and they explain why naive optimization produces pixel-by-pixel designs. Their filter is a PDE (Helmholtz) filter, Eq. (17). The conic filter used here is Tidy3D's (<code>_kernel_conic</code>, <code>make_kernel</code>, <code>get_kernel_size_px</code>), so Eq. (3.9) cites Tidy3D. All maps below are computed in your browser.`,
 cards: [
-{s: "1. The tanh map", t: "From an unbounded q to a bounded width",
-intu: String.raw`\(\tanh q\) runs from −1 to +1 as \(q\) runs over all real numbers. Scaling and shifting it maps \(q\) onto the interval from \(w_{\mathrm{min}}\) to \(w_{\mathrm{max}}\). At \(q = 0\) the width sits in the middle of the interval. Whatever value the optimizer gives \(q\), the width can never leave the interval. Set the bounds and move \(q\).`,
-eq: String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]<div class="eqref">Ch. 3 Eq. (3.7)</div>`,
-sym: [[String.raw`\(q\)`, "free variable seen by the optimizer, any real number"], [String.raw`\(w_{\mathrm{min}}\)`, "smallest allowed width, the minimum feature of the device"], [String.raw`\(w_{\mathrm{max}}\)`, "largest allowed width"], [String.raw`\(w(q)\)`, "physical width used to build the geometry"]],
-how: [String.raw`\(\tanh: \mathbb{R} \to (-1, 1)\), smooth and monotonic.`, "Multiply by half the range and add the center.", String.raw`\(q = \pm\infty\) give the bounds, \(q = 0\) gives the center.`, String.raw`The chain rule gives \(\partial J/\partial q = (\partial J/\partial w)(dw/dq)\), which autograd applies automatically.`],
-say: "Each width is a tanh function of a free variable, so the optimizer can take any step and the width still stays between its bounds.",
-num: String.raw`For example, with \(w_{\mathrm{min}} = 100\) nm and \(w_{\mathrm{max}} = 800\) nm, \(q = 0\) gives 450 nm and \(q = 2\) gives 787 nm.`,
+/* from old ch3 L6 card 1 */
+{s: "1. Pixels", t: "A density per pixel, interpolated between air and GaAs",
+intu: String.raw`Each pixel carries a density \(\rho\). The permittivity is linear in \(\rho\): 1 for air at \(\rho = 0\), 12.19 for GaAs at \(\rho = 1\). A design can start from a rough drawing, here a Y-shaped splitter with dense arms on a light background. Any value in between is a grey material that does not exist: at \(\rho = 0.5\) the index would be about 2.6. The optimizer has to be pushed toward 0 and 1, otherwise its best design may rely on such fictitious material. Change the arm and background densities.`,
+eq: String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]<div class="eqref">Ch. 3 Eq. (3.11), Christiansen Eqs. 9 and 19</div>`,
+sym: [[String.raw`\(\rho\)`, String.raw`raw density of a pixel, the design variable, in \([0, 1]\)`], [String.raw`\(\hat\rho\)`, String.raw`density after filter and projection, the one that sets \(\varepsilon\) (Lesson 7)`], [String.raw`\(\varepsilon_{\mathrm{air}} = 1, \varepsilon_{\mathrm{GaAs}} = 12.19\)`, String.raw`the two materials (\(n = 3.492\))`]],
+how: ["Discretize the design region into square pixels.", "Give each pixel a continuous density so that gradients exist.", String.raw`Interpolate \(\varepsilon\) linearly, as Christiansen and Sigmund do.`, String.raw`Only \(\rho = 0\) and \(\rho = 1\) correspond to real materials.`],
+say: "Each pixel has a density between 0 and 1, and its permittivity is a linear interpolation between air and GaAs, so only the end values are physical.",
+num: String.raw`\(\rho = 0.5\) gives \(\varepsilon = 6.6\) and \(n = 2.57\). \(\rho = 0.9\) gives \(\varepsilon = 11.1\) and \(n = 3.33\).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("a", "w_min (nm)", 40, 300, 10, 100) + sl("b", "w_max (nm)", 400, 1200, 10, 800) + sl("q", "q", -4, 4, 0.05, 0.6) + '<div class="readout" id="ro"></div>';
-  const qs = range(-4, 4, 200);
+  ctl.innerHTML = sl("a", "Arm density", 0, 1, 0.01, 0.9) + sl("b", "Background density", 0, 1, 0.01, 0.1) + '<div class="readout" id="ro"></div>';
+  const W = 90, H = 60;
   const u = () => {
-    const a = +$("a").value, b = +$("b").value, q = +$("q").value; $("av").textContent = a; $("bv").textContent = b; $("qv").textContent = q.toFixed(2);
-    const w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a), X = C3.X(70, 560, -4, 4), Y = C3.Y(30, 180, 0, 1250);
-    let s = C3.frame(70, 30, 560, 180, -4, 4, 0, 1250, [-4, -2, 0, 2, 4], [0, 400, 800, 1200], "free variable q", "width w (nm)");
-    s += `<line x1="70" x2="630" y1="${Y(a)}" y2="${Y(a)}" stroke="#D85A30" stroke-dasharray="5 4"/><line x1="70" x2="630" y1="${Y(b)}" y2="${Y(b)}" stroke="#D85A30" stroke-dasharray="5 4"/><text class="ts" x="625" y="${Y(a) - 5}" text-anchor="end">w_min</text><text class="ts" x="625" y="${Y(b) - 5}" text-anchor="end">w_max</text>`;
-    s += plot(70, 30, 560, 180, qs, qs.map(w), -4, 4, 0, 1250, "#378ADD", 2.5) + `<circle cx="${X(q)}" cy="${Y(w(q))}" r="6" fill="#D85A30"/>`;
-    fig.innerHTML = svg(250, s);
-    const d = 0.5 * (b - a) / Math.cosh(q) ** 2;
-    $("ro").innerHTML = `<div><span>w(q)</span><b>${w(q).toFixed(1)} nm</b></div><div><span>dw/dq</span><b>${d.toFixed(1)} nm</b></div>`;
+    const ra = +$("a").value, rb = +$("b").value; $("av").textContent = ra.toFixed(2); $("bv").textContent = rb.toFixed(2);
+    const a = new Float64Array(W * H).fill(rb);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const yc = H / 2, t = Math.max(0, (x - 30) / 60), off = 18 * t * t * (3 - 2 * t);
+      if (x < 32 && Math.abs(y + 0.5 - yc) < 5) a[y * W + x] = ra;
+      if (x >= 28 && (Math.abs(y + 0.5 - (yc - off)) < 5 || Math.abs(y + 0.5 - (yc + off)) < 5)) a[y * W + x] = ra;
+    }
+    C3.draw(fig, a, W, H, 6, "Starting density image. Dark is GaAs (ρ = 1), white is air (ρ = 0).");
+    const e = r => 1 + r * 11.19;
+    $("ro").innerHTML = `<div><span>arm: ε / n</span><b>${e(ra).toFixed(2)} / ${Math.sqrt(e(ra)).toFixed(2)}</b></div><div><span>background: ε / n</span><b>${e(rb).toFixed(2)} / ${Math.sqrt(e(rb)).toFixed(2)}</b></div><div><span>physical?</span><b>${(ra === 0 || ra === 1) && (rb === 0 || rb === 1) ? "yes" : "no, grey"}</b></div>`;
   };
-  ["a", "b", "q"].forEach(k => $(k).oninput = u); u();
+  $("a").oninput = u; $("b").oninput = u; u();
 }},
 
-{s: "2. Saturation", t: "Near a bound the width responds less",
-intu: String.raw`The slope \(dw/dq = \tfrac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q\) is largest at \(q = 0\) and falls off quickly. A width pressed against a bound has a large \(|q|\) and a tiny slope, so both its gradient \(\partial J/\partial q\) and its response to a step become small. This is the gentle way the bound is enforced. It also means a parameter that wandered deep into saturation needs many steps to come back. Move \(q\) and compare the effect of the same step \(\Delta q = 0.1\).`,
-eq: String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q, \qquad \frac{\partial J}{\partial q} = \frac{\partial J}{\partial w} \frac{dw}{dq} \]`,
-sym: [[String.raw`\(\operatorname{sech}^2 q = 1/\cosh^2 q\)`, String.raw`1 at \(q = 0\), about 0.07 at \(q = 2\), about 0.0013 at \(q = 4\)`], [String.raw`\(\Delta q\)`, String.raw`a step taken by the optimizer in \(q\)`], [String.raw`\(\Delta w \approx (dw/dq)\, \Delta q\)`, "the resulting change of width"]],
-how: [String.raw`Differentiate tanh: \(d\tanh q/dq = \operatorname{sech}^2 q\).`, "Multiply by the half range.", String.raw`Chain rule: the gradient reaching \(q\) is scaled by the same factor.`, "Adam partly compensates, because it normalizes each parameter's step by its own gradient history (Lesson 12)."],
-say: "Close to a bound the tanh map flattens, so the width responds less to the optimizer, which keeps it inside the limits without a hard clip.",
-num: String.raw`With the example bounds 100 and 800 nm, a step \(\Delta q = 0.1\) moves the width by 35 nm at \(q = 0\) but by only 2.2 nm at \(q = 2\).`,
+/* from old ch3 L6 card 2 */
+{s: "2. Raw pixels", t: "What an unconstrained pixel optimization produces",
+intu: "Left free, the optimizer exploits every pixel. Christiansen and Sigmund observe pixel-by-pixel varying regions in a naive optimization, and features of single pixels. Such patterns can be fine in simulation, partly because a pixel-size feature is poorly resolved by the grid, but they cannot be written by lithography. The two maps show the typical symptoms: speckle of single pixels and large grey regions. The readouts count them.",
+eq: String.raw`\[ \text{smallest feature without a filter: one pixel, } \Delta \]\[ \text{grey fraction} = \text{share of pixels with } 0.05 \lt \rho \lt 0.95 \]`,
+sym: [[String.raw`\(\Delta\)`, "pixel size, about 10 nm in a typical 3D design"], ["grey fraction", "a simple measure of how far the design is from binary"]],
+how: ["Each pixel is an independent variable with its own gradient.", "Nothing couples neighbors, so the optimum can vary from pixel to pixel.", "Grey values are often optimal for a continuous problem.", "Both effects are removed by the filter (this lesson) and the projection (Lesson 7)."],
+say: "Without regularization the optimizer produces single-pixel features and grey regions, which is why a filter and a projection are added.",
+num: "At 10 nm pixels a single-pixel feature is 10 nm, an order of magnitude below a typical electron-beam lithography rule of about 100 nm.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("q", "q", -4, 4, 0.05, 2) + '<div class="readout" id="ro"></div>';
-  const a = 100, b = 800, qs = range(-4, 4, 200), d = v => 0.5 * (b - a) / Math.cosh(v) ** 2, w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a);
-  const u = () => {
-    const q = +$("q").value; $("qv").textContent = q.toFixed(2);
-    const X = C3.X(70, 560, -4, 4), Y = C3.Y(30, 180, 0, 380);
-    let s = C3.frame(70, 30, 560, 180, -4, 4, 0, 380, [-4, -2, 0, 2, 4], [0, 175, 350], "free variable q", "dw/dq (nm)") + plot(70, 30, 560, 180, qs, qs.map(d), -4, 4, 0, 380, "#7F77DD", 2.5);
-    s += `<circle cx="${X(q)}" cy="${Y(d(q))}" r="6" fill="#D85A30"/><rect x="${X(q)}" y="${Y(d(q))}" width="${X(q + 0.1) - X(q)}" height="${210 - Y(d(q))}" fill="#D85A30" opacity="0.3"/>`;
-    fig.innerHTML = svg(250, s);
-    $("ro").innerHTML = `<div><span>w(q)</span><b>${w(q).toFixed(1)} nm</b></div><div><span>Δw for Δq = 0.1</span><b>${(w(q + 0.1) - w(q)).toFixed(2)} nm</b></div><div><span>sech²q</span><b>${(1 / Math.cosh(q) ** 2).toFixed(4)}</b></div>`;
-  };
-  $("q").oninput = u; u();
+  const W = 90, H = 60, r = C3.rng(12), sp = new Float64Array(W * H), gr = new Float64Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const base = Math.sin(x / 9) * Math.cos(y / 7) > 0 ? 1 : 0; sp[y * W + x] = r() < 0.18 ? 1 - base : base; gr[y * W + x] = C3.clamp(0.5 + 0.55 * Math.sin(x / 11 + 0.6 * Math.sin(y / 9)) * Math.cos(y / 13), 0, 1); }
+  const stats = a => { let g = 0; a.forEach(v => { if (v > 0.05 && v < 0.95) g++; }); const B = Uint8Array.from(a, v => v > 0.5 ? 1 : 0), cs = C3.components(B, W, H, 1).concat(C3.components(B, W, H, 0)); return [g / a.length, cs.filter(c => c.area === 1).length]; };
+  const s1 = stats(sp), s2 = stats(gr);
+  C3.drawRow(fig, [{ a: sp }, { a: gr }], W, H, 3.6, "Two typical symptoms of an unregularized design.", ["speckle of single pixels", "grey regions"]);
+  ctl.innerHTML = `<div class="readout"><div><span>speckle: single-pixel islands and holes</span><b>${s1[1]}</b></div><div><span>grey map: grey fraction</span><b>${(100 * s2[0]).toFixed(0)} %</b></div></div>`;
 }},
 
-{s: "3. A grating", t: "A grating described by its tooth and gap widths",
-intu: String.raw`A grating with \(N\) teeth is described by the widths of its \(N\) gaps and \(N\) teeth, \(2N\) numbers, each built with Eq. (3.7). Here the \(q\) values are random with a chosen spread. However large the spread, no tooth or gap ever falls below \(w_{\mathrm{min}}\), which is how the minimum feature of the grating is guaranteed. A uniform grating is the natural start: all \(q\) equal.`,
-eq: String.raw`\[ w_j = w(q_j), \qquad j = 1, \dots, 2N \qquad (\text{gaps and teeth alternating}) \]`,
-sym: [[String.raw`\(N\)`, "number of teeth"], [String.raw`\(q_j\)`, String.raw`free variable of width \(j\)`], ["spread", String.raw`standard deviation of the random \(q\) values in this demo`]],
-how: ["Each gap and tooth gets its own free variable.", "All widths share the same bounds.", "The grating is built tooth by tooth from the widths, so the period can vary along the grating (apodization).", String.raw`The bounds guarantee the minimum feature for any \(q\).`],
-say: String.raw`The grating is described by \(2N\) widths, each bounded by a tanh map, so every tooth and gap respects the minimum feature size.`,
-num: "Typical sizes: about 10 teeth, so about 20 parameters. Varying the period along the grating is how the radiated beam is shaped to match a fiber.",
+/* from old ch3 L6 card 3 */
+{s: "3. The conic kernel", t: "The conic filter kernel and its rounded radius",
+intu: String.raw`The filter replaces each pixel by a weighted average of its neighbors. The weight falls linearly from 1 at the center to 0 at a radius \(\tilde R\), like a cone. Because the kernel lives on the pixel grid, Tidy3D rounds the radius up to a whole number of pixels, \(\tilde R = \lceil R/\Delta \rceil \Delta\), and builds a kernel of \(2\lceil R/\Delta \rceil + 1\) pixels per side. Pixels at exactly \(\tilde R\) get zero weight. Change \(R/\Delta\) and watch the rounding.`,
+eq: String.raw`\[ \tilde\rho_i = \frac{\sum_j K(r_{ij})\, \rho_j}{\sum_j K(r_{ij})} \]\[ K(r) = \max(0, 1 - r/\tilde R), \qquad \tilde R = \lceil R/\Delta \rceil \Delta \]<div class="eqref">Ch. 3 Eq. (3.9)</div>`,
+sym: [[String.raw`\(\tilde\rho_i\)`, String.raw`filtered density of pixel \(i\)`], [String.raw`\(r_{ij}\)`, String.raw`distance between the centers of pixels \(i\) and \(j\)`], [String.raw`\(K\)`, "cone-shaped weight"], [String.raw`\(R\)`, "requested filter radius"], [String.raw`\(\tilde R\)`, "radius actually used, rounded up to whole pixels"], [String.raw`\(\Delta\)`, "pixel size"]],
+how: [String.raw`Choose a radius \(R\) in nanometers.`, String.raw`Convert to pixels and round up: \(n = \lceil R/\Delta \rceil\).`, String.raw`Build a \((2n + 1) \times (2n + 1)\) kernel with \(K = \max(0, 1 - r/(n\Delta))\).`, "Normalize by the sum of the weights so a uniform design stays uniform."],
+say: "The conic filter averages the densities with weights that fall linearly to zero at the radius, which Tidy3D rounds up to a whole number of pixels.",
+num: String.raw`Example: \(R = 100\) nm on 9 nm pixels gives \(\lceil 11.1 \rceil = 12\) pixels, \(\tilde R = 108\) nm, a kernel of 25 × 25 pixels. A radius of one pixel leaves only the center weight, so the filter does nothing.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("n", "Teeth N", 4, 14, 1, 9) + sl("s", "Spread of q", 0, 3, 0.05, 1) + `<div class="row"><button id="rn">New random q</button><button id="un">Uniform start (all q = −0.4)</button></div><div class="readout" id="ro"></div>`;
-  let seed = 3, uni = false; const a = 100, b = 800, w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a);
+  ctl.innerHTML = sl("R", "R / Δ (radius in pixels, before rounding)", 1, 8, 0.1, 3.4) + '<div class="readout" id="ro"></div>';
   const u = () => {
-    const N = +$("n").value, sp = +$("s").value; $("nv").textContent = N; $("sv").textContent = sp.toFixed(2);
-    const r = C3.rng(seed), g = () => { let x = 0; for (let k = 0; k < 6; k++) x += r(); return x - 3; };
-    const qs = Array.from({ length: 2 * N }, () => uni ? -0.4 : -0.4 + sp * g() * 0.7), ws = qs.map(w), L = ws.reduce((x, y) => x + y, 0), sc = 600 / L;
-    let x = 40, s = `<rect x="20" y="110" width="${640}" height="40" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
-    ws.forEach((v, i) => { if (i % 2 === 0) s += `<rect x="${x}" y="110" width="${v * sc}" height="22" fill="var(--panel)" stroke="var(--blue)"/>`; x += v * sc; });
-    s += `<text class="ts" x="340" y="95" text-anchor="middle">etched gaps (white) and teeth, drawn to scale (total ${(L / 1000).toFixed(2)} µm)</text>`;
-    const X = C3.X(40, 600, 0, 2 * N - 1), Y = C3.Y(175, 70, 0, 850);
-    s += `<line x1="40" x2="640" y1="${Y(a)}" y2="${Y(a)}" stroke="#D85A30" stroke-dasharray="5 4"/><text class="ts" x="645" y="${Y(a) + 4}">w_min</text>`;
-    ws.forEach((v, i) => s += `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="${i % 2 ? "#378ADD" : "var(--p)"}"/>`);
-    fig.innerHTML = svg(255, s + `<text class="ts" x="340" y="252" text-anchor="middle">each dot is one width (gaps dark, teeth blue)</text>`);
-    $("ro").innerHTML = `<div><span>parameters 2N</span><b>${2 * N}</b></div><div><span>smallest width</span><b>${Math.min(...ws).toFixed(1)} nm</b></div><div><span>largest width</span><b>${Math.max(...ws).toFixed(1)} nm</b></div>`;
+    const Rq = +$("R").value, n = Math.ceil(Rq - 1e-9); $("Rv").textContent = Rq.toFixed(1);
+    const K = C3.kernel2D(n), c = Math.min(14, 200 / (2 * n + 1));
+    let s = `<text class="ts" x="${40 + (2 * n + 1) * c / 2}" y="22" text-anchor="middle">kernel, ${2 * n + 1} × ${2 * n + 1} pixels</text>`;
+    for (let dy = -n; dy <= n; dy++) for (let dx = -n; dx <= n; dx++) { const w = Math.max(0, 1 - Math.hypot(dx, dy) / n); s += `<rect x="${40 + (dx + n) * c}" y="${32 + (dy + n) * c}" width="${c - 0.6}" height="${c - 0.6}" fill="${w > 0 ? "#D85A30" : "var(--sunk)"}" fill-opacity="${w > 0 ? 0.12 + 0.88 * w : 1}"/>`; }
+    const X = C3.X(330, 310, -8.5, 8.5), Y = C3.Y(40, 160, 0, 1.1), rs = range(-8.5, 8.5, 341);
+    s += C3.frame(330, 40, 310, 160, -8.5, 8.5, 0, 1.1, [-8, -4, 0, 4, 8], [0, 0.5, 1], "distance (pixels)", "K");
+    s += plot(330, 40, 310, 160, rs, rs.map(r => Math.max(0, 1 - Math.abs(r) / n)), -8.5, 8.5, 0, 1.1, "#D85A30", 2.5) + plot(330, 40, 310, 160, rs, rs.map(r => Math.max(0, 1 - Math.abs(r) / Rq)), -8.5, 8.5, 0, 1.1, "var(--p)", 1.5, "4 3");
+    for (let d = -n; d <= n; d++) s += `<circle cx="${X(d)}" cy="${Y(Math.max(0, 1 - Math.abs(d) / n))}" r="3" fill="#D85A30"/>`;
+    s += C3.legend(330, 262, [["used, R̃", "#D85A30"], ["requested R", "var(--p)", "4 3"]]);
+    fig.innerHTML = svg(272, s);
+    $("ro").innerHTML = `<div><span>⌈R/Δ⌉</span><b>${n} pixels</b></div><div><span>R̃ / R</span><b>${(n / Rq).toFixed(3)}</b></div><div><span>nonzero weights</span><b>${K.length}</b></div>`;
   };
-  $("rn").onclick = () => { uni = false; seed++; u(); }; $("un").onclick = () => { uni = true; u(); }; $("n").oninput = u; $("s").oninput = () => { uni = false; u(); }; u();
+  $("R").oninput = u; u();
 }},
 
-{s: "4. DBR layers", t: "Scaling the mirror layers between 0.5 and 1.5",
-intu: String.raw`The bottom mirror can also be designed. Each layer keeps its quarter-wave thickness times a scale \(1 + \tfrac{1}{2}\tanh q\), which stays between 0.5 and 1.5. At \(q = 0\) the stack is the ideal quarter-wave mirror of Chapter 2. Here all high-index layers share one \(q\) and all low-index layers another, so you can see what the scales do: thicker layers shift the stopband to longer wavelengths, unequal scales narrow it. The reflectance is computed live with the transfer matrix method.`,
-eq: String.raw`\[ d_j = d_j^{\mathrm{QW}} \left( 1 + \tfrac{1}{2} \tanh q_j \right) \]\[ d^{\mathrm{QW}} = \frac{\lambda_0}{4n}, \qquad 0.5 \lt d_j/d_j^{\mathrm{QW}} \lt 1.5 \]`,
-sym: [[String.raw`\(d_j\)`, String.raw`thickness of layer \(j\)`], [String.raw`\(d^{\mathrm{QW}}\)`, String.raw`quarter-wave thickness at \(\lambda_0\)`], [String.raw`\(q_j\)`, String.raw`free variable of layer \(j\)`], [String.raw`\(n_H, n_L\)`, "3.5 and 3.0 in this example"]],
-how: [String.raw`Start from the quarter-wave stack, the best mirror at \(\lambda_0\) for a fixed number of pairs.`, "Allow each layer to change by at most ±50 %.", "The scale is a tanh map with center 1 and half range ½.", "With per-layer scales the optimizer can tune the phase of the reflection, not just its strength."],
-say: "Each DBR layer thickness is its quarter-wave value times a tanh-bounded scale between 0.5 and 1.5, starting from the quarter-wave stack.",
-num: String.raw`Example stack: 10 pairs, \(n_H = 3.5\), \(n_L = 3.0\), \(\lambda_0 = 800\) nm, so \(d^{\mathrm{QW}} = 57.1\) and 66.7 nm. Each pair adds two parameters.`,
+/* from old ch3 L6 card 4 */
+{s: "4. Filtering", t: "The filter removes pixel noise and makes the design grey",
+intu: String.raw`Apply the filter to a map of random pixel values. Small-scale variation is averaged out and smooth blobs of size about \(R\) remain. Notice the side effect: the filtered values bunch up around the mean, 0.5. The filter alone turns a noisy design into a grey one. That is the reason a projection always follows the filter. Change the radius.`,
+eq: String.raw`\[ \tilde\rho = \frac{K \ast \rho}{K \ast 1} \qquad (\text{normalized convolution}) \]`,
+sym: [[String.raw`\(\ast\)`, "convolution over the pixel grid"], [String.raw`\(K \ast 1\)`, "sum of the weights inside the region, which normalizes at the edges"], ["std", "spread of the values around their mean"]],
+how: ["Each filtered pixel is a weighted mean of many raw pixels.", "Means of many random values cluster near their average.", String.raw`So the spread shrinks roughly like \(1/\sqrt{\text{number of pixels in the kernel}}\).`, String.raw`Spatial features smaller than about \(R\) are averaged away.`],
+say: String.raw`The filter smooths the design over a radius \(R\), removing pixel-scale features, but it also pushes values toward grey.`,
+num: "Raw uniform random values have a spread of 0.29. After a filter of radius 3 pixels it drops to 0.07, and at 4 pixels to 0.05, so almost every pixel is grey.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("h", "q of high-index layers", -2.5, 2.5, 0.05, 0) + sl("l", "q of low-index layers", -2.5, 2.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
-  const nH = 3.5, nL = 3.0, l0 = 800, ls = range(600, 1050, 226);
+  ctl.innerHTML = sl("n", "Filter radius (pixels)", 1, 8, 1, 4) + '<div class="readout" id="ro"></div>';
+  const W = 90, H = 60, raw = C3.noise(W, H, 77);
+  const sd = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length); };
   const u = () => {
-    const qh = +$("h").value, ql = +$("l").value; $("hv").textContent = qh.toFixed(2); $("lv").textContent = ql.toFixed(2);
-    const sh = 1 + 0.5 * Math.tanh(qh), sL = 1 + 0.5 * Math.tanh(ql), lay = []; for (let i = 0; i < 10; i++) { lay.push([nH, l0 / (4 * nH) * sh]); lay.push([nL, l0 / (4 * nL) * sL]); }
-    const R = ls.map(l => C2.tmmR(1.0, lay, 3.5, l)), R0 = ls.map(l => C2.tmmR(1.0, C2.dbrLayers(nH, nL, 10, l0), 3.5, l));
-    let im = 0; R.forEach((v, i) => { if (v > R[im]) im = i; });
-    let s = C3.frame(70, 30, 560, 180, 600, 1050, 0, 1, [600, 700, 800, 900, 1000], [0, 0.5, 1], "wavelength (nm)", "reflectance R") + plot(70, 30, 560, 180, ls, R0, 600, 1050, 0, 1, "var(--p)", 1.5, "4 3") + plot(70, 30, 560, 180, ls, R, 600, 1050, 0, 1, "#378ADD", 2.5);
-    s += C3.legend(80, 250, [["quarter-wave start (q = 0)", "var(--p)", "4 3"], ["scaled stack", "#378ADD"]]);
-    fig.innerHTML = svg(260, s);
-    $("ro").innerHTML = `<div><span>scale H / L</span><b>${sh.toFixed(3)} / ${sL.toFixed(3)}</b></div><div><span>peak R at</span><b>${ls[im].toFixed(0)} nm</b></div><div><span>R at 800 nm</span><b>${C2.tmmR(1.0, lay, 3.5, 800).toFixed(3)}</b></div>`;
+    const n = +$("n").value; $("nv").textContent = n; const f = C3.filter2D(raw, W, H, n);
+    C3.drawRow(fig, [{ a: raw }, { a: f }], W, H, 3.6, "Same colors as before: dark 1, white 0, grey in between.", ["raw ρ", "filtered ρ̃"]);
+    let g = 0; f.forEach(v => { if (v > 0.05 && v < 0.95) g++; });
+    $("ro").innerHTML = `<div><span>spread raw / filtered</span><b>${sd(raw).toFixed(3)} / ${sd(f).toFixed(3)}</b></div><div><span>grey fraction after filter</span><b>${(100 * g / f.length).toFixed(0)} %</b></div>`;
   };
-  $("h").oninput = u; $("l").oninput = u; u();
+  $("n").oninput = u; u();
 }},
 
-{s: "5. A taper", t: "Taper half-widths bounded between the two waveguides",
-intu: String.raw`A taper from a narrow waveguide to a wide section is described by its half-width \(y_i\) at \(M\) fixed, equally spaced positions. Each \(y_i\) is a tanh map of its own \(q_i\), bounded by the two half-widths. The map bounds the width but does not prescribe a profile: the outline can bulge or even wiggle, and the optimizer decides. Choose a starting profile and add a ripple in \(q\) to see that the outline always stays between the dashed limits. The outline is mirrored about the axis.`,
-eq: String.raw`\[ y_i = \frac{w_{\mathrm{in}}}{2} + \frac{w_{\mathrm{out}} - w_{\mathrm{in}}}{2} \cdot \frac{\tanh(\pi q_i) + 1}{2} \]<div class="eqref">Ch. 3 Eq. (3.8)</div>`,
-sym: [[String.raw`\(y_i\)`, String.raw`half-width at position \(x_i\)`], [String.raw`\(w_{\mathrm{in}}, w_{\mathrm{out}}\)`, "widths of the narrow and the wide waveguide"], [String.raw`\(q_i\)`, String.raw`free variable of point \(i\)`], [String.raw`\([\tanh(\pi q) + 1]/2\)`, String.raw`runs from 0 to 1, so \(y_i\) runs from \(w_{\mathrm{in}}/2\) to \(w_{\mathrm{out}}/2\)`]],
-how: [String.raw`Fix \(M\) positions along the taper.`, "Let only the half-width at each position change.", String.raw`Map each \(q_i\) through \((\tanh(\pi q_i) + 1)/2\) onto \([0, 1]\), then onto the allowed half-width range.`, "Mirror the outline about the axis and etch it through the membrane."],
-say: "The taper outline is a set of half-widths at fixed positions, each bounded between the two waveguide half-widths by a tanh map, with no profile imposed.",
-num: String.raw`Typical: about 100 points along a few micrometers. The first and last points connect to the waveguides. A linear start uses \(q_i = \operatorname{atanh}(2t_i - 1)/\pi\) with \(t_i\) the fractional position.`,
+/* from old ch3 L6 card 5 */
+{s: "5. A weak length scale", t: "Filter, then threshold: features grow with R, but no guarantee",
+intu: String.raw`Threshold the filtered map at 0.5 to see the shapes it encodes. A larger radius gives larger features, so the filter does set a length scale. Christiansen and Sigmund call it a weak sense of length scale, because nothing forbids a thin neck or a tiny island where the filtered value happens to cross 0.5. The readout tracks the smallest island or hole. Change \(R\) and look for small features.`,
+eq: String.raw`\[ \text{binary design: } \hat\rho = 1 \text{ if } \tilde\rho \gt 0.5, \text{ else } 0 \]<div class="eqref">the limit \(\beta \to \infty\) of the projection, Lesson 7</div>`,
+sym: [["island", "connected GaAs region"], ["hole", "connected air region surrounded by GaAs"], ["smallest feature", "area of the smallest island or hole, in pixels"]],
+how: [String.raw`Filtering limits how fast \(\tilde\rho\) can vary in space.`, String.raw`So the 0.5 contour cannot wiggle on scales much below \(R\).`, "But the contour can still pass close to itself, making thin necks and small islands.", "A hard guarantee needs more: the erosion and dilation penalty (Lesson 9) and a design rule check (Lesson 11)."],
+say: "The filter radius sets a typical feature size, but only a weak one: it does not guarantee a minimum feature size.",
+num: "In Christiansen and Sigmund's metalens, filtering and thresholding removed the pixel-scale features at a cost of only about 1 % of the figure of merit.",
 r(fig, ctl) {
-  let prof = "lin"; ctl.innerHTML = btns([["lin", "Linear start"], ["cvx", "Bulging"], ["cnc", "Hollow"]], "p") + sl("r", "Ripple in q", 0, 1.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
-  const M = 41, wi = 0.3, wo = 2.0;
+  ctl.innerHTML = sl("n", "Filter radius (pixels)", 1, 8, 1, 3) + '<div class="readout" id="ro"></div>';
+  const W = 90, H = 60, raw = C3.noise(W, H, 5);
   const u = () => {
-    pick(ctl, "p", prof); const rp = +$("r").value; $("rv").textContent = rp.toFixed(2);
-    const t = range(0.02, 0.98, M), base = t.map(v => prof === "lin" ? v : prof === "cvx" ? Math.sqrt(v) : v * v);
-    const q = base.map((v, i) => Math.atanh(C3.clamp(2 * v - 1, -0.999, 0.999)) / Math.PI + rp * Math.sin(i * 1.3));
-    const y = q.map(v => wi / 2 + (wo - wi) / 2 * (Math.tanh(Math.PI * v) + 1) / 2);
-    const X = C3.X(60, 560, 0, 1), Y = v => 130 - v * 100;
-    let top = "", bot = ""; t.forEach((v, i) => { top += (i ? "L" : "M") + X(v).toFixed(1) + " " + Y(y[i]).toFixed(1); bot += (i ? "L" : "M") + X(v).toFixed(1) + " " + (260 - Y(y[i])).toFixed(1); });
-    let s = `<rect x="10" y="${Y(wi / 2)}" width="50" height="${2 * (130 - Y(wi / 2))}" fill="var(--blue-bg)" stroke="var(--blue)"/><rect x="620" y="${Y(wo / 2)}" width="50" height="${2 * (130 - Y(wo / 2))}" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
-    const poly = t.map((v, i) => `${X(v).toFixed(1)} ${Y(y[i]).toFixed(1)}`).concat(t.map((v, i) => `${X(v).toFixed(1)} ${(260 - Y(y[i])).toFixed(1)}`).reverse());
-    s += `<path d="M${poly.join("L")}Z" fill="var(--blue-bg)" stroke="none"/>`;
-    s += `<path d="${top}" fill="none" stroke="var(--blue)" stroke-width="2"/><path d="${bot}" fill="none" stroke="var(--blue)" stroke-width="2"/>`;
-    for (const yy of [wi / 2, wo / 2]) s += `<line x1="60" x2="620" y1="${Y(yy)}" y2="${Y(yy)}" stroke="#D85A30" stroke-dasharray="5 4"/><line x1="60" x2="620" y1="${260 - Y(yy)}" y2="${260 - Y(yy)}" stroke="#D85A30" stroke-dasharray="5 4"/>`;
-    t.forEach((v, i) => s += `<circle cx="${X(v)}" cy="${Y(y[i])}" r="2.5" fill="#D85A30"/>`);
-    s += `<line x1="60" x2="620" y1="130" y2="130" stroke="var(--b)" stroke-dasharray="2 4"/>`;
-    fig.innerHTML = svg(262, s);
-    $("ro").innerHTML = `<div><span>points M</span><b>${M}</b></div><div><span>narrowest half-width</span><b>${(Math.min(...y) * 1000).toFixed(0)} nm</b></div><div><span>widest half-width</span><b>${(Math.max(...y) * 1000).toFixed(0)} nm</b></div>`;
+    const n = +$("n").value; $("nv").textContent = n; const f = C3.filter2D(raw, W, H, n), b = Uint8Array.from(f, v => v > 0.5 ? 1 : 0);
+    const isl = C3.components(b, W, H, 1), hol = C3.components(b, W, H, 0).filter(c => !c.edge), all = isl.concat(hol), mn = all.length ? Math.min(...all.map(c => c.area)) : 0;
+    const small = new Uint8Array(W * H); const lab1 = C3.label(b, W, H), sz = {}; lab1.forEach(l => { if (l >= 0) sz[l] = (sz[l] || 0) + 1; }); lab1.forEach((l, i) => { if (l >= 0 && sz[l] <= Math.max(4, n * n)) small[i] = 1; });
+    C3.drawRow(fig, [{ a: f }, { a: b, over: [[small, [216, 90, 48]]] }], W, H, 3.6, "Right: thresholded at 0.5. Islands no larger than R² pixels are marked orange.", ["filtered ρ̃", "thresholded"]);
+    $("ro").innerHTML = `<div><span>islands / holes</span><b>${isl.length} / ${hol.length}</b></div><div><span>smallest island or hole</span><b>${mn} px</b></div><div><span>R²</span><b>${n * n} px</b></div>`;
   };
-  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { prof = b.dataset.p; u(); }); $("r").oninput = u; u();
+  $("n").oninput = u; u();
 }},
 
-{s: "6. An outline", t: "Polygon vertices that move along their normals",
-intu: String.raw`After a topology design is traced into a polygon, its boundary can be optimized directly. Each free vertex moves along its outward normal by \(\Delta_{\mathrm{max}} \tanh \theta_i\), so it never leaves a band of half-width \(\Delta_{\mathrm{max}}\) around the starting outline (shaded), and \(\theta = 0\) reproduces the start exactly. Because the boundary moves continuously instead of in pixel steps, staircase edges disappear and corner radii can be controlled (Lesson 10). Shuffle the \(\theta\) values and change \(\Delta_{\mathrm{max}}\).`,
-eq: String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]<div class="eqref">Ch. 3 Eq. (3.12)</div>`,
-sym: [[String.raw`\(\mathbf{r}_i^{(0)}\)`, String.raw`starting position of vertex \(i\)`], [String.raw`\(\hat{\mathbf{n}}_i\)`, String.raw`outward unit normal at vertex \(i\)`], [String.raw`\(\theta_i\)`, String.raw`free variable of vertex \(i\)`], [String.raw`\(\Delta_{\mathrm{max}}\)`, "largest allowed move"]],
-how: ["Compute the normal at each vertex from its two neighbors.", "Let the vertex move only along that normal.", String.raw`Bound the move with \(\Delta_{\mathrm{max}} \tanh \theta\).`, String.raw`The boundary gradient of Eq. (3.6) gives \(\partial J/\partial \mathbf{r}_i\), and the chain rule gives \(\partial J/\partial \theta_i = (\partial J/\partial \mathbf{r}_i) \cdot \hat{\mathbf{n}}_i\, \Delta_{\mathrm{max}} \operatorname{sech}^2 \theta_i\).`],
-say: String.raw`In the shape stage each vertex moves along its normal by a tanh-bounded amount, so the outline stays within \(\Delta_{\mathrm{max}}\) of where it started.`,
-num: String.raw`A larger \(\Delta_{\mathrm{max}}\) gives the optimizer more freedom. A small one, a few nanometers, keeps a design that already passed a design rule check close to passing (Lesson 11).`,
+/* from old ch3 L6 card 6 */
+{s: "6. Gradients through the filter", t: "The filter smooths the gradient too",
+intu: "The chain rule passes the gradient back through the filter. Because the conic kernel is symmetric, the backward pass is again a convolution with the same kernel (with the normalization moved inside). So a sensitivity that varies from pixel to pixel is smoothed before it reaches the design variables. A single-pixel spike becomes a cone, and a checkerboard pattern, the classic pixel-scale artifact, is almost wiped out. Pick a gradient pattern.",
+eq: String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum_k K(r_{ik})} \]`,
+sym: [[String.raw`\(\partial J/\partial \tilde\rho_i\)`, "gradient arriving at the filtered density (from projection and simulation)"], [String.raw`\(\partial J/\partial \rho_j\)`, "gradient with respect to the raw design variable"], ["red / blue", "positive / negative gradient"]],
+how: [String.raw`\(\tilde\rho\) is linear in \(\rho\), with matrix entries \(K(r_{ij})/\sum K\).`, "The vector-Jacobian product multiplies by the transpose of that matrix.", String.raw`\(K(r_{ij}) = K(r_{ji})\), so the transpose is again a cone-weighted sum.`, "High spatial frequencies are damped in the gradient as well as in the design."],
+say: String.raw`Backpropagation through the conic filter is again a cone-weighted average, so the gradient reaching the design variables is smoothed on the scale \(R\).`,
+num: "A checkerboard has the highest spatial frequency of the grid. A cone of radius 2 pixels reduces it to about 4 % of its amplitude, radius 3 to below 1 %.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("d", "Δ_max (nm)", 0, 60, 1, 30) + sl("a", "Spread of θ", 0, 3, 0.05, 1.5) + `<div class="row"><button id="rn">New random θ</button></div><div class="readout" id="ro"></div>`;
-  let seed = 8; const n = 48, sc = 0.45;
-  const base = Array.from({ length: n }, (_, i) => { const a = 2 * Math.PI * i / n, r = 220 + 50 * Math.sin(2 * a) + 25 * Math.cos(3 * a); return [r * Math.cos(a) * 1.3, r * Math.sin(a) * 0.9]; });
-  const nor = base.map((p, i) => { const a = base[(i + n - 1) % n], b = base[(i + 1) % n], tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty); return [ty / l, -tx / l]; });
+  let m = "spike"; ctl.innerHTML = btns([["spike", "Single pixel"], ["check", "Checkerboard"], ["noise", "Random"]], "m") + sl("n", "Filter radius (pixels)", 1, 6, 1, 3) + '<div class="readout" id="ro"></div>';
+  const W = 60, H = 40;
   const u = () => {
-    const D = +$("d").value, sp = +$("a").value; $("dv").textContent = D; $("av").textContent = sp.toFixed(2);
-    const r = C3.rng(seed), th = base.map(() => sp * (2 * r() - 1)), pts = base.map((p, i) => [p[0] + D * Math.tanh(th[i]) * nor[i][0], p[1] + D * Math.tanh(th[i]) * nor[i][1]]);
-    const P = p => `${(340 + p[0] * sc).toFixed(1)} ${(135 + p[1] * sc).toFixed(1)}`;
-    const outer = base.map((p, i) => [p[0] + D * nor[i][0], p[1] + D * nor[i][1]]), inner = base.map((p, i) => [p[0] - D * nor[i][0], p[1] - D * nor[i][1]]);
-    let s = `<path d="M${outer.map(P).join("L")}Z M${inner.map(P).join("L")}Z" fill="#EF9F27" fill-opacity="0.18" fill-rule="evenodd"/>`;
-    s += `<path d="M${base.map(P).join("L")}Z" fill="none" stroke="var(--p)" stroke-dasharray="4 3"/><path d="M${pts.map(P).join("L")}Z" fill="var(--blue-bg)" fill-opacity="0.7" stroke="var(--blue)" stroke-width="2"/>`;
-    base.forEach((p, i) => { if (i % 4 === 0) s += `<line x1="${340 + p[0] * sc}" y1="${135 + p[1] * sc}" x2="${340 + (p[0] + 50 * nor[i][0]) * sc}" y2="${135 + (p[1] + 50 * nor[i][1]) * sc}" stroke="#7F77DD" stroke-width="1.2" marker-end="url(#ar)"/>`; });
-    pts.forEach(p => s += `<circle cx="${340 + p[0] * sc}" cy="${135 + p[1] * sc}" r="2.5" fill="#D85A30"/>`);
-    fig.innerHTML = svg(270, s + `<text class="ts" x="20" y="262">dashed: start, shaded: ±Δ_max band, purple: normals</text>`);
-    let mm = 0; pts.forEach((p, i) => mm = Math.max(mm, Math.hypot(p[0] - base[i][0], p[1] - base[i][1])));
-    $("ro").innerHTML = `<div><span>vertices</span><b>${n}</b></div><div><span>largest move</span><b>${mm.toFixed(1)} nm</b></div><div><span>allowed</span><b>${D} nm</b></div>`;
+    pick(ctl, "m", m); const n = +$("n").value; $("nv").textContent = n;
+    const g = new Float64Array(W * H), r = C3.rng(3);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) g[y * W + x] = m === "spike" ? (x === 30 && y === 20 ? 1 : 0) : m === "check" ? ((x + y) % 2 ? 1 : -1) * (x > 8 && x < 52 && y > 6 && y < 34 ? 1 : 0) : 2 * r() - 1;
+    const b = C3.filter2DT(g, W, H, n), mg = Math.max(...g.map(Math.abs)), mb = Math.max(...b.map(Math.abs)) || 1;
+    C3.drawRow(fig, [{ rgb: i => C2.color(g[i] / mg) }, { rgb: i => C2.color(b[i] / mg) }], W, H, 5.2, "Both maps use the same color scale, set by the incoming gradient.", ["gradient arriving at ρ̃", "gradient reaching ρ"]);
+    $("ro").innerHTML = `<div><span>largest |gradient| in</span><b>${mg.toFixed(3)}</b></div><div><span>largest |gradient| out</span><b>${mb.toFixed(3)}</b></div><div><span>ratio</span><b>${(mb / mg).toFixed(3)}</b></div>`;
   };
-  $("d").oninput = u; $("a").oninput = u; $("rn").onclick = () => { seed++; u(); }; u();
+  ctl.querySelectorAll("button").forEach(bt => bt.onclick = () => { m = bt.dataset.m; u(); }); $("n").oninput = u; u();
 }}
+
 ],
-summary: String.raw`Every bounded geometric quantity is written as a tanh function of a free variable, so the optimizer moves freely while the geometry stays inside its limits. Grating widths lie between \(w_{\mathrm{min}}\) and \(w_{\mathrm{max}}\) (Eq. 3.7), DBR layers between 0.5 and 1.5 times their quarter-wave thickness, taper half-widths between those of the two waveguides (Eq. 3.8), and outline vertices within \(\Delta_{\mathrm{max}}\) of their start along the normal (Eq. 3.12). Near a bound the tanh flattens, so the quantity responds less, which enforces the bound gently. The chain rule through the tanh is applied automatically.`,
+summary: String.raw`In density topology optimization each pixel has a density \(\rho\) in \([0, 1]\), and the permittivity is interpolated linearly between air and GaAs, so only 0 and 1 are physical. Unregularized, the optimizer produces single-pixel features and grey regions. A conic filter of radius \(R\) averages the densities with weights \(\max(0, 1 - r/\tilde R)\), where Tidy3D rounds \(R\) up to whole pixels. The filter removes pixel-scale features and smooths the gradient on the same scale, but it makes the design greyer and gives only a weak length scale, so a projection and further penalties are needed.`,
 sheet: [
-[String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]`, "Grating widths (Ch. 3 Eq. 3.7)"],
-[String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q \]`, "Saturation near the bounds"],
-[String.raw`\[ d_j = d_j^{\mathrm{QW}} \left( 1 + \tfrac{1}{2} \tanh q_j \right) \]`, "DBR layer scale, 0.5 to 1.5"],
-[String.raw`\[ y_i = \frac{w_{\mathrm{in}}}{2} + \frac{w_{\mathrm{out}} - w_{\mathrm{in}}}{2} \cdot \frac{\tanh(\pi q_i) + 1}{2} \]`, "Taper half-widths (Ch. 3 Eq. 3.8)"],
-[String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]`, "Outline vertices (Ch. 3 Eq. 3.12)"]],
-consts: "Example values are generic: widths 100 to 800 nm, DBR 3.5/3.0 at 800 nm with 10 pairs, taper from 0.3 to 2.0 µm.",
-sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (polygon vertices as design parameters, shape optimization after topology optimization)", "Flexcompute, Tidy3D 2.11.2 (autograd through the geometry and the chain rule)"]
+[String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]`, "Linear interpolation (Ch. 3 Eq. 3.11, Christiansen Eqs. 9, 19)"],
+[String.raw`\[ \tilde\rho_i = \frac{\sum K(r_{ij})\, \rho_j}{\sum K(r_{ij})}, \qquad K(r) = \max(0, 1 - r/\tilde R) \]`, "Conic filter (Ch. 3 Eq. 3.9, Tidy3D)"],
+[String.raw`\[ \tilde R = \lceil R/\Delta \rceil \Delta, \qquad \text{kernel } 2\lceil R/\Delta \rceil + 1 \text{ pixels per side} \]`, String.raw`Radius rounding (Tidy3D <code>get_kernel_size_px</code>)`],
+[String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum K} \]`, "Backward pass through the filter"]],
+consts: String.raw`\(\varepsilon_{\mathrm{air}} = 1\), \(\varepsilon_{\mathrm{GaAs}} = 12.19\). Maps are 90 × 60 pixels of random or drawn densities, filtered live with edge renormalization.`,
+sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eqs. (9), (17), (19) and Sec. 4 (interpolation, filtering, weak length scale)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/utilities.py (_kernel_conic, make_kernel, get_kernel_size_px), plugins/invdes/region.py (eps_values)"]
 });

@@ -1,9 +1,11 @@
+/* TODO for this lesson: Thesis Sec. 3.2: mention the adjoint source amplitude set by dJ/da at each frequency. */
 addLesson("thesis", "ch3", {
 level: "Core",
 id: "thesis-ch3-l3", title: "Adjoint fields in Tidy3D: pixels, boundaries and autograd", short: "3. Adjoint in Tidy3D",
 big: String.raw`Tidy3D applies the adjoint principle with two time-domain simulations. The forward run records the electric field in the design region at the frequencies of the figure of merit. The adjoint run is excited by a mode source at the output monitor, in the same mode, with an amplitude set by the derivative of \(J\) with respect to that mode amplitude. For a pixel map, the derivative of \(J\) with respect to the permittivity at a point is the real part of \(\mathbf{E}_{\mathrm{fwd}} \cdot \mathbf{E}_{\mathrm{adj}}\) summed over the frequencies. For a structure defined by its boundary, the same overlap is evaluated on the boundary, using the field components that are continuous across it. The automatic differentiation interface then carries the result back through the parameterization by the chain rule.`,
 bridge: String.raw`This is Ch. 3 Sec. 3.2, Eqs. (3.5) and (3.6). Both formulas were read from the Tidy3D 2.11.2 source (<code>derivative_map_E</code> and the medium derivatives for pixels, <code>_evaluate_dielectric_gradient_at_points</code> and polyslab for boundaries, <code>ModeData._adjoint_source_amp</code> for the adjoint source). The 1D demonstrations below use the solver of Lesson 2. Michaels and Yablonovitch 2018 motivate the boundary treatment: on a rectangular grid a moving boundary has to be handled with care.`,
 cards: [
+/* from old ch3 L3 card 1 */
 {s: "1. Two runs", t: "Forward run and adjoint run in a waveguide device",
 intu: String.raw`In a waveguide device the forward run launches the input mode and records two things: the field \(\mathbf{E}_{\mathrm{fwd}}\) everywhere in the design region, at every frequency of interest, and the mode amplitude \(a\) at the output monitor. The adjoint run puts a mode source at the output monitor plane, in the same mode, pointing back into the device. Its complex amplitude at each frequency is set by \(\partial J/\partial a\). It records \(\mathbf{E}_{\mathrm{adj}}\) in the design region. You never build the matrix \(A\), Tidy3D sets up the adjoint source for you. Switch between the runs.`,
 eq: String.raw`<div class="eqnote">adjoint source: mode \(m\) at the monitor plane</div>\[ \text{amplitude} \propto \frac{\partial J}{\partial a_m(f)} \quad \text{at each frequency } f \]\[ \text{for } J = \sum_i w_i\, |a_m(f_i)|^2: \qquad \text{amplitude} \propto w_i\, a_m^{*}(f_i) \]`,
@@ -26,6 +28,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { m = b.dataset.m; u(); }); u();
 }},
 
+/* from old ch3 L3 card 2 */
 {s: "2. Many frequencies", t: "The sensitivity map summed over a band",
 intu: "A broadband pulse gives all frequencies in one run, and the frequency monitors store the fields at the chosen frequencies (Chapter 2, Lesson 11). The sensitivity map is then a sum over frequencies of the field products. Below, the figure of merit is the weighted transmission of the 1D device over a band. Thin lines are the contribution of each wavelength, the bold line is their sum. The contributions often disagree in sign, which is exactly the trade-off between wavelengths that the optimizer has to resolve. Change the number of wavelengths and the band width.",
 eq: String.raw`\[ \frac{\partial J}{\partial \varepsilon(\mathbf{r})} = \operatorname{Re} \sum_f \mathbf{E}_{\mathrm{fwd}}(\mathbf{r}, f) \cdot \mathbf{E}_{\mathrm{adj}}(\mathbf{r}, f) \]<div class="eqref">Ch. 3 Eq. (3.5), Tidy3D</div>`,
@@ -54,6 +57,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { nf = +b.dataset.n; u(); }); $("s").oninput = u; u();
 }},
 
+/* from old ch3 L3 card 3 */
 {s: "3. Follow the gradient", t: "A step along the gradient improves the figure of merit",
 intu: String.raw`The sensitivity map says where to add and where to remove material. Take a small step of the pixel densities along it and the figure of merit goes up. Press the step button a few times and watch the design (stripe), the transmission spectrum and \(F\) at 800 nm. This is gradient ascent in its plainest form, without the filter, projection or Adam of later lessons, so the design stays grey.`,
 eq: String.raw`\[ \rho_i \leftarrow \rho_i + \alpha\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}})\, \frac{\partial F}{\partial \varepsilon_i}, \qquad \text{clipped to } [0, 1] \]`,
@@ -80,6 +84,7 @@ r(fig, ctl) {
   $("rs").onclick = () => { reset(); u(); }; $("a").oninput = u; reset(); u();
 }},
 
+/* from old ch3 L3 card 4 */
 {s: "4. At a boundary", t: "Which field components are continuous at a boundary",
 intu: String.raw`When an outline moves, a thin sliver changes from air to GaAs. To evaluate the field product on that boundary you need field values that are well defined there. The tangential electric field \(\mathbf{E}_{\parallel}\) is continuous across the boundary. The normal electric field is not: it jumps by the ratio of permittivities, about 12 for GaAs and air. The normal displacement \(D_{\perp} = \varepsilon E_{\perp}\) is continuous instead. So the boundary formula uses \(\mathbf{E}_{\parallel}\) and \(D_{\perp}\). Rotate the field and see which arrows match across the boundary.`,
 eq: String.raw`\[ \mathbf{E}_{\parallel}^{\mathrm{in}} = \mathbf{E}_{\parallel}^{\mathrm{out}}, \qquad D_{\perp}^{\mathrm{in}} = D_{\perp}^{\mathrm{out}} \quad\Longrightarrow\quad E_{\perp}^{\mathrm{out}} = \frac{\varepsilon_{\mathrm{in}}}{\varepsilon_{\mathrm{out}}}\, E_{\perp}^{\mathrm{in}} \]\[ \frac{\partial J}{\partial p_i} = \operatorname{Re} \sum_f \int_S \left[ \Delta\varepsilon\, \mathbf{E}_{\parallel,\mathrm{fwd}} \cdot \mathbf{E}_{\parallel,\mathrm{adj}} - \Delta(\varepsilon^{-1})\, D_{\perp,\mathrm{fwd}}\, D_{\perp,\mathrm{adj}} \right] v_{n,i}\, dS \]<div class="eqref">Ch. 3 Eq. (3.6)</div>`,
@@ -104,6 +109,7 @@ r(fig, ctl) {
   $("a").oninput = u; u();
 }},
 
+/* from old ch3 L3 card 5 */
 {s: "5. A boundary gradient, checked", t: "Moving a slab boundary: formula versus finite difference",
 intu: String.raw`In 1D at normal incidence the field is tangential to every interface, so only the \(\Delta\varepsilon\, \mathbf{E}_{\parallel} \cdot \mathbf{E}_{\parallel}\) term of Eq. (3.6) is present. A GaAs slab of thickness \(L\) sits in air. Its right boundary can move continuously because the boundary pixel is partly filled, which is the material averaging idea of Michaels and Yablonovitch. The slope \(dT/dL\) from the boundary formula (two solves) is drawn as the orange tangent on the \(T(L)\) curve. It matches the finite-difference slope. Move the thickness.`,
 eq: String.raw`\[ \begin{aligned} \frac{dT}{dL} &= \Delta\varepsilon \times \left(\frac{\partial T}{\partial \varepsilon} \text{ per unit length}\right) \text{ at the boundary} \\ &= \Delta\varepsilon \cdot \left[ -2k_0^2 \operatorname{Re}\{ E_{\mathrm{adj}} E_{\mathrm{fwd}} \} \right]_{\mathrm{boundary}} / \Delta \end{aligned} \]`,
@@ -128,6 +134,7 @@ r(fig, ctl) {
   $("L").oninput = u; u();
 }},
 
+/* from old ch3 L3 card 6 */
 {s: "6. Autograd", t: "From the Python function to the gradient of every parameter",
 intu: "In practice the geometry, the simulation and the figure of merit are written as one Python function. Tidy3D's automatic differentiation records every operation. Asking for the gradient runs the forward simulation, builds the adjoint source, runs the adjoint simulation, evaluates the pixel or boundary formula, and carries the result back through the parameterization by the chain rule. Penalties depend only on the geometry, so their gradient comes from the chain rule alone, with no simulation. Step through the forward pass and the backward pass.",
 eq: String.raw`\[ \frac{\partial J}{\partial p_j} = \sum_{\mathbf{r}} \frac{\partial J}{\partial \varepsilon(\mathbf{r})} \cdot \frac{\partial \varepsilon(\mathbf{r})}{\partial p_j} - \sum_k w_k \frac{\partial P_k}{\partial p_j} \]`,
@@ -151,6 +158,7 @@ r(fig, ctl) {
   };
   $("b").onclick = () => { k--; u(); }; $("n").onclick = () => { k++; u(); }; u();
 }}
+
 ],
 summary: String.raw`Tidy3D evaluates the adjoint gradient with two time-domain runs per input. The forward run records \(\mathbf{E}_{\mathrm{fwd}}\) in the design region and the output mode amplitudes. The adjoint run is a mode source at the output monitor in the same mode, with amplitude \(\partial J/\partial a_m\) at each frequency, and records \(\mathbf{E}_{\mathrm{adj}}\). For a pixel map, \(\partial J/\partial \varepsilon(\mathbf{r}) = \operatorname{Re} \sum_f \mathbf{E}_{\mathrm{fwd}} \cdot \mathbf{E}_{\mathrm{adj}}\), with all constants folded into the adjoint source. For boundaries, the overlap is taken on the boundary with the continuous components, \(\Delta\varepsilon\, \mathbf{E}_{\parallel} \cdot \mathbf{E}_{\parallel} - \Delta(1/\varepsilon)\, D_{\perp} D_{\perp}\), times the normal velocity of the boundary. Autograd then applies the chain rule back through the parameterization, and penalties add their gradients without any simulation.`,
 sheet: [

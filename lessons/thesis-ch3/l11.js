@@ -1,9 +1,11 @@
+/* TODO for this lesson: Thesis Sec. 3.5: THREE rules (min GaAs width, min gap, min area), KLayout + Shapely morphology r = 59 nm, repair r = 63 nm, check every 5 steps. */
 addLesson("thesis", "ch3", {
 level: "Advanced",
 id: "thesis-ch3-l11", title: "Design rule check, repair and the DRC-safe stage", short: "11. DRC and repair",
 big: "A foundry or a cleanroom accepts a layout only if it passes a design rule check (DRC): no GaAs line narrower than a minimum width, no air gap narrower than a minimum gap, no island or hole smaller than a minimum area. Penalties during the optimization only discourage violations, so the final layout is checked with hard rules. The width and gap rules can be checked by morphology: the GaAs removed by an opening with a disk of half the rule, and the air filled by a closing, must both have zero area. A layout that fails is repaired with the same operations, a closing then an opening with a slightly larger radius. Repair changes the geometry, so the optimization continues from the repaired outline in short, small-step runs, keeping only outlines that pass.",
 bridge: "This is Ch. 3 Sec. 3.5, design rule check and repair, Eq. (3.18). Tidy3D has no design rule check, so this part is separate code written for the thesis, using the Shapely geometry library and the KLayout layout tool. Hammond et al. 2021 is the reference for why rules must be part of the optimization, for the five basic foundry rules, and for what happens when rules are switched on. The checks below run on a pixel grid of 5 nm with an exact distance transform, as a picture of what the polygon-based checks do.",
 cards: [
+/* from old ch3 L11 card 1 */
 {s: "1. The rulebook", t: "Five basic design rules",
 intu: "Hammond et al. list five basic rules that a foundry checks. Three are one-dimensional: minimum linewidth, minimum spacing between features, minimum radius of curvature. Two are two-dimensional: minimum area of an island and minimum enclosed area of a hole. A shape can pass every 1D rule and still fail a 2D rule, for example a round island that is wide enough but too small in area. The thesis checks width, gap and area. Pick a rule to see what it measures.",
 eq: String.raw`\[ w \ge w_{\mathrm{min}} \qquad g \ge g_{\mathrm{min}} \qquad r \ge r_{\mathrm{min}} \]\[ A_{\mathrm{island}} \ge A_{\mathrm{min}} \qquad A_{\mathrm{hole}} \ge A_{\mathrm{hole,min}} \]`,
@@ -26,6 +28,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { k = b.dataset.k; u(); }); u();
 }},
 
+/* from old ch3 L11 card 2 */
 {s: "2. Width and gap", t: "The morphological width and gap check",
 intu: String.raw`The layout has two large blocks 90 nm apart, a 60 nm hole, a 60 nm line, a 60 nm island and a 130 nm round island. Choose the rule. The check opens and closes the GaAs with a disk of radius \(r = \text{rule}/2\). Red marks GaAs the opening removes, blue marks air the closing fills. Both must be empty. Switch the large blocks to sharp corners: every corner now fails, because a disk cannot fill a sharp tip. So this check also asks for corner radii of at least \(r\). Regions of a few pixels from staircase edges are ignored.`,
 eq: String.raw`\[ \text{pass} \;\Longleftrightarrow\; \operatorname{area}\big(X \setminus \operatorname{open}_r(X)\big) = 0 \;\text{ and }\; \operatorname{area}\big(\operatorname{close}_r(X) \setminus X\big) = 0 \]\[ r = \text{rule}/2 \]`,
@@ -45,6 +48,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { sharp = b.dataset.s === "1"; u(); }); $("w").oninput = u; u();
 }},
 
+/* from old ch3 L11 card 3 */
 {s: "3. Minimum area", t: "Islands and holes: the area rule",
 intu: String.raw`The area rule looks at every connected island of GaAs and every hole in it. Here the minimum area is the square of the rule. Look at the round island of 130 nm diameter. It is wider than a 120 nm rule, so it passes the width check, yet its area, \(\pi/4 \times 130^2 \approx 13\,300\) nm², is below \(120^2 = 14\,400\) nm². A disk exactly as wide as the rule always fails a square area rule, because \(\pi/4 \lt 1\). Width and area are independent rules.`,
 eq: String.raw`\[ A_{\mathrm{island}} \ge A_{\mathrm{min}} \qquad A_{\mathrm{hole}} \ge A_{\mathrm{min}} \qquad \text{here } A_{\mathrm{min}} = (\text{rule})^2 \]\[ \text{disk of diameter } w\text{:} \quad A = \frac{\pi}{4}\, w^2 \approx 0.785\, w^2 \]`,
@@ -67,6 +71,7 @@ r(fig, ctl) {
   $("w").oninput = u; u();
 }},
 
+/* from old ch3 L11 card 4 */
 {s: "4. Two independent checks", t: "Edge measurements and the rolling disk",
 intu: "A design is accepted only if two independent checks both find nothing. KLayout measures distances between edges: for width, between edges facing each other across GaAs, for space, across air. Any pair closer than the rule is flagged. The morphological check rolls a disk. The two agree on bars and gaps, but they look at corners differently. An edge check usually ignores a sharp convex corner, since no two facing edges are close. The disk check flags it, because the disk cannot reach the tip. Pick a situation.",
 eq: String.raw`<div class="eqnote">edge check</div>\[ \text{flag edge pairs with distance } d \lt \text{rule} \]<div class="eqnote">morphology</div>\[ \text{flag } \operatorname{area}\big(X \setminus \operatorname{open}_r(X)\big) \gt 0 \;\text{ or }\; \operatorname{area}\big(\operatorname{close}_r(X) \setminus X\big) \gt 0 \]`,
@@ -88,6 +93,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { m = b.dataset.m; u(); }); u();
 }},
 
+/* from old ch3 L11 card 5 */
 {s: "5. Repair", t: "Healing with a closing, then an opening, and a small margin",
 intu: String.raw`A layout that fails is repaired with the same two operations. The closing first fills every gap narrower than \(2r\), then the opening removes every GaAs feature narrower than \(2r\), and both round the corners. The radius is slightly larger than half the rule, so that rounding the vertices to a 1 nm grid afterwards cannot bring a feature back below the rule. Change the repair radius and look at what is added (blue) and removed (red), and at the check after repair. Note what repair does not fix: an island that is wide enough but too small in area.`,
 eq: String.raw`\[ X_{\mathrm{healed}} = \operatorname{open}_r\big(\operatorname{close}_r(X)\big) \qquad r = \text{rule}/2 + \text{margin} \]<div class="eqref">Ch. 3 Eq. (3.18)</div>`,
@@ -108,6 +114,7 @@ r(fig, ctl) {
   $("h").oninput = u; u();
 }},
 
+/* from old ch3 L11 card 6 */
 {s: "6. The DRC-safe stage", t: "Optimizing while staying legal",
 intu: String.raw`Repair changes the geometry, which can lower the performance. So the shape optimization continues from the repaired outline, in a stage designed to stay legal. Vertex moves are limited to a small \(\Delta_{\mathrm{max}}\), so a few steps cannot create a new violation of any size. Every few steps the outline is repaired and resampled. Only evaluations of an outline that passes the check are kept as candidates, and the final device is the best passing candidate, validated again on a finer grid. Hammond et al. saw the same pattern in their runs: when rules are switched on, performance drops and is then gradually recovered. Step through the loop.`,
 eq: String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i, \qquad \text{small } \Delta_{\mathrm{max}} \]\[ \text{every } m \text{ steps: } X \leftarrow \operatorname{open}_r\big(\operatorname{close}_r(X)\big), \text{ resample, check} \]`,
@@ -128,6 +135,7 @@ r(fig, ctl) {
   };
   $("b").onclick = () => { k--; u(); }; $("n").onclick = () => { k++; u(); }; u();
 }}
+
 ],
 summary: String.raw`The final layout must pass a design rule check with minimum width, minimum gap and minimum area. Width and gap are checked by morphology: the GaAs removed by opening with a disk of radius \(\text{rule}/2\) and the air filled by closing must both have zero area, which also requires rounded corners, and independently by KLayout edge-distance checks. Area is checked separately, since a feature can be wide enough yet too small. A failing layout is repaired by \(X_{\mathrm{healed}} = \operatorname{open}_r(\operatorname{close}_r(X))\) with \(r\) slightly above \(\text{rule}/2\), so grid rounding cannot recreate a violation. Repair changes the geometry, so the optimization continues in a DRC-safe stage with small vertex moves, repair and resampling every few steps, and only passing outlines kept.`,
 sheet: [

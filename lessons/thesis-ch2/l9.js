@@ -1,176 +1,198 @@
+/* TODO for this lesson: Thesis Sec. 2.6 second half. Rewrite big/bridge/summary/sheet. Quiz must cover only thesis Ch2 content. */
 addLesson("thesis", "ch2", {
-level: "Advanced",
-id: "thesis-ch2-l9", title: "FDTD 2: the Yee cell in 2D and 3D", short: "9. FDTD 2: the Yee cell",
-big: String.raw`In 3D each grid cell holds six field components, but not at the same point. The three \(\mathbf{E}\) components sit at the centres of the cell edges, pointing along them. The three \(\mathbf{H}\) components sit at the centres of the faces, pointing normal to them. With this arrangement every \(\mathbf{H}\) is surrounded by a loop of four \(\mathbf{E}\) components, and every \(\mathbf{E}\) by a loop of four \(\mathbf{H}\) components, which is exactly what a curl needs. Kane Yee proposed it in 1966, and it is the grid Tidy3D and MEEP use. In 2D it splits into two independent sets, and you can run one live here.`,
-bridge: "Your Chapter 2 Fig. 2.7 shows the Yee cell. This lesson lets you rotate it, see which components feed which, and then watch a 2D Yee grid guide light in a high-index slab.",
+level: "Pro",
+id: "thesis-ch2-l9", title: "FDTD 2: sources, absorbing boundaries and spectra", short: "9. FDTD 2, sources to spectra",
+big: "A device simulation needs four more ingredients around the Yee grid. A source launches a short pulse whose spectrum covers the band of interest. Perfectly matched layers absorb everything that reaches the edge, so the small box behaves like open space. Monitors Fourier transform the fields as they pass, building up spectra step by step. And a mode decomposition projects the field at the output onto the mode you care about, which turns fields into a transmission number. A convergence check against grid resolution then tells you how far to trust it.",
+bridge: "Oskooi et al. 2010 describe all of these pieces for MEEP: sources, PML (their Sec. 4.2), flux and Fourier-transformed field output. Tidy3D provides the same ingredients under its own names. All simulations on this page are live 1D FDTD.",
 cards: [
-{s: "1. The Yee cell", t: "Where the six components live",
-intu: String.raw`Rotate the cell. Blue arrows are \(\mathbf{E}\) components, each at the middle of an edge and pointing along it: four \(E_x\) on the edges parallel to \(x\), four \(E_y\), four \(E_z\). Coral arrows are \(\mathbf{H}\) components, each at the centre of a face and pointing out of it. Click an \(\mathbf{H}\) component: the four \(\mathbf{E}\) components circling its face light up. Those four are exactly what the curl of \(\mathbf{E}\) needs to update that \(\mathbf{H}\). Click an \(\mathbf{E}\) component: the \(\mathbf{H}\) components on the faces that share its edge light up (two in this cell, two more in the neighbouring cells).`,
-eq: String.raw`\[ E_x(i+\tfrac{1}{2}, j, k), \quad E_y(i, j+\tfrac{1}{2}, k), \quad E_z(i, j, k+\tfrac{1}{2}) \]\[ H_x(i, j+\tfrac{1}{2}, k+\tfrac{1}{2}), \quad H_y(i+\tfrac{1}{2}, j, k+\tfrac{1}{2}), \quad H_z(i+\tfrac{1}{2}, j+\tfrac{1}{2}, k) \]`,
-sym: [[String.raw`\((i, j, k)\)`, "integer grid indices, one per cell corner"], [String.raw`\(+\tfrac{1}{2}\)`, "half a cell along that axis"], ["edge centre", String.raw`where each \(\mathbf{E}\) component sits`], ["face centre", String.raw`where each \(\mathbf{H}\) component sits`]],
-how: [String.raw`The curl of \(\mathbf{E}\) at a face centre needs the \(\mathbf{E}\) components tangential to that face, around its edges.`, String.raw`Placing \(\mathbf{E}\) on edges puts exactly four of them around each face.`, String.raw`Likewise the curl of \(\mathbf{H}\) along an edge needs the \(\mathbf{H}\) components on the four faces that meet at that edge.`, "So the curl equations become sums of four neighbours, all centered. This is Yee's arrangement."],
-say: "In the Yee cell the electric field components sit at the centres of the cell edges and the magnetic components at the centres of the faces, so each component is surrounded by a loop of the other field, as the curl equations require.",
-num: String.raw`One cell: <b>12</b> edge positions (\(\mathbf{E}\)) and <b>6</b> face positions (\(\mathbf{H}\)), but each is shared with neighbours, so a large grid has 3 \(\mathbf{E}\) and 3 \(\mathbf{H}\) values per cell.`,
+/* from old ch2 L8 card 6 */
+{s: "6. All colours at once", t: "One pulse gives the whole spectrum",
+intu: "A short pulse contains many frequencies. Record the field after the slab during the whole run, then Fourier transform it, and you have the response at every frequency from one simulation. Divide by the spectrum of a run without the slab and you get the transmission. This card does exactly that, two 1D FDTD runs (about 4000 steps each) when you press the button. The dots are the FDTD result, the line is the exact transfer-matrix answer for the same slab. They agree closely, and the small mismatch at short wavelengths is the numerical dispersion of Lesson 10.",
+eq: String.raw`\[ \tilde{E}(f) = \sum_n E_z^{\,n}\, e^{i2\pi f n\Delta t}\, \Delta t \qquad T(f) = \frac{|\tilde{E}_{\mathrm{slab}}(f)|^2}{|\tilde{E}_{\mathrm{ref}}(f)|^2} \]`,
+sym: [[String.raw`\(\tilde{E}(f)\)`, "discrete Fourier transform of the recorded field"], ["ref", "same simulation without the slab"], [String.raw`\(T(f)\)`, "power transmission spectrum"]],
+how: [String.raw`Run with a broadband pulse and record \(E\) at a probe behind the slab every step.`, "Fourier transform the record at many frequencies (a running sum, Lesson 11).", "Repeat with no slab to get the incident spectrum at the same probe.", "The ratio of the two power spectra is the transmission. Oskooi et al. note this is the usual way FDTD gets broadband results from one run."],
+say: "Because FDTD is a time-domain method, one simulation with a short pulse gives the response over a whole band, obtained by Fourier transforming the recorded fields.",
+num: String.raw`Slab \(\varepsilon = 4\), 40 cells thick. Fabry-Perot peaks where \(2nd = m\lambda\): \(\lambda = 160/m\) cells, so peaks near \(\lambda = 80, 53, 40\) cells.`,
 r(fig, ctl) {
-  let sel = "Hz0", ang = 35;
-  const E = [], H = [];
-  [0, 1].forEach(j => [0, 1].forEach(k => E.push({ id: `Ex${j}${k}`, p: [0.5, j, k], d: [1, 0, 0], c: "x" })));
-  [0, 1].forEach(i => [0, 1].forEach(k => E.push({ id: `Ey${i}${k}`, p: [i, 0.5, k], d: [0, 1, 0], c: "y" })));
-  [0, 1].forEach(i => [0, 1].forEach(j => E.push({ id: `Ez${i}${j}`, p: [i, j, 0.5], d: [0, 0, 1], c: "z" })));
-  [0, 1].forEach(i => H.push({ id: `Hx${i}`, p: [i, 0.5, 0.5], d: [1, 0, 0] }));
-  [0, 1].forEach(j => H.push({ id: `Hy${j}`, p: [0.5, j, 0.5], d: [0, 1, 0] }));
-  [0, 1].forEach(k => H.push({ id: `Hz${k}`, p: [0.5, 0.5, k], d: [0, 0, 1] }));
-  const near = (h, e) => { for (let a = 0; a < 3; a++) if (h.d[a] === 1) { if (e.d[a] === 1) return false; if (Math.abs(e.p[a] - h.p[a]) > 1e-9) return false; } return Math.abs(e.p[0] - h.p[0]) + Math.abs(e.p[1] - h.p[1]) + Math.abs(e.p[2] - h.p[2]) <= 0.5 + 1e-9; };
-  ctl.innerHTML = sl("ang", "Rotate view", 0, 90, 1, 35) + `<div class="row"><label>H on a face</label>${H.map(h => `<button data-s="${h.id}">${h.id.slice(0, 2)}${h.id[2] === "0" ? " (lower)" : " (upper)"}</button>`).join("")}</div><div class="row"><label>E on an edge</label><button data-s="Ez00">Ez</button><button data-s="Ex00">Ex</button><button data-s="Ey00">Ey</button></div><div class="readout" id="ro"></div>`;
-  const P = ([x, y, z]) => { const a = ang * Math.PI / 180, xr = x * Math.cos(a) - y * Math.sin(a), yr = x * Math.sin(a) + y * Math.cos(a); return [250 + 170 * xr, 245 - 160 * z - 60 * yr]; };
-  const u = () => {
-    pick(ctl, "s", sel); ang = +$("ang").value; $("angv").textContent = ang + "°";
-    let s = "";
-    const cs = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], ed = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
-    ed.forEach(([a, b]) => { const p = P(cs[a]), q = P(cs[b]); s += `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="var(--b)" stroke-width="1.2"/>`; });
-    const sh = H.find(h => h.id === sel), se = E.find(e => e.id === sel);
-    const hot = new Set(); if (sh) E.forEach(e => { if (near(sh, e)) hot.add(e.id); }); if (se) H.forEach(h => { if (near(h, se)) hot.add(h.id); });
-    const arrow = (o, col, on, len) => { const a = P([o.p[0] - o.d[0] * len, o.p[1] - o.d[1] * len, o.p[2] - o.d[2] * len]), b = P([o.p[0] + o.d[0] * len, o.p[1] + o.d[1] * len, o.p[2] + o.d[2] * len]); return `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${col}" stroke-width="${on ? 4 : 2}" opacity="${on ? 1 : 0.45}" marker-end="url(#ar)"/>`; };
-    E.forEach(e => s += arrow(e, "#378ADD", hot.has(e.id) || e.id === sel, 0.13));
-    H.forEach(h => s += arrow(h, "#D85A30", hot.has(h.id) || h.id === sel, 0.13));
-    const o = P([0, 0, 0]);
-    fig.innerHTML = svg(310, `${s}<text class="ts" x="${o[0] - 6}" y="${o[1] + 16}" text-anchor="end">(i, j, k)</text><text class="ts" x="480" y="60">blue: E on edges</text><text class="ts" x="480" y="80">coral: H on faces</text><text class="ts" x="480" y="110">highlighted: the loop</text><text class="ts" x="480" y="126">that updates the</text><text class="ts" x="480" y="142">selected component</text>`);
-    $("ro").innerHTML = `<div><span>selected</span><b>${sel.slice(0, 2)}</b></div><div><span>loop partners shown</span><b>${hot.size}${se ? " here (+2 in neighbour cells)" : ""}</b></div>`;
+  ctl.innerHTML = sl("e", "Slab permittivity ε", 1.5, 12, 0.25, 4) + sl("d", "Slab thickness (cells)", 10, 80, 1, 40) + `<div class="row"><button id="go">Run FDTD (two runs)</button></div><div class="readout" id="ro"></div>`;
+  const runOnce = (e, d) => {
+    const N = 1000, a = 500, eps = new Float64Array(N).fill(1); for (let i = a; i < a + d; i++) eps[i] = e;
+    const sim = new C2.FDTD1D(N, 0.5, eps, { pml: 40, smax: 0.6, wall: "pec" }); const rec = [];
+    for (let t = 0; t < 4500; t++) { sim.step([150, Math.exp(-Math.pow((t - 60) / 10, 2))]); rec.push(sim.ez[800]); }
+    return rec;
   };
-  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { sel = b.dataset.s; u(); });
-  $("ang").oninput = u; u();
+  const lams = range(25, 150, 90);
+  const dft = (rec, lam) => { let re = 0, im = 0; const f = 1 / lam; rec.forEach((v, n) => { const p = 2 * Math.PI * f * n * 0.5; re += v * Math.cos(p); im += v * Math.sin(p); }); return re * re + im * im; };
+  const draw = (fd) => {
+    const e = +$("e").value, d = +$("d").value; $("ev").textContent = e.toFixed(2); $("dv").textContent = d;
+    const an = lams.map(l => 1 - C2.tmmR(1, [[Math.sqrt(e), d]], 1, l));
+    let dots = ""; if (fd) fd.forEach((v, i) => dots += `<circle cx="${60 + (lams[i] - 25) / 125 * 560}" cy="${230 - Math.min(1.05, v) * 190}" r="2.6" fill="#D85A30"/>`);
+    fig.innerHTML = svg(260, `${plot(60, 40, 560, 190, lams, an, 25, 150, 0, 1, "#378ADD", 2)}${dots}<line x1="60" x2="620" y1="230" y2="230" stroke="var(--p)"/><line x1="60" x2="60" y1="40" y2="230" stroke="var(--p)"/><text class="ts" x="54" y="44" text-anchor="end">T = 1</text><text class="ts" x="340" y="252" text-anchor="middle">wavelength 25 to 150 cells. Line: exact. Dots: FDTD ${fd ? "" : "(press Run)"}</text>`);
+  };
+  $("e").oninput = () => draw(null); $("d").oninput = () => draw(null);
+  $("go").onclick = () => { const e = +$("e").value, d = +$("d").value; const r0 = runOnce(1, d), r1 = runOnce(e, d); const fd = lams.map(l => dft(r1, l) / dft(r0, l)); draw(fd); const an = lams.map(l => 1 - C2.tmmR(1, [[Math.sqrt(e), d]], 1, l)); const err = Math.max(...fd.map((v, i) => Math.abs(v - an[i]))); $("ro").innerHTML = `<div><span>largest |T_FDTD − T_exact|</span><b>${err.toFixed(3)}</b></div>`; };
+  draw(null);
 }},
 
-{s: "2. A loop on a face", t: "The curl is a loop: updating one H",
-intu: String.raw`Take the bottom face of a cell. \(H_z\) sits at its centre. Around it, on the four edges, are two \(E_x\) and two \(E_y\). Faraday's law says the change of \(H_z\) is set by how much \(\mathbf{E}\) circulates around that loop. Going counterclockwise: \(E_x\) on the front edge counts positive, \(E_y\) on the right edge positive, \(E_x\) on the back edge negative, \(E_y\) on the left edge negative. Set the four edge values and see the circulation and the resulting change in \(H_z\). If all four point the same way around, \(H_z\) changes a lot. If they just point in one straight direction, the loop cancels and \(H_z\) does not change.`,
-eq: String.raw`\[ \frac{\partial H_z}{\partial t} = -\frac{1}{\mu_0}\left(\frac{\partial E_y}{\partial x} - \frac{\partial E_x}{\partial y}\right) \]\[ H_z^{\,n+1/2} = H_z^{\,n-1/2} - \frac{\Delta t}{\mu_0}\left[\frac{E_y\big|_{i+1} - E_y\big|_{i}}{\Delta x} - \frac{E_x\big|_{j+1} - E_x\big|_{j}}{\Delta y}\right] \]`,
-sym: [["circulation", String.raw`sum of \(\mathbf{E}\) along the loop, counterclockwise seen from \(+z\)`], [String.raw`\(E_y\big|_{i+1}, E_y\big|_{i}\)`, String.raw`\(E_y\) on the right and left edges of the face`], [String.raw`\(E_x\big|_{j+1}, E_x\big|_{j}\)`, String.raw`\(E_x\) on the back and front edges`]],
-how: [String.raw`Stokes: the loop integral of \(\mathbf{E}\) around a face equals the curl's normal component times the face area.`, String.raw`Approximate each side of the loop by the \(\mathbf{E}\) value at its centre times its length. That is exactly where Yee puts \(\mathbf{E}\).`, String.raw`Divide by the area \(\Delta x\Delta y\) to get the curl at the face centre.`, String.raw`Faraday's law then gives the change of \(H_z\) over one time step.`],
-say: "Each magnetic component is updated from the circulation of the four electric components around its face, which is a centered, second-order approximation of Faraday's law.",
-num: String.raw`Uniform \(\mathbf{E}\) (all \(E_x = 1\), all \(E_y = 0\)): circulation <b>0</b>, \(H_z\) unchanged.<br>All four pointing around the loop with value 1: circulation <b>4</b> (in units of \(E\cdot\Delta\)), the largest change.`,
+/* from old ch2 L11 card 1 */
+{s: "1. The pulse", t: "A Gaussian pulse: short in time, wide in frequency",
+intu: "A source switched on as a short Gaussian pulse contains a band of frequencies around its centre. The shorter the pulse, the wider its spectrum: duration and bandwidth trade off exactly. Tidy3D's GaussianPulse is specified by its centre frequency and fwidth, the standard deviation of its frequency content. Drag the relative bandwidth. A wide band lets one run cover a whole spectrum, but the run must last long enough for the pulse to pass and for the device to ring down. A narrow band gives a long pulse and a long run.",
+eq: String.raw`\[ s(t) \propto \exp\!\left[-\frac{(t - t_0)^2}{2\tau^2}\right] \sin(2\pi f_0 t) \qquad |S(f)| \propto \exp\!\left[-\frac{(f - f_0)^2}{2\sigma_f^2}\right] \]\[ \tau\,\sigma_f = \frac{1}{2\pi} \]`,
+sym: [[String.raw`\(f_0\)`, String.raw`centre frequency (\(c/\lambda_0\))`], [String.raw`\(\sigma_f\)`, "standard deviation of the spectrum (Tidy3D's fwidth)"], [String.raw`\(\tau\)`, "standard deviation of the pulse envelope in time"], [String.raw`\(t_0\)`, "delay so the pulse starts smoothly from zero"]],
+how: ["The Fourier transform of a Gaussian is a Gaussian.", String.raw`Their widths are inversely related: \(\tau\sigma_f = 1/(2\pi)\) for these definitions.`, String.raw`Multiplying by the carrier \(\sin(2\pi f_0 t)\) shifts the spectrum to \(f_0\).`, "So the spectral band and the pulse length are set together by one parameter."],
+say: "A Gaussian pulse source covers a band of frequencies set by its spectral width. A wider band means a shorter pulse, and one FDTD run then yields the response across that band.",
+num: String.raw`\(\lambda_0 = 800\) nm, \(f_0 = 375\) THz. fwidth = \(f_0/10\) = 37.5 THz ⟹ \(\tau = 1/(2\pi \times 37.5\ \mathrm{THz})\) ≈ <b>4.2 fs</b>.<br>\(\pm 2\sigma_f\) (300 to 450 THz) covers about <b>667 to 1000 nm</b>.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("a", "E_x front edge", -1, 1, 0.05, 1) + sl("b", "E_y right edge", -1, 1, 0.05, 1) + sl("c", "E_x back edge", -1, 1, 0.05, -1) + sl("d", "E_y left edge", -1, 1, 0.05, -1) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("w", "fwidth / f₀", 0.02, 0.4, 0.005, 0.1) + '<div class="readout" id="ro"></div>';
   const u = () => {
-    const a = +$("a").value, b = +$("b").value, c = +$("c").value, d = +$("d").value;["a", "b", "c", "d"].forEach(k => $(k + "v").textContent = (+$(k).value).toFixed(2));
-    const circ = a + b - c - d, x0 = 200, y0 = 50, s = 160;
-    const ar = (x, y, dx, dy, v) => `<line x1="${x - dx * 35 * v}" y1="${y - dy * 35 * v}" x2="${x + dx * 35 * v}" y2="${y + dy * 35 * v}" stroke="#378ADD" stroke-width="3.5" ${Math.abs(v) > 0.02 ? 'marker-end="url(#ar)"' : ""}/>`;
-    fig.innerHTML = svg(260, `<rect x="${x0}" y="${y0}" width="${s}" height="${s}" fill="var(--blue-bg)" stroke="var(--p)"/>${ar(x0 + s / 2, y0 + s, 1, 0, a)}${ar(x0 + s, y0 + s / 2, 0, -1, b)}${ar(x0 + s / 2, y0, 1, 0, c)}${ar(x0, y0 + s / 2, 0, -1, d)}<circle cx="${x0 + s / 2}" cy="${y0 + s / 2}" r="${6 + Math.min(30, Math.abs(circ) * 7)}" fill="#D85A30" opacity="0.35"/><text class="th" x="${x0 + s / 2}" y="${y0 + s / 2 + 5}" text-anchor="middle">H_z</text><path d="M${x0 + s / 2 + 52} ${y0 + s / 2} A52 52 0 1 0 ${x0 + s / 2 + 51} ${y0 + s / 2 - 10}" fill="none" stroke="var(--p)" stroke-dasharray="3 4" marker-end="url(#ar)"/><text class="ts" x="${x0 + s / 2}" y="${y0 + s + 34}" text-anchor="middle">x →, y ↑ (seen from +z). Dashed: counterclockwise</text><text class="th" x="560" y="120" text-anchor="middle">circulation</text><text class="th" x="560" y="146" text-anchor="middle" style="font-size:22px">${circ.toFixed(2)}</text><text class="ts" x="560" y="170" text-anchor="middle">ΔH_z ∝ −circulation</text>`);
-    $("ro").innerHTML = `<div><span>(E_x front − E_x back)</span><b>${(a - c).toFixed(2)}</b></div><div><span>(E_y right − E_y left)</span><b>${(b - d).toFixed(2)}</b></div><div><span>ΔH_z (relative)</span><b>${(-circ).toFixed(2)}</b></div>`;
+    const w = +$("w").value; $("wv").textContent = w.toFixed(3);
+    const f0 = 375, sf = w * f0, tau = 1 / (2 * Math.PI * sf * 1e12) * 1e15;
+    const ts = range(0, 80, 600), s = ts.map(t => Math.exp(-Math.pow(t - 40, 2) / (2 * tau * tau)) * Math.sin(2 * Math.PI * f0 * 1e-3 * t));
+    const fs = range(150, 600, 300), S = fs.map(f => Math.exp(-Math.pow(f - f0, 2) / (2 * sf * sf)));
+    const l1 = 3e5 / (f0 + 2 * sf), l2 = f0 - 2 * sf > 0 ? 3e5 / (f0 - 2 * sf) : Infinity;
+    fig.innerHTML = svg(250, `<text class="th" x="190" y="24" text-anchor="middle">in time (0 to 80 fs)</text>${plot(40, 40, 300, 160, ts, s, 0, 80, -1.05, 1.05, "#378ADD", 1.2)}<line x1="40" x2="340" y1="120" y2="120" stroke="var(--p)" stroke-width="0.5"/><text class="th" x="510" y="24" text-anchor="middle">in frequency (150 to 600 THz)</text>${plot(370, 40, 280, 160, fs, S, 150, 600, 0, 1.05, "#D85A30", 2.5)}<line x1="370" x2="650" y1="200" y2="200" stroke="var(--p)"/><text class="ts" x="${370 + (f0 - 150) / 450 * 280}" y="218" text-anchor="middle">f₀</text>`);
+    $("ro").innerHTML = `<div><span>τ</span><b>${tau.toFixed(2)} fs</b></div><div><span>band ±2σ</span><b>${l1.toFixed(0)} to ${isFinite(l2) ? l2.toFixed(0) : "∞"} nm</b></div>`;
   };
-  ["a", "b", "c", "d"].forEach(k => $(k).oninput = u); u();
+  $("w").oninput = u; u();
 }},
 
-{s: "3. The 2D grid", t: "2D: the grid splits into two independent sets",
-intu: String.raw`If nothing changes along \(z\) (an infinitely long structure, or a 2D cross-section approximation), the six components split into two groups that never talk to each other. One group is \(E_z, H_x, H_y\) (called \(\mathrm{TM}_z\) in FDTD texts), the other is \(H_z, E_x, E_y\) (\(\mathrm{TE}_z\)). Each can be simulated alone. The grid for the first group is drawn here: \(E_z\) at the nodes, \(H_x\) between nodes vertically, \(H_y\) between nodes horizontally. Click a node or an \(H\) to see its update stencil. Careful: FDTD's \(\mathrm{TE}_z\) and \(\mathrm{TM}_z\) names refer to the \(z\) axis of the simulation, which is not the same as the TE-like and TM-like waveguide modes of Lessons 2 and 3.`,
-eq: String.raw`\[ \mathrm{TM}_z:\quad \frac{\partial E_z}{\partial t} = \frac{1}{\varepsilon}\left(\frac{\partial H_y}{\partial x} - \frac{\partial H_x}{\partial y}\right) \]\[ \frac{\partial H_x}{\partial t} = -\frac{1}{\mu_0}\frac{\partial E_z}{\partial y}, \qquad \frac{\partial H_y}{\partial t} = \frac{1}{\mu_0}\frac{\partial E_z}{\partial x} \]`,
-sym: [[String.raw`\(\mathrm{TM}_z\)`, String.raw`the set \(E_z, H_x, H_y\) (\(\mathbf{E}\) normal to the simulation plane)`], [String.raw`\(\mathrm{TE}_z\)`, String.raw`the set \(H_z, E_x, E_y\)`], ["stencil", "the neighbours used in one update"]],
-how: [String.raw`Set \(\partial/\partial z = 0\) in both curl equations.`, String.raw`The equations for \(E_z, H_x, H_y\) only involve each other, and so do those for \(H_z, E_x, E_y\).`, "So a 2D simulation needs only one of the two sets for a given polarization.", "The staggering is the 3D Yee cell seen from above."],
-say: String.raw`In two dimensions the Yee scheme splits into two independent polarizations, \(\mathrm{TM}_z\) (\(E_z, H_x, H_y\)) and \(\mathrm{TE}_z\) (\(H_z, E_x, E_y\)). These names refer to the simulation axis, not to waveguide mode labels.`,
-num: "2D cost: 3 field values per cell instead of 6, and far fewer cells. That is why a grating is often designed first in 2D and only checked in 3D.",
+/* from old ch2 L11 card 2 */
+{s: "2. PML", t: "Absorbing boundaries: why a PML works",
+intu: "The simulation box is finite, but the device sits in open space. Whatever reaches the edge must vanish without coming back. A hard wall reflects everything. A layer that simply absorbs, switched on abruptly, also reflects, because the sudden change in material is itself an interface. A perfectly matched layer absorbs gradually, with electric and magnetic losses matched so that its impedance equals that of the medium, and the loss rises smoothly from zero. Oskooi et al. describe PML in their Sec. 4.2 as making the finite domain behave like open space with almost no reflection. Pick a boundary and watch the pulse come back, or not.",
+eq: String.raw`<div class="eqnote">matched layer</div>\[ \frac{\sigma_e}{\varepsilon} = \frac{\sigma_m}{\mu} \;\Longrightarrow\; \text{impedance unchanged, no reflection at its face} \]<div class="eqnote">graded loss</div>\[ \sigma(d) = \sigma_{\mathrm{max}}\left(\frac{d}{L}\right)^m, \qquad m \approx 3 \]`,
+sym: [[String.raw`\(\sigma_e, \sigma_m\)`, "electric and magnetic conductivities in the layer"], [String.raw`\(d\)`, "depth into the layer"], [String.raw`\(L\)`, "layer thickness"], [String.raw`\(m\)`, "grading order"], ["reflection (dB)", String.raw`\(10\log_{10}\) of reflected over incident power`]],
+how: ["An interface reflects when the wave impedance changes.", "With matched electric and magnetic losses, the impedance stays the same as the medium's, so a normally incident wave enters without reflection.", "On a grid, a sudden jump in loss still reflects a little, so the loss is graded smoothly.", "The wave decays in the layer, reflects from the outer wall, and decays again on the way back."],
+say: "A perfectly matched layer absorbs outgoing waves with almost no reflection, because its electric and magnetic losses are matched and graded smoothly. It lets a small simulation box represent open space.",
+num: "Readout below: reflected power from each boundary, measured by this 1D simulation.<br>Hard wall: <b>0 dB</b> (everything returns). A graded PML is typically tens of dB better than an abrupt absorber.",
 r(fig, ctl) {
-  let sel = "e,2,1";
-  ctl.innerHTML = `<p class="note">Click a dot (E_z) or a square (H) in the picture.</p><div class="readout" id="ro"></div>`;
-  const u = () => {
-    const X = i => 120 + i * 90, Y = j => 220 - j * 70;
-    const [kind, si, sj] = sel.split(","), I = +si, J = +sj;
-    const hot = new Set();
-    if (kind === "e") { hot.add(`hy,${I},${J}`); hot.add(`hy,${I - 1},${J}`); hot.add(`hx,${I},${J}`); hot.add(`hx,${I},${J - 1}`); }
-    if (kind === "hx") { hot.add(`e,${I},${J}`); hot.add(`e,${I},${J + 1}`); }
-    if (kind === "hy") { hot.add(`e,${I},${J}`); hot.add(`e,${I + 1},${J}`); }
-    let s = "";
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) { const k = `e,${i},${j}`; s += `<circle data-k="${k}" cx="${X(i)}" cy="${Y(j)}" r="${k === sel ? 10 : 8}" fill="${k === sel || hot.has(k) ? "#378ADD" : "var(--panel)"}" stroke="#378ADD" stroke-width="2" style="cursor:pointer"/>`; }
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) { const k = `hx,${i},${j}`; s += `<rect data-k="${k}" x="${X(i) - 7}" y="${Y(j) - 35 - 7}" width="14" height="14" fill="${k === sel || hot.has(k) ? "#D85A30" : "var(--panel)"}" stroke="#D85A30" stroke-width="2" style="cursor:pointer"/>`; }
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const k = `hy,${i},${j}`; s += `<rect data-k="${k}" x="${X(i) + 45 - 7}" y="${Y(j) - 7}" width="14" height="14" fill="${k === sel || hot.has(k) ? "#7F77DD" : "var(--panel)"}" stroke="#7F77DD" stroke-width="2" style="cursor:pointer"/>`; }
-    fig.innerHTML = svg(270, `${s}<text class="ts" x="120" y="258">blue dots: E_z at nodes. Coral squares: H_x (between nodes in y). Purple: H_y (between nodes in x)</text>`);
-    fig.querySelectorAll("[data-k]").forEach(el => el.onclick = () => { sel = el.getAttribute("data-k"); u(); });
-    $("ro").innerHTML = `<div><span>selected</span><b>${kind === "e" ? "E_z" : kind === "hx" ? "H_x" : "H_y"}</b></div><div><span>uses</span><b>${kind === "e" ? "2 H_x and 2 H_y around it" : "the 2 E_z on either side"}</b></div>`;
-  };
-  u();
-}},
-
-{s: "4. Run 2D", t: "A live 2D FDTD simulation",
-intu: String.raw`This runs the 2D \(\mathrm{TM}_z\) Yee updates of card 3 on a 200 × 120 grid. Choose a scene. In free space, a point source sends out circular waves. With a dielectric block, the waves slow down inside it, reflect from it and bend around it. With a slab waveguide (a high-index strip, \(n = 3.5\)), a source inside the strip launches light that stays trapped and travels along it, with only a little radiated at the start: total internal reflection, computed from nothing but the curl equations. The colours are the sign and size of \(E_z\). The frame is an absorbing layer.`,
-eq: String.raw`\[ \begin{aligned} E_z &\leftarrow E_z + \frac{S}{\varepsilon}\Big[\left(H_y\big|_{i} - H_y\big|_{i-1}\right) - \left(H_x\big|_{j} - H_x\big|_{j-1}\right)\Big] \\ H_x &\leftarrow H_x - S\left(E_z\big|_{j+1} - E_z\big|_{j}\right) \\ H_y &\leftarrow H_y + S\left(E_z\big|_{i+1} - E_z\big|_{i}\right) \end{aligned} \]`,
-sym: [[String.raw`\(S\)`, String.raw`Courant number, 0.5 here (below the 2D limit \(1/\sqrt{2} \approx 0.707\))`], [String.raw`\(\varepsilon\)`, "relative permittivity per cell"], ["source", "a sine added at one cell each step, smoothly switched on"]],
-how: [String.raw`Same leapfrog as 1D, now with two \(H\) components.`, String.raw`\(\varepsilon\) is stored per cell, so any geometry can be drawn into the grid.`, "A graded absorbing frame damps waves before they reach the edge.", String.raw`Light inside the strip at \(N\) above 1 cannot leak out, the guiding of Lesson 1.`],
-say: "A 2D FDTD simulation reproduces radiation, refraction and waveguiding directly from the discretized curl equations, given only the permittivity on the grid.",
-num: String.raw`Wavelength in air \(\lambda_0 = 40\) cells. Inside the strip (\(n = 3.5\)) the wavelength is about 11 cells, close to the minimum for reasonable accuracy (Lesson 10).`,
-r(fig, ctl) {
-  let scene = "wg", run = true, sim;
-  ctl.innerHTML = btns([["free", "free space"], ["block", "dielectric block"], ["wg", "slab waveguide"]], "s") + `<div class="row"><button id="rs">Restart</button><button id="pp">Pause</button></div>`;
-  const nx = 200, ny = 120, lam = 40;
-  const reset = () => { const eps = new Float32Array(nx * ny).fill(1); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { if (scene === "block" && i > 110 && i < 150 && j > 35 && j < 85) eps[j * nx + i] = 6; if (scene === "wg" && j >= 55 && j <= 64) eps[j * nx + i] = 12.25; } sim = new C2.FDTD2D(nx, ny, 0.5, eps, 15); pick(ctl, "s", scene); };
-  ctl.querySelectorAll("button[data-s]").forEach(b => b.onclick = () => { scene = b.dataset.s; reset(); });
-  $("rs").onclick = reset; $("pp").onclick = () => { run = !run; $("pp").textContent = run ? "Pause" : "Play"; };
-  reset();
-  const { ctx, img } = C2.canvas(fig, nx, ny, 3, "E_z: red positive, blue negative. Grey lines mark the high-index region.");
+  let b = "graded", sim;
+  ctl.innerHTML = btns([["wall", "hard wall"], ["abrupt", "abrupt absorber"], ["graded", "graded PML"]], "b") + `<div class="row"><button id="rs">Restart</button></div><div class="readout" id="ro"></div>`;
+  const N = 500;
+  const mk = () => b === "wall" ? new C2.FDTD1D(N, 0.5, null, { wall: "pec" }) : new C2.FDTD1D(N, 0.5, null, { pml: 40, smax: b === "abrupt" ? 0.5 : 0.6, mode: b, wall: "pec" });
+  const measure = () => { const s = mk(); let inc = 0, ref = 0; for (let t = 0; t < 2400; t++) { s.step([250, Math.exp(-Math.pow((t - 60) / 15, 2))]); if (t < 500) inc = Math.max(inc, Math.abs(s.ez[300])); if (t > 1100) ref = Math.max(ref, Math.abs(s.ez[300])); } return 20 * Math.log10(Math.max(ref, 1e-9) / inc); };
+  const reset = () => { pick(ctl, "b", b); sim = mk(); const db = measure(); $("ro").innerHTML = `<div><span>reflected power</span><b>${db > -0.5 ? "0 dB (total)" : db.toFixed(1) + " dB"}</b></div>`; };
+  ctl.querySelectorAll("button[data-b]").forEach(x => x.onclick = () => { b = x.dataset.b; reset(); });
+  $("rs").onclick = reset; reset();
   anim(() => {
-    if (run) for (let s = 0; s < 3; s++) { const t = sim.t, ramp = Math.min(1, t / 80); const sx = scene === "wg" ? 40 : 60; sim.step([sx, 60, 0.6 * ramp * Math.sin(2 * Math.PI * t * 0.5 / lam)]); }
-    for (let k = 0; k < nx * ny; k++) { const [r, g, b] = C2.color(sim.ez[k] * 3); let o = k * 4; const e = sim.eps[k]; img.data[o] = e > 1 ? r * 0.85 : r; img.data[o + 1] = e > 1 ? g * 0.85 : g; img.data[o + 2] = e > 1 ? b * 0.85 : b; img.data[o + 3] = 255; }
-    const flip = ctx.createImageData(nx, ny); for (let j = 0; j < ny; j++) flip.data.set(img.data.subarray(j * nx * 4, (j + 1) * nx * 4), (ny - 1 - j) * nx * 4);
-    ctx.putImageData(flip, 0, 0);
+    for (let s = 0; s < 4; s++) { const t = sim.t; if (t < 3000) sim.step([250, Math.exp(-Math.pow((t - 60) / 15, 2))]); }
+    const xs = range(0, N - 1, N);
+    fig.innerHTML = svg(230, `${b !== "wall" ? `<rect x="40" y="20" width="${40 / N * 600}" height="180" fill="#888780" opacity="0.18"/><rect x="${40 + (N - 40) / N * 600}" y="20" width="${40 / N * 600}" height="180" fill="#888780" opacity="0.18"/>` : `<rect x="40" y="20" width="4" height="180" fill="var(--t)"/><rect x="636" y="20" width="4" height="180" fill="var(--t)"/>`}<line x1="40" x2="640" y1="110" y2="110" stroke="var(--p)" stroke-width="0.5"/>${plot(40, 20, 600, 180, xs, Array.from(sim.ez), 0, N - 1, -0.6, 0.6, "#378ADD", 1.8)}<text class="ts" x="44" y="222">${b === "wall" ? "hard walls" : b === "abrupt" ? "abrupt absorbing layers" : "graded PML"} (grey)</text><text class="ts" x="636" y="222" text-anchor="end">step ${sim.t}</text>`);
   });
 }},
 
-{s: "5. Geometry on a grid", t: "Curved shapes on a square grid: staircasing",
-intu: String.raw`The grid only knows \(\varepsilon\) per cell. A smooth shape, like a circle or a slanted wall, has to be drawn with square pixels, which gives a staircase. That makes the shape slightly wrong in size and position, and the error falls only slowly as the grid is refined. The fix used by MEEP, which Oskooi et al. describe, and by Tidy3D, is subpixel averaging: a cell cut by an interface gets an effective \(\varepsilon\) from the fraction of each material inside it (and, done properly, from the field direction). Then the effective boundary sits in the right place even between grid points. Change the resolution and compare the staircased and the averaged circle.`,
-eq: String.raw`\[ \text{staircase: } \varepsilon_{\mathrm{cell}} = \varepsilon(\text{centre of the cell}) \]\[ \text{averaged: } \varepsilon_{\mathrm{cell}} = f\,\varepsilon_1 + (1 - f)\,\varepsilon_2 \quad \text{(simplest form)} \]\[ f = \text{fraction of the cell inside material 1} \]`,
-sym: [[String.raw`\(f\)`, "filling fraction of the cell"], ["staircasing", "representing a smooth boundary by whole cells"], ["subpixel averaging", String.raw`assigning an effective \(\varepsilon\) to cells cut by a boundary`]],
-how: ["Sample the shape at the centre of each cell: each cell is all one material or all the other.", "The area represented jumps by whole cells as the shape moves, so small changes in shape are invisible until a cell flips.", String.raw`Averaging gives each boundary cell an intermediate \(\varepsilon\), so the represented shape changes smoothly.`, "A careful average that treats field components parallel and normal to the interface differently restores second-order accuracy."],
-say: "On a Cartesian grid, curved or slanted boundaries are staircased. Subpixel averaging of the permittivity at boundary cells reduces this error, which is important for small, shape-sensitive features.",
-num: "This is one reason inverse-designed shapes are sensitive to grid resolution: a small boundary change only shows up once it moves a whole cell, unless averaging is used.",
+/* from old ch2 L11 card 3 */
+{s: "3. Monitors", t: "How a frequency monitor builds a spectrum",
+intu: String.raw`A frequency-domain monitor does not store the whole time history. At every step it multiplies the current field by \(e^{i2\pi f n\Delta t}\) for each requested frequency and adds it to a running sum. When the run ends, the sums are the Fourier transform. Drag the time slider to stop the sum early. While the pulse is still passing, the spectrum is wrong. If the device rings (here, a resonant slab) and the run stops before the ringing dies, the spectrum shows ripples. That is why a run must last until the fields have decayed, and why solvers stop on a decay criterion.`,
+eq: String.raw`\[ \tilde{E}(f) = \sum_{n=0}^{M} E^{\,n}\, e^{i2\pi f n\Delta t}\, \Delta t \quad \text{(running sum, updated every step)} \]<div class="eqnote">valid only once \(E^{\,n}\) has decayed to \(\approx 0\) for \(n \gt M\)</div>`,
+sym: [[String.raw`\(\tilde{E}(f)\)`, String.raw`running Fourier transform at frequency \(f\)`], [String.raw`\(M\)`, "number of steps so far"], ["ring-down", "slow decay of fields trapped in resonances"]],
+how: ["The continuous Fourier transform is an integral over all time.", "On the grid it becomes a sum over time steps, which can be accumulated as the simulation runs.", "Stopping early truncates the integral, like multiplying the signal by a window, which smears and ripples the spectrum.", String.raw`High-\(Q\) resonators ring for a long time, so they need long runs.`],
+say: "Frequency monitors accumulate a running discrete Fourier transform of the fields. The result is correct only when the run continues until the fields have decayed, so the run time must cover the device's ring-down.",
+num: String.raw`In this demo the slab is \(\varepsilon = 9\) and 40 cells thick, so it rings for several round trips. Stopping at about a third of the run leaves visible ripples in the spectrum.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("n", "Cells across the circle", 4, 40, 1, 10) + sl("off", "Shift the circle (fraction of a cell)", 0, 1, 0.05, 0.3) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("M", "Stop the sum at step", 300, 6000, 50, 6000) + '<div class="readout" id="ro"></div>';
+  const N = 1000, eps = new Float64Array(N).fill(1); for (let i = 500; i < 540; i++) eps[i] = 9;
+  const sim = new C2.FDTD1D(N, 0.5, eps, { pml: 40, smax: 0.6, wall: "pec" }), rec = [];
+  for (let t = 0; t < 6000; t++) { sim.step([150, Math.exp(-Math.pow((t - 60) / 10, 2))]); rec.push(sim.ez[800]); }
+  const ls = range(30, 150, 100);
+  const spec = M => ls.map(l => { let re = 0, im = 0; for (let n = 0; n < M; n++) { const p = 2 * Math.PI / l * n * 0.5; re += rec[n] * Math.cos(p); im += rec[n] * Math.sin(p); } return re * re + im * im; });
+  const fin = spec(6000), mx = Math.max(...fin);
   const u = () => {
-    const n = +$("n").value, off = +$("off").value; $("nv").textContent = n; $("offv").textContent = off.toFixed(2);
-    const R = n / 2, cx = n / 2 + 1 + off, cy = n / 2 + 1, M = n + 3, cs = 240 / M;
-    let s1 = "", s2 = "", A1 = 0, A2 = 0;
-    for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
-      const inC = Math.hypot(i + 0.5 - cx, j + 0.5 - cy) < R ? 1 : 0; let f = 0; const q = 6; for (let a = 0; a < q; a++) for (let b = 0; b < q; b++) if (Math.hypot(i + (a + 0.5) / q - cx, j + (b + 0.5) / q - cy) < R) f++; f /= q * q;
-      A1 += inC; A2 += f;
-      if (inC) s1 += `<rect x="${40 + i * cs}" y="${20 + j * cs}" width="${cs}" height="${cs}" fill="#378ADD"/>`;
-      if (f > 0) s2 += `<rect x="${380 + i * cs}" y="${20 + j * cs}" width="${cs}" height="${cs}" fill="#378ADD" opacity="${f}"/>`;
-    }
-    const grid = x0 => { let g = ""; for (let k = 0; k <= M; k++) g += `<line x1="${x0 + k * cs}" x2="${x0 + k * cs}" y1="20" y2="${20 + M * cs}" stroke="var(--b)" stroke-width="0.5"/><line x1="${x0}" x2="${x0 + M * cs}" y1="${20 + k * cs}" y2="${20 + k * cs}" stroke="var(--b)" stroke-width="0.5"/>`; return g; };
-    const circ = x0 => `<circle cx="${x0 + cx * cs}" cy="${20 + cy * cs}" r="${R * cs}" fill="none" stroke="#D85A30" stroke-width="2"/>`;
-    const At = Math.PI * R * R;
-    fig.innerHTML = svg(290, `${s1}${grid(40)}${circ(40)}${s2}${grid(380)}${circ(380)}<text class="ts" x="160" y="282" text-anchor="middle">staircase</text><text class="ts" x="500" y="282" text-anchor="middle">subpixel average</text>`);
-    $("ro").innerHTML = `<div><span>area error, staircase</span><b>${((A1 / At - 1) * 100).toFixed(1)} %</b></div><div><span>area error, averaged</span><b>${((A2 / At - 1) * 100).toFixed(2)} %</b></div>`;
+    const M = +$("M").value; $("Mv").textContent = M;
+    const sp = spec(M), ts = range(0, 5999, 600), rs = ts.map(t => rec[Math.round(t)]);
+    fig.innerHTML = svg(270, `<text class="ts" x="40" y="20">probe record E(t)</text>${plot(40, 28, 600, 80, ts, rs, 0, 5999, -0.5, 0.5, "#378ADD", 1.2)}<rect x="${40 + M / 6000 * 600}" y="28" width="${600 - M / 6000 * 600}" height="80" fill="var(--sunk)" opacity="0.8"/><text class="ts" x="40" y="134">spectrum: grey dashed final, coral up to the chosen step</text>${plot(40, 140, 600, 110, ls, fin.map(v => v / mx), 30, 150, 0, 1.3, "#888780", 1.5, "5 4")}${plot(40, 140, 600, 110, ls, sp.map(v => v / mx), 30, 150, 0, 1.3, "#D85A30", 2)}<line x1="40" x2="640" y1="250" y2="250" stroke="var(--p)"/><text class="ts" x="340" y="266" text-anchor="middle">wavelength 30 to 150 cells</text>`);
+    const err = Math.max(...sp.map((v, i) => Math.abs(v - fin[i]) / mx));
+    $("ro").innerHTML = `<div><span>largest spectrum error</span><b>${(err * 100).toFixed(1)} %</b></div>`;
   };
-  $("n").oninput = u; $("off").oninput = u; u();
+  $("M").oninput = u; u();
 }},
 
-{s: "6. What it costs", t: "How big a 3D simulation gets",
-intu: String.raw`A 3D FDTD simulation stores six numbers per cell and updates all of them every step. The cell size is set by the shortest wavelength in the structure: \(\lambda_0\) divided by the steps per wavelength and by the highest index. The time step is tied to the cell size by the Courant limit, so a finer grid also needs more steps for the same physical time. Together the cost grows as the fourth power of the resolution. Change the numbers: going from 20 to 30 steps per wavelength makes the run about five times more expensive. Symmetry planes (Lesson 4) cut the cells by 2 each.`,
-eq: String.raw`\[ \Delta x = \frac{\lambda_0}{N_\lambda\, n_{\mathrm{max}}} \qquad \text{cells} = \frac{L_x L_y L_z}{\Delta x^3} \qquad \Delta t \approx \frac{0.99\,\Delta x}{c\sqrt{3}} \]\[ \text{cost} \propto \text{cells} \times \text{steps} \propto N_\lambda^4 \]`,
-sym: [[String.raw`\(N_\lambda\)`, "steps per wavelength in the highest-index material"], [String.raw`\(n_{\mathrm{max}}\)`, "largest refractive index in the domain"], [String.raw`\(L_x, L_y, L_z\)`, "domain size"], ["steps", String.raw`number of time steps for the run time \(T\), \(T/\Delta t\)`]],
-how: [String.raw`Cell size from resolution: \(\Delta x = \lambda_0/(N_\lambda n_{\mathrm{max}})\).`, String.raw`Number of cells scales as \(N_\lambda^3\).`, String.raw`Courant: \(\Delta t \propto \Delta x\), so the number of time steps for a fixed physical time scales as \(N_\lambda\).`, String.raw`Total work \(\propto N_\lambda^4\). Memory \(\propto N_\lambda^3\).`],
-say: "The cost of a 3D FDTD simulation grows as the fourth power of the grid resolution, three powers from the number of cells and one from the time step. Resolution, domain size and symmetry are therefore chosen together.",
-num: String.raw`\(\lambda_0 = 800\) nm, \(n = 3.5\), 20 steps per wavelength: \(\Delta x\) = <b>11.4 nm</b>. At 30 steps: <b>7.6 nm</b>.<br>\((30/20)^4\) ≈ <b>5.1×</b> the work.`,
+/* from old ch2 L11 card 4 */
+{s: "4. Mode overlap", t: "From fields to a number: projecting onto a mode",
+intu: String.raw`At the output of a device the field is some mixture: the wanted mode, other modes, radiation. The transmission into the wanted mode is the overlap of the output field with that mode's profile, normalized by power. This card uses a real slab \(\mathrm{TE}_0\) profile (computed live) as the mode and a Gaussian as the incoming field. Shift it off-centre or change its width and the overlap drops, even though all the power arrives. This is exactly why a device can 'transmit' lots of power but still have low efficiency into the mode, and why mode decomposition, not total flux, is the right measure.`,
+eq: String.raw`\[ a_m = \frac{1}{4}\int \left(\mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H}\right) \cdot \hat{\mathbf{x}}\, dA \]<div class="eqnote">with</div>\[ \frac{1}{2}\,\mathrm{Re}\int \mathbf{E}_m \times \mathbf{H}_m^{*} \cdot \hat{\mathbf{x}}\, dA = 1 \]\[ T_m = |a_m|^2 \]<div class="eqnote">scalar estimate</div>\[ \eta = \frac{\left|\int E\,\psi_m\right|^2}{\int |E|^2 \int |\psi_m|^2} \]`,
+sym: [[String.raw`\(a_m\)`, String.raw`complex amplitude of mode \(m\) in the output field`], [String.raw`\(\mathbf{E}_m, \mathbf{H}_m\)`, "mode fields normalized to unit power"], [String.raw`\(T_m\)`, String.raw`power transmitted into mode \(m\)`], [String.raw`\(\eta\)`, "simplified overlap for one field component"]],
+how: ["Guided modes of a waveguide are orthogonal under this cross-product integral.", "So the output field can be expanded in modes, and each coefficient is found by projecting onto that mode.", String.raw`With unit-power modes, \(|a_m|^2\) is the power carried by mode \(m\).`, "Your Chapter 3 defines transmission this way, as power in the fundamental mode only (any other light counts as loss)."],
+say: "Transmission is computed by projecting the output field onto the target mode with the mode orthogonality integral. Power in other modes or radiation does not count, so mode overlap and total flux can differ.",
+num: "A Gaussian of the right width centred on the slab: overlap close to <b>100 %</b>. Offset by half the slab thickness: noticeably less (see the readout).",
 r(fig, ctl) {
-  ctl.innerHTML = sl("N", "Steps per wavelength", 8, 40, 1, 20) + sl("Lx", "Domain L_x (µm)", 1, 20, 0.5, 6) + sl("Ly", "Domain L_y (µm)", 1, 10, 0.5, 4) + sl("Lz", "Domain L_z (µm)", 0.5, 6, 0.25, 2) + sl("T", "Run time (ps)", 0.2, 5, 0.1, 1) + `<div class="row"><label>Symmetry planes</label>${[0, 1, 2].map(v => `<button data-s="${v}">${v}</button>`).join("")}</div><div class="readout" id="ro"></div>`;
-  let sy = 0;
+  ctl.innerHTML = sl("off", "Offset of the incoming beam (nm)", -200, 200, 1, 0) + sl("w", "Beam half-width (nm)", 30, 300, 1, 110) + '<div class="readout" id="ro"></div>';
+  const zs = range(-500, 500, 801), N = C2.slabN(3.5, 1, 160, 800, 0, "TE"), psi = C2.slabProfile(3.5, 1, 160, 800, 0, "TE", N, zs).main;
   const u = () => {
-    pick(ctl, "s", sy);
-    const N = +$("N").value, Lx = +$("Lx").value, Ly = +$("Ly").value, Lz = +$("Lz").value, T = +$("T").value;["N", "Lx", "Ly", "Lz", "T"].forEach(k => $(k + "v").textContent = (+$(k).value));
-    const dx = 0.8 / (N * 3.5), cells = Lx * Ly * Lz / Math.pow(dx, 3) / Math.pow(2, sy), dt = 0.99 * dx * 1e-6 / (3e8 * Math.sqrt(3)), steps = T * 1e-12 / dt, mem = cells * 6 * 4 / 1e9, work = cells * steps;
-    const ref = (() => { const d = 0.8 / (20 * 3.5); const c = Lx * Ly * Lz / Math.pow(d, 3) / Math.pow(2, sy); const st = T * 1e-12 / (0.99 * d * 1e-6 / (3e8 * Math.sqrt(3))); return c * st; })();
-    const ns = range(8, 40, 33), ws = ns.map(n => Math.pow(n / 20, 4));
-    fig.innerHTML = svg(230, `${plot(60, 30, 560, 160, ns, ws, 8, 40, 0, 16, "#378ADD", 2.5)}<line x1="${60 + (N - 8) / 32 * 560}" x2="${60 + (N - 8) / 32 * 560}" y1="30" y2="190" stroke="#EF9F27" stroke-width="2"/><line x1="60" x2="620" y1="190" y2="190" stroke="var(--p)"/><line x1="60" x2="60" y1="30" y2="190" stroke="var(--p)"/><text class="ts" x="340" y="212" text-anchor="middle">relative work versus steps per wavelength (1 at 20), up to 16×</text>`);
-    $("ro").innerHTML = `<div><span>cell size</span><b>${(dx * 1000).toFixed(1)} nm</b></div><div><span>cells</span><b>${(cells / 1e6).toFixed(1)} million</b></div><div><span>time steps</span><b>${Math.round(steps).toLocaleString()}</b></div><div><span>field memory</span><b>${mem.toFixed(2)} GB</b></div><div><span>work vs 20 steps</span><b>${(work / ref).toFixed(2)}×</b></div>`;
+    const off = +$("off").value, w = +$("w").value; $("offv").textContent = off + " nm"; $("wv").textContent = w + " nm";
+    const E = zs.map(z => Math.exp(-Math.pow((z - off) / w, 2)));
+    let a = 0, b = 0, c = 0; zs.forEach((z, i) => { a += E[i] * psi[i]; b += E[i] * E[i]; c += psi[i] * psi[i]; });
+    const eta = a * a / (b * c);
+    fig.innerHTML = svg(250, `<rect x="${60 + (420) / 1000 * 560}" y="30" width="${160 / 1000 * 560}" height="180" fill="var(--blue-bg)"/>${plot(60, 30, 560, 180, zs, psi, -500, 500, 0, 1.05, "#378ADD", 2.5)}${plot(60, 30, 560, 180, zs, E, -500, 500, 0, 1.05, "#D85A30", 2.5, "5 4")}<line x1="60" x2="620" y1="210" y2="210" stroke="var(--p)"/><text class="ts" x="340" y="232" text-anchor="middle">across the slab, −500 to 500 nm. Blue: TE0 mode. Coral dashed: incoming field</text>`);
+    $("ro").innerHTML = `<div><span>overlap η</span><b>${(eta * 100).toFixed(1)} %</b></div><div><span>power elsewhere</span><b>${((1 - eta) * 100).toFixed(1)} %</b></div>`;
   };
-  ctl.querySelectorAll("button[data-s]").forEach(b => b.onclick = () => { sy = +b.dataset.s; u(); });
-  ["N", "Lx", "Ly", "Lz", "T"].forEach(k => $(k).oninput = u); u();
+  $("off").oninput = u; $("w").oninput = u; u();
+}},
+
+/* NEW CARD: Grid resolution in steps per wavelength in the highest-index material, nominal cell lambda0/(N n), why the GaAs sets it */
+{s: "6. Grid resolution", t: "TODO: Grid resolution in steps per wavelength in the highest-index material, nominal cell lambda0/(N n), why the GaAs sets it", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* from old ch2 L11 card 6 */
+{s: "6. The workflow", t: "One FDTD transmission simulation, start to finish",
+intu: "Click through the steps of a typical device simulation. Each step uses something from Lessons 1 to 11. This is the order in which a simulation of a grating, taper or splitter is set up, and the questions to ask at each stage. It is also a good outline for explaining your methods chapter in a defense.",
+eq: String.raw`\[ \text{geometry} \to \text{grid} \to \text{source} \to \text{symmetry} \to \text{boundaries} \]\[ \to \text{run} \to \text{monitors} \to \text{mode decomposition} \to \text{result + resolution} \]`,
+sym: [["geometry", String.raw`\(\varepsilon(\mathbf{r})\) of the structure`], ["grid", "steps per wavelength in the highest index"], ["source", "mode source or Gaussian beam, with a pulse band"], ["symmetry", "PEC or PMC planes that match the launched mode"]],
+how: ["Draw the structure and choose the domain with space around it.", "Pick a resolution (Lesson 10) and let the time step follow from Courant.", "Launch a mode or beam with a pulse covering the band, and add symmetry only if structure and source allow it.", "Absorb with PML, run until fields decay, record with frequency monitors, project onto the target mode, and repeat at a finer grid to check."],
+say: "An FDTD transmission is obtained by launching a broadband source into a discretized structure surrounded by PML, recording Fourier-transformed fields at the output, and projecting them onto the target mode. Each result is reported with its grid resolution and checked by refinement.",
+num: "Things that most often go wrong: wrong symmetry value (near-zero result), monitor too close to the structure (evanescent fields), run too short (ripples), grid too coarse for a long interference device (phase error).",
+r(fig, ctl) {
+  let k = 0;
+  const S = [["Geometry", "Put ε(r) on the grid. Leave space between the structure and the PML so evanescent tails are not cut.", "L1 to L3"], ["Grid", "Choose steps per wavelength in the highest index. Cost grows as N⁴, phase error falls as 1/N².", "L9, L10"], ["Time step", "Set from the Courant limit, a fraction of Δx/(c√3) in 3D.", "L10"], ["Source", "Mode source for a waveguide input, Gaussian beam for a fiber. Pulse band covers the spectrum you need.", "L11 card 1"], ["Symmetry", "Use PEC or PMC planes only if structure and source are symmetric, and pick the value that keeps the launched mode.", "L4"], ["Boundaries", "PML on open sides, thick enough and graded.", "L11 card 2"], ["Run", "Leapfrog updates until the fields decay by the chosen factor.", "L8"], ["Monitors", "Running DFT of the fields at the output plane.", "L11 card 3"], ["Mode decomposition", "Project onto the target mode to get the transmission into it.", "L11 card 4"], ["Check", "Repeat at a finer grid, and once without symmetry, before trusting the number.", "L11 card 5"]];
+  ctl.innerHTML = `<div class="row"><button id="wb">Back</button><button id="wn">Next</button></div>`;
+  const u = () => {
+    let s = ""; S.forEach(([t], i) => { const x = 20 + (i % 5) * 130, y = i < 5 ? 30 : 120; s += `<g class="${i === k ? "c-coral" : i < k ? "c-teal" : "c-gray"}"><rect x="${x}" y="${y}" width="118" height="52" rx="8" stroke-width="${i === k ? 1.6 : 0.6}"/></g><text class="th" x="${x + 59}" y="${y + 31}" text-anchor="middle" style="font-size:12px">${i + 1}. ${t}</text>`; if (i % 5 !== 4) s += `<line x1="${x + 119}" x2="${x + 129}" y1="${y + 26}" y2="${y + 26}" class="arr" marker-end="url(#ar)"/>`; });
+    const t = S[k][1], cut = t.length > 90 ? t.lastIndexOf(" ", 90) : -1;
+    fig.innerHTML = svg(260, `${s}<text class="th" x="340" y="200" text-anchor="middle">${S[k][0]} (${S[k][2]})</text><text class="ts" x="340" y="222" text-anchor="middle">${cut > 0 ? t.slice(0, cut) : t}</text><text class="ts" x="340" y="240" text-anchor="middle">${cut > 0 ? t.slice(cut + 1) : ""}</text>`);
+    $("wb").disabled = k === 0; $("wn").disabled = k === S.length - 1;
+  };
+  $("wb").onclick = () => { k--; u(); }; $("wn").onclick = () => { k++; u(); }; u();
+}},
+
+/* from old ch2 L11 card 7 */
+{s: "7. Quiz", t: "Chapter 2 quiz: ten questions",
+intu: "Ten questions covering all eleven lessons. Answer, read why, and say the reason out loud. Questions that go beyond these lessons belong to your own chapters, so check those separately.",
+eq: "<div class=\"eqnote\">Lessons 1 to 11</div>",
+sym: [["L1 to L3", "guiding, slab and strip modes"], ["L4", "symmetry"], ["L5 to L7", "grating, DBR, MMI"], ["L8 to L11", "FDTD"]],
+how: ["Answer without looking.", "Explain the reason in one sentence.", "Reopen the lesson for any miss.", "Repeat before the defense."],
+say: "When a question goes beyond your work, say so and answer from the physics you know.",
+num: "Aim for 10 out of 10 with reasons.",
+r(fig, ctl) {
+  const Q = [
+    ["Why does a TM-like mode have a lower effective index than a TE-like mode in a membrane?", ["Its field jumps by ε_core/ε_air outside, so more of it is in air", "It travels faster in GaAs", "It is not guided"], 0, "Normal D is continuous, so E_z jumps by about 12 and the field sits outside (Lesson 2)."],
+    ["Which Tidy3D symmetry value at z = 0 keeps the TE-like modes?", ["+1 (PMC)", "−1 (PEC)", "0"], 0, "TE-like modes are even, with tangential E nonzero at the mid-plane (Lesson 4)."],
+    ["At y = 0, TE0 needs which value?", ["+1", "−1"], 1, "Its tangential components there, E_x and E_z, vanish on the axis (Lesson 4)."],
+    ["The first-order grating period for vertical emission is…", ["λ₀/N", "λ₀/(2N)", "λ₀ N"], 0, "From phase matching with θ = 0 (Lesson 5)."],
+    ["Why avoid exactly vertical grating emission?", ["The second order reflects into the backward mode", "It needs a longer grating", "TM cannot couple"], 0, "β − 2K = −β at θ = 0 (Lesson 5)."],
+    ["Why does a GaAs/AlGaAs DBR need many pairs?", ["The index ratio is small", "The layers absorb", "The stopband is too wide"], 0, "R depends on (n_H/n_L)^(2N) (Lesson 6)."],
+    ["In two-mode interference, how often does the light cross the section?", ["Once every beat length L_π", "Once every 3L_π", "Never"], 0, "The odd mode flips sign every L_π (Lesson 7)."],
+    ["Where are E components in the Yee cell?", ["Edge centres", "Face centres", "Cell corners"], 0, "H is on face centres (Lesson 9)."],
+    ["What happens above the Courant limit?", ["The shortest grid waves grow exponentially", "Results get slightly less accurate", "The run is faster"], 0, "Growth factor above 1 (Lesson 10)."],
+    ["At 20 steps per wavelength, the phase error bound along an axis is about…", ["0.4 %", "4 %", "0.04 %"], 0, "(2π/20)²/24 ≈ 0.0041 (Lesson 10)."]
+  ];
+  let i = 0, score = 0, done = false;
+  const u = () => {
+    if (i >= Q.length) { fig.innerHTML = svg(140, `<text class="th" x="340" y="64" text-anchor="middle" style="font-size:28px">${score} / ${Q.length}</text><text class="ts" x="340" y="96" text-anchor="middle">${score === Q.length ? "Full marks. Now explain each one out loud." : "Reopen the lessons for the ones you missed."}</text>`); ctl.innerHTML = `<div class="row"><button id="qr">Start again</button></div>`; $("qr").onclick = () => { i = 0; score = 0; u(); }; return; }
+    const [q, o, c, why] = Q[i]; done = false;
+    fig.innerHTML = svg(70, `<text class="ts" x="20" y="28">question ${i + 1} of ${Q.length}</text><rect x="20" y="40" width="640" height="8" rx="4" fill="var(--b)"/><rect x="20" y="40" width="${640 * i / Q.length}" height="8" rx="4" fill="#1D9E75"/><text class="ts" x="660" y="28" text-anchor="end">score ${score}</text>`);
+    ctl.innerHTML = `<div class="quiz"><p style="font-weight:600">${q}</p><div class="opts">${o.map((t, j) => `<button data-a="${j}">${t}</button>`).join("")}</div><div class="fb" id="qfb"></div><div class="row"><button id="qn" disabled>Next question</button></div></div>`;
+    ctl.querySelectorAll("button[data-a]").forEach(b => b.onclick = () => { if (done) return; done = true; const ok = +b.dataset.a === c; if (ok) score++; b.classList.add("on"); $("qfb").innerHTML = `<span class="${ok ? "good" : "badc"}">${ok ? "Correct." : "Not quite."}</span> ${why}`; $("qn").disabled = false; });
+    $("qn").onclick = () => { i++; u(); };
+  };
+  u();
 }}
+
 ],
-summary: String.raw`In the Yee cell, \(\mathbf{E}\) components sit at the centres of the cell edges and \(\mathbf{H}\) components at the centres of the faces, so each component is updated from the loop of four components of the other field around it: a centered approximation of the curl. In 2D the scheme splits into two independent sets, \(\mathrm{TM}_z\) (\(E_z, H_x, H_y\)) and \(\mathrm{TE}_z\) (\(H_z, E_x, E_y\)), named after the simulation axis. A live 2D run shows radiation, refraction and waveguiding emerging from the updates. Curved boundaries are staircased unless \(\varepsilon\) is averaged at boundary cells, and the cost of a 3D run grows as the fourth power of the resolution.`,
+summary: String.raw`A Gaussian pulse source covers a band set by its spectral width, with \(\tau\sigma_f = 1/(2\pi)\). A perfectly matched layer absorbs outgoing waves with almost no reflection because its losses are matched and graded. Frequency monitors build spectra from a running Fourier sum, valid only once the fields have decayed. Transmission into a mode comes from projecting the output field onto that mode with the orthogonality integral, so power in other modes counts as loss. A result is trusted only after refining the grid, where for the Yee scheme the error falls as \(1/N^2\), and it is reported together with its resolution.`,
 sheet: [
-[String.raw`\[ E_x(i+\tfrac{1}{2}, j, k), \quad E_y(i, j+\tfrac{1}{2}, k), \quad E_z(i, j, k+\tfrac{1}{2}) \]`, String.raw`\(\mathbf{E}\) on edge centres`],
-[String.raw`\[ H_x(i, j+\tfrac{1}{2}, k+\tfrac{1}{2}), \quad H_y(i+\tfrac{1}{2}, j, k+\tfrac{1}{2}), \quad H_z(i+\tfrac{1}{2}, j+\tfrac{1}{2}, k) \]`, String.raw`\(\mathbf{H}\) on face centres`],
-[String.raw`\[ \frac{\partial H_z}{\partial t} = -\frac{1}{\mu_0}\left(\frac{\partial E_y}{\partial x} - \frac{\partial E_x}{\partial y}\right) \]`, "Face loop update"],
-[String.raw`\[ \mathrm{TM}_z:\ E_z, H_x, H_y \qquad \mathrm{TE}_z:\ H_z, E_x, E_y \]`, "2D split"],
-[String.raw`\[ \varepsilon_{\mathrm{cell}} = f\varepsilon_1 + (1 - f)\varepsilon_2 \]`, "Simplest subpixel average"],
-[String.raw`\[ \Delta x = \frac{\lambda_0}{N_\lambda\, n_{\mathrm{max}}}, \qquad \text{cost} \propto N_\lambda^4 \]`, "Grid size and cost"]],
-consts: String.raw`2D simulation: 200 × 120 cells, \(S = 0.5\), \(\lambda_0 = 40\) cells.`,
-sources: ["Oskooi et al., Comput. Phys. Commun. 181, 687 (2010) (Yee grid, subpixel averaging in MEEP)", "K. S. Yee, IEEE Trans. Antennas Propag. 14, 302 (1966) (the original Yee scheme)", "Dohlus and Zagorodnov, J. Comput. Phys. 228, 2822 (2009), Eq. (8) (3D stability limit)", "Your Chapter 2, Fig. 2.7 (the Yee cell)"]
+[String.raw`\[ \tau\sigma_f = \frac{1}{2\pi} \]`, "Pulse length and bandwidth"],
+[String.raw`\[ \frac{\sigma_e}{\varepsilon} = \frac{\sigma_m}{\mu}, \qquad \sigma(d) = \sigma_{\mathrm{max}}\left(\frac{d}{L}\right)^m \]`, "Matched, graded PML"],
+[String.raw`\[ \tilde{E}(f) = \sum_n E^{\,n}\, e^{i2\pi f n\Delta t}\, \Delta t \]`, "Running DFT monitor"],
+[String.raw`\[ a_m = \frac{1}{4}\int\left(\mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H}\right)\cdot\hat{\mathbf{x}}\, dA, \qquad T_m = |a_m|^2 \]`, "Mode decomposition"],
+[String.raw`\[ Q_\infty \approx \frac{N_2^2 Q_2 - N_1^2 Q_1}{N_2^2 - N_1^2} \]`, "Richardson extrapolation"]],
+consts: "1D simulations in normalized units. The convergence curve is illustrative.",
+sources: ["Oskooi et al., Comput. Phys. Commun. 181, 687 (2010), Sec. 4.2 (PML) and sources, flux and Fourier-transformed output in MEEP", "Tidy3D documentation (GaussianPulse fwidth, mode monitors and symmetry)", "Snyder and Love, Optical Waveguide Theory, Chapman and Hall (1983) (mode orthogonality)"]
 });

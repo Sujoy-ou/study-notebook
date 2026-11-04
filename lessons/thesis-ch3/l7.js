@@ -1,147 +1,172 @@
+/* TODO for this lesson: Thesis Sec. 3.4: 1 W normalization, T = |a|^2, CE, sigma in nm, PBS FOM max 2. */
 addLesson("thesis", "ch3", {
 level: "Core",
-id: "thesis-ch3-l7", title: "Projection and β continuation", short: "7. Projection and β",
-big: String.raw`After filtering, a smooth tanh step pushes each density toward 0 or 1. Its sharpness \(\beta\) decides how binary the design becomes, and its threshold \(\eta\) decides where the step sits. A large \(\beta\) gives a nearly black and white design but a badly conditioned problem, because the gradient survives only in the few pixels whose filtered value is close to \(\eta\). A small \(\beta\) gives a smooth problem whose best design is grey. The standard answer is continuation: start with a small \(\beta\) so the layout can form, raise it in stages so it becomes binary, and threshold the result at the end. Shifting \(\eta\) instead of \(\beta\) grows or shrinks every feature, which models over- and under-etching and leads directly to erosion and dilation.`,
-bridge: String.raw`This is Ch. 3 Sec. 3.3, Eq. (3.10), and the projection continuation of Sec. 3.5 with Fig. 3.2. The projection is Christiansen and Sigmund's Eq. (18), identical to Tidy3D's <code>tanh_projection</code>. Their tutorial explains why \(\beta\) is raised from a low to a high value and shows eroded, nominal and dilated designs for robustness, as do Hammond et al.`,
+id: "thesis-ch3-l7", title: "Objective functions: mode overlap, band weights and the splitter FOM", short: "7. Objective functions",
+big: String.raw`Every figure of merit in the thesis is built from one quantity: the power carried by one guided mode through a monitor plane. It is obtained by projecting the simulated field onto the mode, which gives a complex amplitude \(a_m\), and \(|a_m|^2\) is the fraction of the input power delivered into that mode. Power that ends up in other modes or radiates does not count. Optimizing at a single wavelength tends to produce narrow resonances, so the objectives of the gratings and the splitter are averaged over a band with Gaussian weights that sum to one. For the polarization splitter, two such averages are added, TE into the cross port and TM into the bar port, so the maximum is 2.`,
+bridge: String.raw`This is Ch. 3 Sec. 3.4, Eqs. (3.13) to (3.15), and the reported quantities of Sec. 3.7, Eq. (3.19). The overlap formula is the one in Tidy3D's mode data (components/data/utils.py, <code>_dot_numpy</code>). The mode profiles below come from the slab solver of Chapter 2, Lesson 2.`,
 cards: [
-{s: "1. The projection", t: "A smooth step with sharpness β and threshold η",
-intu: String.raw`The projection maps a filtered density \(\tilde\rho\) to \(\hat\rho\). For \(\beta\) near 1 it is almost the identity (dotted). As \(\beta\) grows, values above \(\eta\) are pushed toward 1 and values below toward 0, and the curve approaches a step at \(\eta\). The normalization keeps \(\hat\rho(0) = 0\) and \(\hat\rho(1) = 1\) for any \(\beta\) and \(\eta\). Move \(\beta\) and \(\eta\).`,
-eq: String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]<div class="eqref">Ch. 3 Eq. (3.10), Christiansen Eq. 18</div>`,
-sym: [[String.raw`\(\tilde\rho\)`, "filtered density, input"], [String.raw`\(\hat\rho\)`, String.raw`projected density, sets \(\varepsilon\) (Eq. 3.11)`], [String.raw`\(\beta\)`, "sharpness"], [String.raw`\(\eta\)`, "threshold, 0.5 for the nominal design"]],
-how: [String.raw`\(\tanh(\beta(\tilde\rho - \eta))\) is a smooth step centered at \(\eta\).`, String.raw`Adding \(\tanh(\beta\eta)\) makes it zero at \(\tilde\rho = 0\).`, String.raw`Dividing by its value at \(\tilde\rho = 1\) makes it one there.`, String.raw`For \(\beta \to \infty\) it becomes the hard threshold at \(\eta\).`],
-say: String.raw`The tanh projection is a smooth threshold whose sharpness \(\beta\) is raised during the optimization, pushing the filtered densities toward 0 or 1.`,
-num: String.raw`Christiansen and Sigmund: at \(\beta = 1\) the thresholding has little effect. At \(\beta = 100\) and \(\eta = 0.5\), \(\tilde\rho = 0.52\) already gives \(\hat\rho = 0.98\).`,
+/* from old ch3 L4 card 1 */
+{s: "1. Mode overlap", t: "How much of the field is in the target mode",
+intu: "The field arriving at the output plane is generally not a clean mode. It may be shifted, too wide or too narrow. The overlap integral measures how much of it looks like the mode. In the scalar picture, for fields traveling the same way in the same waveguide, Eq. (3.13) reduces to the normalized overlap of the two profiles. Here the target mode is the TE0 mode of a 2D guide (blue), and a Gaussian field (orange) arrives. Move and resize the field and watch the coupled fraction.",
+eq: String.raw`\[ a_m = \frac{1}{4} \int_S \left( \mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H} \right) \cdot \hat{\mathbf{n}}\, dS, \qquad T_m = |a_m|^2 \]<div class="eqnote">scalar picture:</div>\[ T = \frac{\left| \int E\, m\, dy \right|^2}{\int |E|^2\, dy \int |m|^2\, dy} \]<div class="eqref">Ch. 3 Eq. (3.13)</div>`,
+sym: [[String.raw`\(\mathbf{E}, \mathbf{H}\)`, String.raw`simulated fields on the monitor plane \(S\)`], [String.raw`\(\mathbf{E}_m, \mathbf{H}_m\)`, String.raw`fields of mode \(m\) from the mode solver at that plane, normalized to unit power`], [String.raw`\(\hat{\mathbf{n}}\)`, "normal of the plane"], [String.raw`\(T_m\)`, String.raw`fraction of the injected power in mode \(m\), when the source is normalized to unit power`]],
+how: ["Guided modes of a waveguide are orthogonal under this integral.", String.raw`So the field on the plane can be expanded in modes, and \(a_m\) picks out one coefficient.`, String.raw`With unit-power normalization, \(|a_m|^2\) is directly a power fraction.`, String.raw`In the scalar picture, \(\mathbf{H}\) follows from \(\mathbf{E}\) through the same impedance for both, and the integral becomes the profile overlap.`],
+say: "The transmission into a mode is the squared magnitude of the overlap of the simulated field with that mode, normalized so that it is a fraction of the input power.",
+num: String.raw`A centered Gaussian of 180 nm \(1/e\) width reaches 0.996 here. The mode's own \(1/e\) half-width is about 190 nm, and a shift of half that, about 95 nm, already costs about a quarter of the power.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + sl("e", "η", 0.05, 0.95, 0.01, 0.5) + '<div class="readout" id="ro"></div>';
-  const xs = range(0, 1, 401);
+  ctl.innerHTML = sl("d", "Field offset (nm)", -400, 400, 5, 120) + sl("w", "Field 1/e width (nm)", 60, 600, 5, 180) + '<div class="readout" id="ro"></div>';
+  const ys = range(-900, 900, 721), N = C2.slabN(3.0, 1.0, 400, 800, 0, "TE"), m = C2.slabProfile(3.0, 1.0, 400, 800, 0, "TE", N, ys).main;
   const u = () => {
-    const b = Math.pow(10, +$("b").value), e = +$("e").value; $("bv").textContent = b.toFixed(b < 10 ? 2 : 0); $("ev").textContent = e.toFixed(2);
-    let s = C3.frame(70, 20, 300, 220, 0, 1, 0, 1, [0, 0.5, 1], [0, 0.5, 1], "filtered ρ̃", "projected ρ̂") + plot(70, 20, 300, 220, xs, xs, 0, 1, 0, 1, "var(--p)", 1, "2 3");
-    [1, 4, 16].forEach((bb, k) => s += plot(70, 20, 300, 220, xs, xs.map(x => C3.proj(x, bb, e)), 0, 1, 0, 1, "var(--b)", 1));
-    s += plot(70, 20, 300, 220, xs, xs.map(x => C3.proj(x, b, e)), 0, 1, 0, 1, "#D85A30", 3) + `<line x1="${C3.X(70, 300, 0, 1)(e)}" x2="${C3.X(70, 300, 0, 1)(e)}" y1="20" y2="240" stroke="#EF9F27" stroke-dasharray="4 3"/>`;
-    s += `<text class="ts" x="420" y="60">orange: current β</text><text class="ts" x="420" y="82">grey: β = 1, 4, 16</text><text class="ts" x="420" y="104">dotted: identity</text><text class="ts" x="420" y="126">dashed: threshold η</text>`;
-    fig.innerHTML = svg(275, s);
-    $("ro").innerHTML = `<div><span>ρ̂(0.4)</span><b>${C3.proj(0.4, b, e).toFixed(3)}</b></div><div><span>ρ̂(0.6)</span><b>${C3.proj(0.6, b, e).toFixed(3)}</b></div><div><span>ρ̂(0), ρ̂(1)</span><b>${C3.proj(0, b, e).toFixed(2)}, ${C3.proj(1, b, e).toFixed(2)}</b></div>`;
+    const d = +$("d").value, w = +$("w").value; $("dv").textContent = d; $("wv").textContent = w;
+    const E = ys.map(y => Math.exp(-Math.pow((y - d) / w, 2)));
+    let a = 0, b = 0, c = 0; ys.forEach((_, i) => { a += E[i] * m[i]; b += E[i] * E[i]; c += m[i] * m[i]; });
+    const T = a * a / (b * c), X = C3.X(70, 560, -900, 900);
+    let s = `<rect x="${X(-200)}" y="30" width="${X(200) - X(-200)}" height="170" fill="var(--blue-bg)" opacity="0.6"/><text class="ts" x="${X(0)}" y="46" text-anchor="middle">core, 400 nm</text>`;
+    s += C3.frame(70, 30, 560, 170, -900, 900, 0, 1.05, [-800, -400, 0, 400, 800], [0, 0.5, 1], "position across the guide (nm)", "field") + plot(70, 30, 560, 170, ys, m, -900, 900, 0, 1.05, "#378ADD", 2.5) + plot(70, 30, 560, 170, ys, E, -900, 900, 0, 1.05, "#D85A30", 2.5);
+    s += C3.legend(90, 250, [["target mode TE0", "#378ADD"], ["arriving field", "#D85A30"]]);
+    fig.innerHTML = svg(260, s);
+    $("ro").innerHTML = `<div><span>T into the mode</span><b>${T.toFixed(3)}</b></div><div><span>lost to other modes and radiation</span><b>${(1 - T).toFixed(3)}</b></div><div><span>mode index N</span><b>${N.toFixed(3)}</b></div>`;
   };
-  $("b").oninput = u; $("e").oninput = u; u();
+  $("d").oninput = u; $("w").oninput = u; u();
 }},
 
-{s: "2. Filter then project", t: "The full chain on a map: raw, filtered, projected",
-intu: String.raw`The full density chain is raw \(\rho\) → filter → \(\tilde\rho\) → projection → \(\hat\rho\) → \(\varepsilon\). The filter sets the shapes, the projection decides how sharp they are. At small \(\beta\) the projected map is still grey. Raise \(\beta\) and the same shapes become black and white, with a thin grey edge that shrinks as \(\beta\) grows. The readouts measure how binary the design is.`,
-eq: String.raw`\[ \rho \to \tilde\rho = \mathrm{filter}(\rho) \to \hat\rho = P_{\beta,\eta}(\tilde\rho) \to \varepsilon(\hat\rho) \]<div class="eqnote">binarization:</div>\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`,
-sym: [[String.raw`\(M\)`, "0 for a perfectly binary design, 1 if every pixel is 0.5"], ["grey fraction", String.raw`share of pixels with \(0.05 \lt \hat\rho \lt 0.95\)`]],
-how: ["The raw map is the same random design as in Lesson 6.", "The filter makes it smooth and grey.", String.raw`The projection sharpens it again, now with smooth outlines of size about \(R\).`, String.raw`Only the edge pixels stay grey at large \(\beta\).`],
-say: String.raw`Filtering sets the feature shapes and projection makes them binary, with only the edges left grey at large \(\beta\).`,
-num: String.raw`The grey edge is about one pixel wide once \(\beta\) is large enough that the filtered value crosses from 0.05 to 0.95 within one pixel.`,
+/* from old ch3 L4 card 2 */
+{s: "2. Only the target mode", t: "Power in the wrong mode counts as loss",
+intu: String.raw`A wider guide carries two modes, TE0 (even) and TE1 (odd). Suppose the arriving field is a mix of the two with all of the power guided. The total transmitted power is 1, yet the figure of merit only counts the TE0 part, \(\cos^2\theta\). This is intended: in a circuit, light in the wrong mode is lost at the next single-mode section. Change the mixing angle.`,
+eq: String.raw`\[ E = \cos\theta \cdot \mathrm{TE0} + \sin\theta \cdot \mathrm{TE1} \]\[ \Longrightarrow\quad T_{\mathrm{TE0}} = \cos^2\theta, \qquad T_{\mathrm{TE1}} = \sin^2\theta, \qquad T_{\mathrm{TE0}} + T_{\mathrm{TE1}} = 1 \]`,
+sym: [[String.raw`\(\theta\)`, "mixing angle between the two modes"], ["TE0, TE1", "even and odd modes, orthogonal so their powers add"], [String.raw`\(T_{\mathrm{TE0}}\)`, "what the figure of merit sees"]],
+how: ["The modes are orthogonal, so the overlap of TE1 with TE0 is zero.", String.raw`Projecting \(\mathbf{E}\) onto TE0 keeps only the \(\cos\theta\) part.`, String.raw`Its power is \(\cos^2\theta\).`, "A flux monitor would report 1 here, which is why the thesis uses mode monitors for the figure of merit."],
+say: "Projecting onto the target mode means that power carried by any other mode counts as loss, even though it is still guided.",
+num: String.raw`At \(\theta = 45^\circ\) the guided power is 100 % but only half is in TE0, a 3 dB loss for the figure of merit.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 0.6) + '<div class="readout" id="ro"></div>';
-  const W = 72, H = 50, raw = C3.noise(W, H, 5), f = C3.filter2D(raw, W, H, 3);
+  ctl.innerHTML = sl("t", "Mixing angle θ (°)", 0, 90, 1, 30) + '<div class="readout" id="ro"></div>';
+  const ys = range(-900, 900, 721), n0 = C2.slabN(3.0, 1.0, 700, 800, 0, "TE"), n1 = C2.slabN(3.0, 1.0, 700, 800, 1, "TE");
+  const m0 = C2.slabProfile(3.0, 1.0, 700, 800, 0, "TE", n0, ys).main, m1 = C2.slabProfile(3.0, 1.0, 700, 800, 1, "TE", n1, ys).main;
+  const nrm = a => { const s = Math.sqrt(a.reduce((x, v) => x + v * v, 0)); return a.map(v => v / s); }, M0 = nrm(m0), M1 = nrm(m1);
   const u = () => {
-    const b = Math.pow(10, +$("b").value); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
-    const p = f.map(v => C3.proj(v, b, 0.5));
-    C3.drawRow(fig, [{ a: raw }, { a: f }, { a: p }], W, H, 2.95, "Filter radius 3 pixels, η = 0.5.", ["raw ρ", "filtered ρ̃", "projected ρ̂"]);
-    let g = 0, M = 0; p.forEach(v => { if (v > 0.05 && v < 0.95) g++; M += 4 * v * (1 - v); });
-    $("ro").innerHTML = `<div><span>grey fraction</span><b>${(100 * g / p.length).toFixed(1)} %</b></div><div><span>binarization M</span><b>${(M / p.length).toFixed(3)}</b></div>`;
+    const th = +$("t").value * Math.PI / 180; $("tv").textContent = $("t").value;
+    const E = M0.map((v, i) => Math.cos(th) * v + Math.sin(th) * M1[i]), mx = Math.max(...M0, ...M1.map(Math.abs), ...E.map(Math.abs));
+    const X = C3.X(70, 560, -900, 900); let s = `<rect x="${X(-350)}" y="20" width="${X(350) - X(-350)}" height="170" fill="var(--blue-bg)" opacity="0.6"/>`;
+    s += C3.frame(70, 20, 560, 170, -900, 900, -mx, mx, [-800, -400, 0, 400, 800], [], "position across the guide (nm)", "field") + `<line x1="70" x2="630" y1="105" y2="105" stroke="var(--b)"/>`;
+    s += plot(70, 20, 560, 170, ys, M0, -900, 900, -mx, mx, "#378ADD", 1.5, "5 4") + plot(70, 20, 560, 170, ys, M1, -900, 900, -mx, mx, "#7F77DD", 1.5, "5 4") + plot(70, 20, 560, 170, ys, E, -900, 900, -mx, mx, "#D85A30", 2.5);
+    s += C3.legend(80, 245, [["TE0", "#378ADD", "5 4"], ["TE1", "#7F77DD", "5 4"], ["arriving field", "#D85A30"]]);
+    const T0 = Math.cos(th) ** 2;
+    s += `<rect x="470" y="230" width="${150 * T0}" height="12" fill="#378ADD"/><rect x="${470 + 150 * T0}" y="230" width="${150 * (1 - T0)}" height="12" fill="#7F77DD"/>`;
+    fig.innerHTML = svg(255, s);
+    $("ro").innerHTML = `<div><span>T into TE0 (counted)</span><b>${T0.toFixed(3)}</b></div><div><span>T into TE1 (lost)</span><b>${(1 - T0).toFixed(3)}</b></div><div><span>total guided power</span><b>1.000</b></div>`;
   };
-  $("b").oninput = u; u();
+  $("t").oninput = u; u();
 }},
 
-{s: "3. The slope", t: "At large β the gradient lives only near the threshold",
-intu: String.raw`The gradient reaches the filtered density through the slope of the projection. At small \(\beta\) the slope is close to 1 everywhere, so every pixel can change. At large \(\beta\) the slope is huge near \(\eta\) and almost zero elsewhere. Pixels that are already clearly 0 or 1 hardly feel the gradient any more, and the few that do feel it very strongly. This is what a badly conditioned problem looks like. The readout counts the pixels of the map in card 2 whose slope is still at least a tenth of the peak.`,
-eq: String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]\[ \text{peak} \approx \beta/2 \text{ at } \tilde\rho = \eta = 0.5 \text{ for large } \beta \]`,
-sym: [[String.raw`\(\operatorname{sech}^2 = 1/\cosh^2\)`, String.raw`a bump of width about \(1/\beta\)`], ["peak", String.raw`slope at \(\tilde\rho = \eta\)`], ["active pixels", "pixels whose slope is at least 10 % of the peak"]],
-how: ["Differentiate the projection.", String.raw`The bump has height about \(\beta/2\) and width about \(1/\beta\).`, "So the product of height and width stays about the same, the gradient just concentrates.", "Concentrated gradients make the step size hard to choose: too large for the edge pixels, useless for the rest."],
-say: String.raw`At large \(\beta\) the projection slope is large near the threshold and nearly zero elsewhere, so the gradient concentrates on the edges and the problem becomes badly conditioned.`,
-num: String.raw`At \(\beta = 100\) the slope at \(\tilde\rho = 0.5\) is 50, while at \(\tilde\rho = 0.6\) it is below 0.01.`,
+/* from old ch3 L4 card 3 */
+{s: "3. Band weights", t: "Gaussian weights over a band of wavelengths",
+intu: String.raw`Instead of one wavelength, the objective is a weighted average of the transmission at many wavelengths. The weights are a Gaussian centered at \(\lambda_0\), normalized so they sum to one, so the result is still a number between 0 and 1. The width \(\sigma\) sets how much the edges of the band matter. Some code writes the Gaussian as \(\exp[-((\lambda - \lambda_0)/\sigma_c)^2]\). That is the same curve with \(\sigma = \sigma_c/\sqrt{2}\). Change \(\sigma\) and the number of wavelengths.`,
+eq: String.raw`\[ \bar{T} = \sum_i w_i\, T(\lambda_i), \qquad w_i = \frac{\exp\!\left[ -(\lambda_i - \lambda_0)^2/(2\sigma^2) \right]}{\sum_j \exp\!\left[ -(\lambda_j - \lambda_0)^2/(2\sigma^2) \right]} \]\[ \exp\!\left[ -\left( \frac{\lambda - \lambda_0}{\sigma_c} \right)^2 \right] \quad\Longleftrightarrow\quad \sigma = \sigma_c/\sqrt{2} \]<div class="eqref">Ch. 3 Eq. (3.14)</div>`,
+sym: [[String.raw`\(\lambda_i\)`, "sampled wavelengths"], [String.raw`\(\lambda_0\)`, "center wavelength, 795 nm for the quantum dots of the thesis"], [String.raw`\(\sigma\)`, "standard deviation of the Gaussian"], [String.raw`\(\sigma_c\)`, "width parameter of the alternative form"], [String.raw`\(w_i\)`, String.raw`normalized weights, \(\sum w_i = 1\)`]],
+how: ["Choose the band and sample it.", String.raw`Give each sample a Gaussian weight around \(\lambda_0\).`, String.raw`Normalize so the weights sum to one: \(\bar{T}\) is a weighted mean.`, String.raw`Matching exponents: \((\lambda - \lambda_0)^2/(2\sigma^2) = (\lambda - \lambda_0)^2/\sigma_c^2\) gives \(\sigma = \sigma_c/\sqrt{2}\).`],
+say: "The broadband objective is a weighted mean of the transmission, with Gaussian weights centered at the design wavelength that sum to one.",
+num: String.raw`Example: \(\sigma_c = 12\) nm is \(\sigma = 8.5\) nm. The full width at half maximum of the weights is \(2.355\sigma\).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1.3) + '<div class="readout" id="ro"></div>';
-  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), xs = range(0, 1, 501);
+  ctl.innerHTML = sl("s", "σ (nm)", 3, 40, 0.5, 8) + sl("n", "Number of wavelengths", 5, 101, 2, 31) + '<div class="readout" id="ro"></div>';
   const u = () => {
-    const b = Math.pow(10, +$("b").value); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
-    const d = xs.map(x => C3.dproj(x, b, 0.5)), pk = C3.dproj(0.5, b, 0.5), ymax = Math.max(1.2, pk * 1.1);
-    let s = C3.frame(70, 20, 330, 200, 0, 1, 0, ymax, [0, 0.5, 1], [0, ymax / 2, ymax], "filtered ρ̃", "slope dρ̂/dρ̃", v => v, v => v.toFixed(ymax < 10 ? 1 : 0)) + plot(70, 20, 330, 200, xs, d, 0, 1, 0, ymax, "#7F77DD", 2.5);
-    const hist = new Array(25).fill(0); f.forEach(v => hist[Math.min(24, Math.floor(v * 25))]++); const mh = Math.max(...hist);
-    hist.forEach((h, i) => s += `<rect x="${C3.X(70, 330, 0, 1)(i / 25) + 1}" y="${220 - 40 * h / mh}" width="${330 / 25 - 2}" height="${40 * h / mh}" fill="var(--b)" opacity="0.6"/>`);
-    let act = 0; f.forEach(v => { if (C3.dproj(v, b, 0.5) >= 0.1 * pk) act++; });
-    s += `<text class="ts" x="430" y="60">purple: projection slope</text><text class="ts" x="430" y="82">grey bars: how many pixels</text><text class="ts" x="430" y="100">of the card 2 map have</text><text class="ts" x="430" y="118">each filtered value</text>`;
-    fig.innerHTML = svg(258, s);
-    $("ro").innerHTML = `<div><span>peak slope</span><b>${pk.toFixed(2)}</b></div><div><span>slope at ρ̃ = 0.6</span><b>${C3.dproj(0.6, b, 0.5).toExponential(2)}</b></div><div><span>active pixels</span><b>${(100 * act / f.length).toFixed(1)} %</b></div>`;
+    const sg = +$("s").value, n = +$("n").value; $("sv").textContent = sg; $("nv").textContent = n;
+    const ls = range(745, 845, n), w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S), mx = Math.max(...w);
+    const X = C3.X(70, 560, 745, 845), Y = C3.Y(30, 180, 0, mx * 1.1), bw = Math.max(1, 560 / n * 0.7);
+    let s = C3.frame(70, 30, 560, 180, 745, 845, 0, mx * 1.1, [745, 770, 795, 820, 845], [0, mx], "wavelength (nm)", "weight wᵢ", v => v, v => v.toFixed(3));
+    ls.forEach((l, i) => s += `<rect x="${X(l) - bw / 2}" y="${Y(w[i])}" width="${bw}" height="${210 - Y(w[i])}" fill="#378ADD" opacity="0.8"/>`);
+    s += `<line x1="${X(795 - 1.1774 * sg)}" x2="${X(795 + 1.1774 * sg)}" y1="${Y(mx / 2)}" y2="${Y(mx / 2)}" stroke="#D85A30" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="${X(795 + 1.2 * sg) + 8}" y="${Y(mx / 2) + 4}">FWHM ${(2.355 * sg).toFixed(1)} nm</text>`;
+    fig.innerHTML = svg(250, s);
+    $("ro").innerHTML = `<div><span>Σ wᵢ</span><b>${w.reduce((a, b) => a + b, 0).toFixed(3)}</b></div><div><span>equivalent σ_c</span><b>${(sg * Math.SQRT2).toFixed(1)} nm</b></div><div><span>weight at λ₀</span><b>${mx.toFixed(4)}</b></div>`;
   };
-  $("b").oninput = u; u();
+  $("s").oninput = u; $("n").oninput = u; u();
 }},
 
-{s: "4. Continuation", t: "Raising β in stages: a geometric schedule",
-intu: String.raw`Continuation runs the optimizer at a fixed \(\beta\) for a number of steps, then raises \(\beta\) and continues. A geometric schedule multiplies \(\beta\) by the same factor at every level, so it spends equal effort on each decade from 1 to \(\beta_{\mathrm{max}}\). Early levels shape the layout while the problem is smooth, late levels make it binary. Change the schedule.`,
-eq: String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L - 1)}, \qquad k = 0, \dots, L - 1 \]\[ \text{each held for } s \text{ steps, total } L \cdot s \text{ steps} \]`,
-sym: [[String.raw`\(L\)`, "number of levels"], [String.raw`\(s\)`, "optimizer steps per level"], [String.raw`\(\beta_{\mathrm{max}}\)`, "final sharpness"], ["ratio", String.raw`\(\beta_{k+1}/\beta_k = \beta_{\mathrm{max}}^{1/(L-1)}\)`]],
-how: [String.raw`Start at \(\beta = 1\), where the projection is nearly the identity.`, String.raw`Multiply \(\beta\) by a fixed ratio at each level.`, String.raw`Stop at \(\beta_{\mathrm{max}}\), where the projection is close to a step.`, String.raw`Threshold the final design at \(\hat\rho = 0.5\) to make it exactly binary.`],
-say: String.raw`\(\beta\) is raised geometrically during the optimization, so the layout forms while the problem is smooth and becomes binary at the end.`,
-num: String.raw`Example: \(\beta\) from 1 to 100 in 11 levels of 7 steps gives 77 steps, a ratio of 1.585 per level, and the eighth level is \(\beta = 25.1\). Hammond et al. used three stages, \(\beta = 8\), 16 and 32, with 70 iterations each.`,
+/* from old ch3 L4 card 4 */
+{s: "4. Why a band", t: "A narrow resonance wins at one wavelength and loses over a band",
+intu: String.raw`Two imagined designs. Design A has a sharp resonance that reaches 1.0 exactly at \(\lambda_0\). Design B is flat and broad but only reaches 0.85. A single-wavelength objective prefers A. The band-weighted objective prefers B once \(\sigma\) is a few nanometers, because the resonance is gone a few nanometers away. Quantum dot emission wavelengths differ from dot to dot and fabrication shifts the response, so B is the useful device. Change \(\sigma\).`,
+eq: String.raw`\[ \bar{T}_A = \sum w_i\, T_A(\lambda_i) \quad \text{versus} \quad \bar{T}_B = \sum w_i\, T_B(\lambda_i) \]`,
+sym: [[String.raw`\(T_A\)`, "narrow Lorentzian resonance, peak 1.0, 4 nm wide (illustration)"], [String.raw`\(T_B\)`, "broad response, peak 0.85, 80 nm wide (illustration)"], [String.raw`\(\sigma\)`, "width of the weights"]],
+how: [String.raw`At \(\sigma \to 0\) the average equals the value at \(\lambda_0\): A wins.`, String.raw`As \(\sigma\) grows, A's average falls quickly because most weight sits outside its peak.`, "B's average hardly changes.", "So band weighting steers the optimizer away from fragile resonances."],
+say: "Averaging over a band with Gaussian weights steers the optimizer away from narrow resonances toward broadband designs.",
+num: "Ch. 3 states the motivation directly: optimizing at a single wavelength tends to produce narrow resonances.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("m", "β_max", 10, 200, 5, 100) + sl("L", "Levels L", 2, 15, 1, 11) + sl("s", "Steps per level", 1, 15, 1, 7) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("s", "σ (nm)", 0.5, 40, 0.5, 8) + '<div class="readout" id="ro"></div>';
+  const ls = range(735, 855, 241), TA = l => 1 / (1 + Math.pow((l - 795) / 2, 2)), TB = l => 0.85 * Math.exp(-Math.pow((l - 795) / 48, 2));
   const u = () => {
-    const bm = +$("m").value, L = +$("L").value, st = +$("s").value; $("mv").textContent = bm; $("Lv").textContent = L; $("sv").textContent = st;
-    const bs = Array.from({ length: L }, (_, k) => Math.pow(bm, k / (L - 1))), T = L * st;
-    const X = C3.X(70, 560, 0, T), Y = v => 210 - Math.log10(v) / Math.log10(250) * 180;
-    let s = `<rect x="70" y="30" width="560" height="180" fill="none" stroke="var(--b)"/>`;
-    [1, 10, 100].forEach(v => s += `<line x1="66" x2="70" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--p)"/><text class="ts" x="62" y="${Y(v) + 4}" text-anchor="end">${v}</text><line x1="70" x2="630" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--b)" stroke-dasharray="2 4"/>`);
-    let d = ""; bs.forEach((b, k) => d += `${k ? "L" : "M"}${X(k * st)} ${Y(b)} L${X((k + 1) * st)} ${Y(b)}`);
-    s += `<path d="${d}" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="350" y="236" text-anchor="middle">optimizer step (total ${T})</text><text class="ts" x="30" y="120" transform="rotate(-90 30 120)" text-anchor="middle">β (log)</text>`;
-    fig.innerHTML = svg(245, s);
-    $("ro").innerHTML = `<div><span>ratio per level</span><b>${Math.pow(bm, 1 / (L - 1)).toFixed(3)}</b></div><div><span>levels</span><b>${bs.map(b => b < 10 ? b.toFixed(1) : b.toFixed(0)).join(", ")}</b></div>`;
+    const sg = +$("s").value; $("sv").textContent = sg;
+    const w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S);
+    let A = 0, B = 0; ls.forEach((l, i) => { A += w[i] * TA(l); B += w[i] * TB(l); });
+    const mw = Math.max(...w0);
+    let s = C3.frame(70, 30, 560, 180, 735, 855, 0, 1.05, [735, 765, 795, 825, 855], [0, 0.5, 1], "wavelength (nm)", "T") + plot(70, 30, 560, 180, ls, w0.map(v => v / mw), 735, 855, 0, 1.05, "#EF9F27", 1.5, "4 3");
+    s += plot(70, 30, 560, 180, ls, ls.map(TA), 735, 855, 0, 1.05, "#D85A30", 2.5) + plot(70, 30, 560, 180, ls, ls.map(TB), 735, 855, 0, 1.05, "#378ADD", 2.5);
+    s += C3.legend(80, 250, [["design A, resonance", "#D85A30"], ["design B, broad", "#378ADD"], ["weights (scaled)", "#EF9F27", "4 3"]]);
+    fig.innerHTML = svg(260, s);
+    $("ro").innerHTML = `<div><span>T̄ of A</span><b>${A.toFixed(3)}</b></div><div><span>T̄ of B</span><b>${B.toFixed(3)}</b></div><div><span>preferred</span><b>${A > B ? "A" : "B"}</b></div>`;
   };
-  ["m", "L", "s"].forEach(k => $(k).oninput = u); u();
+  $("s").oninput = u; u();
 }},
 
-{s: "5. Why gradually", t: "How many pixels can still change, as β grows",
-intu: String.raw`Combine cards 3 and 4. For the filtered map of card 2, the curve shows the share of pixels whose projection slope is still at least a tenth of the peak, as a function of \(\beta\). At \(\beta = 1\) every pixel can move, so holes can open and arms can merge. At \(\beta = 100\) fewer than a fifth of the pixels respond, and at \(\beta = 200\) one in ten. This map is still very grey, because it is filtered noise. In a real run the design has moved toward 0 and 1 by then, so even fewer pixels respond: the topology is effectively frozen and only the outlines shift. Raising \(\beta\) slowly gives the layout time to settle before it freezes. Starting at a large \(\beta\) freezes whatever the initial design happens to be.`,
-eq: String.raw`\[ \text{active share}(\beta) = \frac{1}{N}\, \#\left\{ i : \frac{d\hat\rho}{d\tilde\rho}(\tilde\rho_i) \ge 0.1 \cdot \text{peak} \right\} \]`,
-sym: [["active share", "fraction of pixels that still receive a useful gradient"], ["freezing", "topology fixed, only boundaries move"]],
-how: ["Use the slope formula of card 3.", "Evaluate it for every pixel of the filtered map.", "Count the pixels above 10 % of the peak.", String.raw`Repeat for \(\beta\) from 1 to 200.`],
-say: String.raw`As \(\beta\) grows, fewer pixels receive a useful gradient, so the topology freezes, which is why \(\beta\) is raised gradually.`,
-num: "Christiansen and Sigmund: a sharp threshold early makes the problem badly conditioned and freezes the design too soon.",
+/* from old ch3 L4 card 5 */
+{s: "5. Splitter objective", t: "The polarization splitter: two transmissions added",
+intu: String.raw`A polarization beam splitter must send \(\mathrm{TE}_0\) to the cross port and \(\mathrm{TM}_0\) to the bar port. The figure of merit adds the two band-weighted transmissions, so its maximum is 2. Leakage into the wrong port is not penalized directly, since power in the wrong port cannot be in the right one. The reported quantities are the extinction ratio, how much more power goes to the intended port than to the other, and the insertion loss. Set the four transmissions.`,
+eq: String.raw`\[ \mathrm{FOM} = \sum_i w_i\, T_{\mathrm{TE}\to\mathrm{cross}}(\lambda_i) + \sum_i w_i\, T_{\mathrm{TM}\to\mathrm{bar}}(\lambda_i) \]\[ \mathrm{ER} = 10 \log_{10}\frac{T_{\mathrm{target}}}{T_{\mathrm{leak}}}, \qquad \mathrm{IL} = -10 \log_{10} T_{\mathrm{target}} \]<div class="eqref">Ch. 3 Eq. (3.15) and Eq. (3.19)</div>`,
+sym: [[String.raw`\(T_{\mathrm{TE}\to\mathrm{cross}}\)`, String.raw`\(\mathrm{TE}_0\) input reaching the cross port in \(\mathrm{TE}_0\)`], [String.raw`\(T_{\mathrm{TM}\to\mathrm{bar}}\)`, String.raw`\(\mathrm{TM}_0\) input reaching the bar port in \(\mathrm{TM}_0\)`], [String.raw`\(T_{\mathrm{leak}}\)`, "power in the other port"], [String.raw`\(\mathrm{ER}\)`, "extinction ratio in dB"], [String.raw`\(\mathrm{IL}\)`, "insertion loss in dB"]],
+how: ["Each polarization is a separate input, so each needs its own forward and adjoint runs.", "Each term is a band-weighted mode transmission (cards 1 and 3).", "Adding them treats both polarizations as equally important.", String.raw`Energy conservation \(T_{\mathrm{target}} + T_{\mathrm{leak}} + \text{losses} = 1\) means maximizing \(T_{\mathrm{target}}\) already pushes \(T_{\mathrm{leak}}\) down.`],
+say: "The splitter figure of merit is the sum of the band-weighted transmissions of TE into the cross port and TM into the bar port, with a maximum of 2.",
+num: String.raw`Example: \(T_{\mathrm{target}} = 0.9\) and \(T_{\mathrm{leak}} = 0.01\) give IL = 0.46 dB and ER = 19.5 dB. The thesis defines the operating band as the range where both polarizations reach \(T_{\mathrm{target}} \ge 0.8\).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + '<div class="readout" id="ro"></div>';
-  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), lb = range(0, 2.3, 70);
-  const share = b => { const pk = C3.dproj(0.5, b, 0.5); let a = 0; f.forEach(v => { if (C3.dproj(v, b, 0.5) >= 0.1 * pk) a++; }); return a / f.length; };
-  const curve = lb.map(l => share(Math.pow(10, l)));
+  ctl.innerHTML = sl("a", "TE → cross (target)", 0, 1, 0.01, 0.9) + sl("b", "TE → bar (leak)", 0, 1, 0.005, 0.02) + sl("c", "TM → bar (target)", 0, 1, 0.01, 0.85) + sl("d", "TM → cross (leak)", 0, 1, 0.005, 0.04) + '<div class="readout" id="ro"></div>';
   const u = () => {
-    const l = +$("b").value, b = Math.pow(10, l); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
-    const X = C3.X(70, 560, 0, 2.3), Y = C3.Y(20, 180, 0, 1);
-    let s = C3.frame(70, 20, 560, 180, 0, 2.3, 0, 1, [0, 1, 2], [0, 0.5, 1], "β", "active share", v => ["1", "10", "100"][v], v => (100 * v).toFixed(0) + " %") + plot(70, 20, 560, 180, lb, curve, 0, 2.3, 0, 1, "#1D9E75", 2.5);
-    const sh = share(b); s += `<circle cx="${X(l)}" cy="${Y(sh)}" r="6" fill="#D85A30"/>`;
-    fig.innerHTML = svg(240, s);
-    $("ro").innerHTML = `<div><span>β</span><b>${b.toFixed(b < 10 ? 2 : 0)}</b></div><div><span>pixels still active</span><b>${(100 * sh).toFixed(1)} %</b></div>`;
+    let a = +$("a").value, b = +$("b").value, c = +$("c").value, d = +$("d").value;
+    if (a + b > 1) { b = Math.max(0, 1 - a); $("b").value = b; } if (c + d > 1) { d = Math.max(0, 1 - c); $("d").value = d; }
+    $("av").textContent = a.toFixed(2); $("bv").textContent = b.toFixed(3); $("cv").textContent = c.toFixed(2); $("dv").textContent = d.toFixed(3);
+    const W = v => 1 + 14 * v;
+    let s = `<rect x="250" y="70" width="180" height="110" rx="6" fill="var(--sunk)" stroke="var(--p)"/><text class="th" x="340" y="130" text-anchor="middle">PBS</text>`;
+    s += `<path d="M40 125 L250 125" stroke="var(--p)" stroke-width="16" stroke-opacity="0.15"/><text class="ts" x="40" y="110">input: TE₀ and TM₀</text>`;
+    s += `<path d="M430 90 L640 60" stroke="var(--p)" stroke-width="34" stroke-opacity="0.12"/><path d="M430 160 L640 190" stroke="var(--p)" stroke-width="34" stroke-opacity="0.15"/><text class="ts" x="640" y="34" text-anchor="end">bar port</text><text class="ts" x="640" y="228" text-anchor="end">cross port</text>`;
+    s += `<path d="M430 166 L640 196" stroke="#378ADD" stroke-width="${W(a)}" opacity="0.85"/><path d="M430 154 L640 184" stroke="#D85A30" stroke-width="${W(d)}" opacity="0.85" stroke-dasharray="6 4"/>`;
+    s += `<path d="M430 84 L640 54" stroke="#D85A30" stroke-width="${W(c)}" opacity="0.85"/><path d="M430 96 L640 66" stroke="#378ADD" stroke-width="${W(b)}" opacity="0.85" stroke-dasharray="6 4"/>`;
+    s += C3.legend(40, 250, [["TE₀", "#378ADD"], ["TM₀", "#D85A30"], ["leak", "var(--p)", "6 4"]]);
+    fig.innerHTML = svg(255, s);
+    const er = (t, l) => l > 0 ? (10 * Math.log10(t / l)).toFixed(1) + " dB" : "∞", il = t => t > 0 ? (-10 * Math.log10(t)).toFixed(2) + " dB" : "∞";
+    $("ro").innerHTML = `<div><span>FOM (max 2)</span><b>${(a + c).toFixed(3)}</b></div><div><span>TE: ER / IL</span><b>${er(a, b)} / ${il(a)}</b></div><div><span>TM: ER / IL</span><b>${er(c, d)} / ${il(c)}</b></div>`;
   };
-  $("b").oninput = u; u();
+  ["a", "b", "c", "d"].forEach(k => $(k).oninput = u); u();
 }},
 
-{s: "6. Shifting η", t: "Moving the threshold: eroded, nominal and dilated designs",
-intu: String.raw`Keep \(\beta\) large and move \(\eta\) instead. A threshold above 0.5 keeps only pixels whose filtered value is high, deep inside the features: every GaAs feature shrinks, as if over-etched. A threshold below 0.5 keeps more: every feature grows, as if under-etched. Christiansen and Sigmund, and Hammond et al., use these eroded, nominal and dilated designs to make devices robust to etch bias. Pushing \(\eta\) almost to 1 or 0 turns the projection into a morphological erosion or dilation, the subject of the next lesson.`,
-eq: String.raw`\[ \text{eroded: } \eta = 0.5 + \delta, \qquad \text{nominal: } \eta = 0.5, \qquad \text{dilated: } \eta = 0.5 - \delta \]`,
-sym: [[String.raw`\(\delta\)`, "threshold shift"], ["eroded", "GaAs shrinks, gaps widen (over-etch)"], ["dilated", "GaAs grows, gaps narrow (under-etch)"], ["edge shift", String.raw`the boundary moves by roughly \(\delta\) divided by the slope of \(\tilde\rho\) across the edge`]],
-how: ["The filtered map changes smoothly across each edge.", "Moving the threshold up or down moves the 0.5 contour inward or outward.", String.raw`Because \(\tilde\rho\) is smooth on the scale \(R\), the shift is nearly uniform along the outline.`, String.raw`With \(\eta = 0.99\) or 0.01 the shift is close to the full filter radius: erosion and dilation (Lesson 8).`],
-say: "Shifting the projection threshold above or below 0.5 erodes or dilates every feature, which models over- and under-etching.",
-num: "Hammond et al. build eroded and dilated designs that differ from the blueprint by a set distance, for example ±20 nm, and optimize the worst of the three. It costs two extra simulations per step.",
+/* from old ch3 L4 card 6 */
+{s: "6. Objective sets the adjoint source", t: "Which wavelengths drive the adjoint run",
+intu: String.raw`The adjoint source amplitude at each frequency is \(\partial J/\partial a_m\). For a band-weighted objective \(J = \sum w_i |a_i|^2\) this is proportional to \(w_i a_i^{*}\). So a wavelength drives the adjoint run strongly when it has a large weight and the device already sends some light into the mode there. Below, a current transmission spectrum (blue) and the weights (orange) give the adjoint amplitudes (bars). Shift the spectrum and change \(\sigma\).`,
+eq: String.raw`\[ J = \sum_i w_i\, |a_m(\lambda_i)|^2 \quad\Longrightarrow\quad \frac{\partial J}{\partial a_m(\lambda_i)} \propto w_i\, a_m^{*}(\lambda_i) \]\[ |\text{amplitude}| \propto w_i \sqrt{T_i} \]`,
+sym: [[String.raw`\(a_m(\lambda_i)\)`, String.raw`mode amplitude at wavelength \(i\)`], [String.raw`\(w_i\)`, "band weight"], [String.raw`\(a^{*}\)`, "complex conjugate, the time reversal of Lesson 2 card 6"]],
+how: [String.raw`\(J\) depends on each \(a_i\) through \(w_i a_i a_i^{*}\).`, String.raw`Its derivative with respect to \(a_i\), holding \(a_i^{*}\) fixed, is \(w_i a_i^{*}\).`, "Tidy3D uses this as the adjoint source amplitude, with its own constant factors.", String.raw`This is the 1D result \(\operatorname{conj}(E_{\mathrm{out}})\) of Lesson 2, now per frequency and per mode.`],
+say: "The adjoint source of each frequency is proportional to its band weight times the conjugate mode amplitude, so the objective decides which wavelengths drive the gradient.",
+num: "A wavelength with zero weight contributes nothing to the gradient, however the device behaves there.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("d", "Threshold shift δ", 0, 0.45, 0.01, 0.2) + '<div class="readout" id="ro"></div>';
-  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 9), W, H, 3);
+  ctl.innerHTML = sl("c", "Spectrum peak (nm)", 760, 830, 1, 805) + sl("s", "σ of the weights (nm)", 3, 30, 0.5, 10);
   const u = () => {
-    const d = +$("d").value; $("dv").textContent = d.toFixed(2);
-    const P = e => f.map(v => C3.proj(v, 60, e)), D = P(0.5 - d), N = P(0.5), E = P(0.5 + d), fr = a => (100 * a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) + " %";
-    C3.drawRow(fig, [{ a: D }, { a: N }, { a: E }], W, H, 2.95, "β = 60 for all three. Same filtered map.", [`dilated, η = ${(0.5 - d).toFixed(2)}`, "nominal, η = 0.50", `eroded, η = ${(0.5 + d).toFixed(2)}`]);
-    $("ro").innerHTML = `<div><span>GaAs fraction dilated</span><b>${fr(D)}</b></div><div><span>nominal</span><b>${fr(N)}</b></div><div><span>eroded</span><b>${fr(E)}</b></div>`;
+    const pc = +$("c").value, sg = +$("s").value; $("cv").textContent = pc; $("sv").textContent = sg;
+    const ls = range(755, 835, 33), T = ls.map(l => 0.8 * Math.exp(-Math.pow((l - pc) / 25, 2))), w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S);
+    const amp = ls.map((_, i) => w[i] * Math.sqrt(T[i])), ma = Math.max(...amp), mw = Math.max(...w);
+    const X = C3.X(70, 560, 755, 835), Y = C3.Y(30, 180, 0, 1.05);
+    let s = C3.frame(70, 30, 560, 180, 755, 835, 0, 1.05, [755, 775, 795, 815, 835], [0, 0.5, 1], "wavelength (nm)", "scaled");
+    ls.forEach((l, i) => s += `<rect x="${X(l) - 5}" y="${Y(amp[i] / ma)}" width="10" height="${210 - Y(amp[i] / ma)}" fill="#7F77DD" opacity="0.75"/>`);
+    s += plot(70, 30, 560, 180, ls, T, 755, 835, 0, 1.05, "#378ADD", 2.5) + plot(70, 30, 560, 180, ls, w.map(v => v / mw), 755, 835, 0, 1.05, "#EF9F27", 2, "4 3");
+    s += C3.legend(80, 250, [["T(λ) now", "#378ADD"], ["weights (scaled)", "#EF9F27", "4 3"]]) + `<rect x="380" y="240" width="12" height="12" fill="#7F77DD"/><text class="ts" x="398" y="250">adjoint amplitude (scaled)</text>`;
+    fig.innerHTML = svg(260, s);
   };
-  $("d").oninput = u; u();
+  $("c").oninput = u; $("s").oninput = u; u();
 }}
+
 ],
-summary: String.raw`The tanh projection \(\hat\rho = [\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))]/[\tanh(\beta\eta) + \tanh(\beta(1 - \eta))]\) pushes filtered densities toward 0 or 1, with sharpness \(\beta\) and threshold \(\eta\). Large \(\beta\) gives a binary design but concentrates the gradient on the edges and freezes the topology, small \(\beta\) keeps the problem smooth but grey. So \(\beta\) is raised geometrically during the optimization, for example from 1 to 100 in 11 levels, and the result is thresholded at 0.5. Shifting \(\eta\) above or below 0.5 erodes or dilates every feature, which models etch bias and leads to the morphological operations of the next lesson.`,
+summary: String.raw`Every figure of merit is a mode transmission \(T_m = |a_m|^2\), with \(a_m\) the overlap of the simulated field with the mode at the monitor, normalized to unit power. Power in other modes or radiated counts as loss. Objectives are averaged over a band with normalized Gaussian weights, which steers the optimizer away from narrow resonances. The polarization splitter adds TE into the cross port and TM into the bar port, maximum 2, and is reported with extinction ratio and insertion loss. The objective also fixes the adjoint source: at each frequency its amplitude is proportional to \(w_i a_i^{*}\).`,
 sheet: [
-[String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, "Projection (Ch. 3 Eq. 3.10, Christiansen Eq. 18)"],
-[String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, String.raw`Slope, peak \(\approx \beta/2\) at \(\eta = 0.5\)`],
-[String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L-1)} \]`, "Geometric continuation"],
-[String.raw`\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`, "Binarization measure (0 = binary)"],
-[String.raw`\[ \eta = 0.5 \pm \delta \]`, "Eroded and dilated designs"]],
-consts: "Maps: 72 × 50 pixels of uniform random values, conic filter radius 3 pixels.",
-sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eq. (18), continuation, eroded, nominal and dilated designs", "Hammond et al., Opt. Express 29, 23916 (2021) (β stages 8, 16, 32 and robustness to ±20 nm etch bias)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/projections.py (tanh_projection)"]
+[String.raw`\[ a_m = \frac{1}{4} \int_S \left( \mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H} \right) \cdot \hat{\mathbf{n}}\, dS, \qquad T_m = |a_m|^2 \]`, "Mode overlap (Ch. 3 Eq. 3.13)"],
+[String.raw`\[ \bar{T} = \sum w_i\, T(\lambda_i), \qquad w_i \propto \exp\!\left[ -(\lambda_i - \lambda_0)^2/(2\sigma^2) \right], \qquad \sum w_i = 1 \]`, "Band weights (Ch. 3 Eq. 3.14)"],
+[String.raw`\[ \sigma = \sigma_c/\sqrt{2} \]`, "Converting the alternative Gaussian form"],
+[String.raw`\[ \mathrm{FOM} = \sum w_i\, T_{\mathrm{TE}\to\mathrm{cross}} + \sum w_i\, T_{\mathrm{TM}\to\mathrm{bar}} \le 2 \]`, "Splitter objective (Ch. 3 Eq. 3.15)"],
+[String.raw`\[ \mathrm{ER} = 10 \log_{10}(T_{\mathrm{target}}/T_{\mathrm{leak}}), \qquad \mathrm{IL} = -10 \log_{10} T_{\mathrm{target}} \]`, "Reported quantities (Ch. 3 Eq. 3.19)"],
+[String.raw`\[ \text{adjoint amplitude} \propto w_i\, a_m^{*}(\lambda_i) \]`, "Objective to adjoint source"]],
+consts: "Mode profiles: 2D slab guides with core index 3.0 in air at 800 nm. The spectra in cards 4 and 6 are illustrations.",
+sources: ["Flexcompute, Tidy3D 2.11.2 source: components/data/utils.py _dot_numpy (mode overlap), ModeData._adjoint_source_amp", "Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (figure of merit from mode overlap, adjoint source from ∂F/∂x)"]
 });

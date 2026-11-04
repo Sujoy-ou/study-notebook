@@ -1,142 +1,135 @@
+/* TODO for this lesson: Thesis Sec. 3.3/3.5: schedule beta 1 to 100 in 11 geometric levels of 7 steps, threshold at 0.5 at the end. */
 addLesson("thesis", "ch3", {
 level: "Core",
-id: "thesis-ch3-l6", title: "Density topology: pixels and the conic filter", short: "6. Pixels and the filter",
-big: String.raw`In topology optimization the design region is a grid of pixels, each with a density \(\rho\) between 0 (air) and 1 (GaAs), and the permittivity is interpolated linearly between the two materials. This gives the optimizer complete freedom, including the freedom to make single-pixel features and grey pixels that are neither air nor GaAs, which cannot be fabricated and have no physical meaning. The first fix is a filter: each pixel is replaced by a weighted average over a disk of radius \(R\), with weights that fall off linearly like a cone. The filter removes pixel-scale noise and gives the design a weak sense of length scale. On its own it makes the design greyer, which is why a projection follows (Lesson 7).`,
-bridge: String.raw`This is Ch. 3 Sec. 3.3, Eqs. (3.9) and (3.11). Christiansen and Sigmund 2021 (DTU, the Sigmund group) is a tutorial on exactly this recipe for photonics: their Eqs. (9) and (19) give the linear interpolation, and they explain why naive optimization produces pixel-by-pixel designs. Their filter is a PDE (Helmholtz) filter, Eq. (17). The conic filter used here is Tidy3D's (<code>_kernel_conic</code>, <code>make_kernel</code>, <code>get_kernel_size_px</code>), so Eq. (3.9) cites Tidy3D. All maps below are computed in your browser.`,
+id: "thesis-ch3-l6", title: "Projection and β continuation", short: "6. Projection and β",
+big: String.raw`After filtering, a smooth tanh step pushes each density toward 0 or 1. Its sharpness \(\beta\) decides how binary the design becomes, and its threshold \(\eta\) decides where the step sits. A large \(\beta\) gives a nearly black and white design but a badly conditioned problem, because the gradient survives only in the few pixels whose filtered value is close to \(\eta\). A small \(\beta\) gives a smooth problem whose best design is grey. The standard answer is continuation: start with a small \(\beta\) so the layout can form, raise it in stages so it becomes binary, and threshold the result at the end. Shifting \(\eta\) instead of \(\beta\) grows or shrinks every feature, which models over- and under-etching and leads directly to erosion and dilation.`,
+bridge: String.raw`This is Ch. 3 Sec. 3.3, Eq. (3.10), and the projection continuation of Sec. 3.5 with Fig. 3.2. The projection is Christiansen and Sigmund's Eq. (18), identical to Tidy3D's <code>tanh_projection</code>. Their tutorial explains why \(\beta\) is raised from a low to a high value and shows eroded, nominal and dilated designs for robustness, as do Hammond et al.`,
 cards: [
-{s: "1. Pixels", t: "A density per pixel, interpolated between air and GaAs",
-intu: String.raw`Each pixel carries a density \(\rho\). The permittivity is linear in \(\rho\): 1 for air at \(\rho = 0\), 12.19 for GaAs at \(\rho = 1\). A design can start from a rough drawing, here a Y-shaped splitter with dense arms on a light background. Any value in between is a grey material that does not exist: at \(\rho = 0.5\) the index would be about 2.6. The optimizer has to be pushed toward 0 and 1, otherwise its best design may rely on such fictitious material. Change the arm and background densities.`,
-eq: String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]<div class="eqref">Ch. 3 Eq. (3.11), Christiansen Eqs. 9 and 19</div>`,
-sym: [[String.raw`\(\rho\)`, String.raw`raw density of a pixel, the design variable, in \([0, 1]\)`], [String.raw`\(\hat\rho\)`, String.raw`density after filter and projection, the one that sets \(\varepsilon\) (Lesson 7)`], [String.raw`\(\varepsilon_{\mathrm{air}} = 1, \varepsilon_{\mathrm{GaAs}} = 12.19\)`, String.raw`the two materials (\(n = 3.492\))`]],
-how: ["Discretize the design region into square pixels.", "Give each pixel a continuous density so that gradients exist.", String.raw`Interpolate \(\varepsilon\) linearly, as Christiansen and Sigmund do.`, String.raw`Only \(\rho = 0\) and \(\rho = 1\) correspond to real materials.`],
-say: "Each pixel has a density between 0 and 1, and its permittivity is a linear interpolation between air and GaAs, so only the end values are physical.",
-num: String.raw`\(\rho = 0.5\) gives \(\varepsilon = 6.6\) and \(n = 2.57\). \(\rho = 0.9\) gives \(\varepsilon = 11.1\) and \(n = 3.33\).`,
+/* from old ch3 L7 card 1 */
+{s: "1. The projection", t: "A smooth step with sharpness β and threshold η",
+intu: String.raw`The projection maps a filtered density \(\tilde\rho\) to \(\hat\rho\). For \(\beta\) near 1 it is almost the identity (dotted). As \(\beta\) grows, values above \(\eta\) are pushed toward 1 and values below toward 0, and the curve approaches a step at \(\eta\). The normalization keeps \(\hat\rho(0) = 0\) and \(\hat\rho(1) = 1\) for any \(\beta\) and \(\eta\). Move \(\beta\) and \(\eta\).`,
+eq: String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]<div class="eqref">Ch. 3 Eq. (3.10), Christiansen Eq. 18</div>`,
+sym: [[String.raw`\(\tilde\rho\)`, "filtered density, input"], [String.raw`\(\hat\rho\)`, String.raw`projected density, sets \(\varepsilon\) (Eq. 3.11)`], [String.raw`\(\beta\)`, "sharpness"], [String.raw`\(\eta\)`, "threshold, 0.5 for the nominal design"]],
+how: [String.raw`\(\tanh(\beta(\tilde\rho - \eta))\) is a smooth step centered at \(\eta\).`, String.raw`Adding \(\tanh(\beta\eta)\) makes it zero at \(\tilde\rho = 0\).`, String.raw`Dividing by its value at \(\tilde\rho = 1\) makes it one there.`, String.raw`For \(\beta \to \infty\) it becomes the hard threshold at \(\eta\).`],
+say: String.raw`The tanh projection is a smooth threshold whose sharpness \(\beta\) is raised during the optimization, pushing the filtered densities toward 0 or 1.`,
+num: String.raw`Christiansen and Sigmund: at \(\beta = 1\) the thresholding has little effect. At \(\beta = 100\) and \(\eta = 0.5\), \(\tilde\rho = 0.52\) already gives \(\hat\rho = 0.98\).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("a", "Arm density", 0, 1, 0.01, 0.9) + sl("b", "Background density", 0, 1, 0.01, 0.1) + '<div class="readout" id="ro"></div>';
-  const W = 90, H = 60;
+  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + sl("e", "η", 0.05, 0.95, 0.01, 0.5) + '<div class="readout" id="ro"></div>';
+  const xs = range(0, 1, 401);
   const u = () => {
-    const ra = +$("a").value, rb = +$("b").value; $("av").textContent = ra.toFixed(2); $("bv").textContent = rb.toFixed(2);
-    const a = new Float64Array(W * H).fill(rb);
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const yc = H / 2, t = Math.max(0, (x - 30) / 60), off = 18 * t * t * (3 - 2 * t);
-      if (x < 32 && Math.abs(y + 0.5 - yc) < 5) a[y * W + x] = ra;
-      if (x >= 28 && (Math.abs(y + 0.5 - (yc - off)) < 5 || Math.abs(y + 0.5 - (yc + off)) < 5)) a[y * W + x] = ra;
-    }
-    C3.draw(fig, a, W, H, 6, "Starting density image. Dark is GaAs (ρ = 1), white is air (ρ = 0).");
-    const e = r => 1 + r * 11.19;
-    $("ro").innerHTML = `<div><span>arm: ε / n</span><b>${e(ra).toFixed(2)} / ${Math.sqrt(e(ra)).toFixed(2)}</b></div><div><span>background: ε / n</span><b>${e(rb).toFixed(2)} / ${Math.sqrt(e(rb)).toFixed(2)}</b></div><div><span>physical?</span><b>${(ra === 0 || ra === 1) && (rb === 0 || rb === 1) ? "yes" : "no, grey"}</b></div>`;
+    const b = Math.pow(10, +$("b").value), e = +$("e").value; $("bv").textContent = b.toFixed(b < 10 ? 2 : 0); $("ev").textContent = e.toFixed(2);
+    let s = C3.frame(70, 20, 300, 220, 0, 1, 0, 1, [0, 0.5, 1], [0, 0.5, 1], "filtered ρ̃", "projected ρ̂") + plot(70, 20, 300, 220, xs, xs, 0, 1, 0, 1, "var(--p)", 1, "2 3");
+    [1, 4, 16].forEach((bb, k) => s += plot(70, 20, 300, 220, xs, xs.map(x => C3.proj(x, bb, e)), 0, 1, 0, 1, "var(--b)", 1));
+    s += plot(70, 20, 300, 220, xs, xs.map(x => C3.proj(x, b, e)), 0, 1, 0, 1, "#D85A30", 3) + `<line x1="${C3.X(70, 300, 0, 1)(e)}" x2="${C3.X(70, 300, 0, 1)(e)}" y1="20" y2="240" stroke="#EF9F27" stroke-dasharray="4 3"/>`;
+    s += `<text class="ts" x="420" y="60">orange: current β</text><text class="ts" x="420" y="82">grey: β = 1, 4, 16</text><text class="ts" x="420" y="104">dotted: identity</text><text class="ts" x="420" y="126">dashed: threshold η</text>`;
+    fig.innerHTML = svg(275, s);
+    $("ro").innerHTML = `<div><span>ρ̂(0.4)</span><b>${C3.proj(0.4, b, e).toFixed(3)}</b></div><div><span>ρ̂(0.6)</span><b>${C3.proj(0.6, b, e).toFixed(3)}</b></div><div><span>ρ̂(0), ρ̂(1)</span><b>${C3.proj(0, b, e).toFixed(2)}, ${C3.proj(1, b, e).toFixed(2)}</b></div>`;
   };
-  $("a").oninput = u; $("b").oninput = u; u();
+  $("b").oninput = u; $("e").oninput = u; u();
 }},
 
-{s: "2. Raw pixels", t: "What an unconstrained pixel optimization produces",
-intu: "Left free, the optimizer exploits every pixel. Christiansen and Sigmund observe pixel-by-pixel varying regions in a naive optimization, and features of single pixels. Such patterns can be fine in simulation, partly because a pixel-size feature is poorly resolved by the grid, but they cannot be written by lithography. The two maps show the typical symptoms: speckle of single pixels and large grey regions. The readouts count them.",
-eq: String.raw`\[ \text{smallest feature without a filter: one pixel, } \Delta \]\[ \text{grey fraction} = \text{share of pixels with } 0.05 \lt \rho \lt 0.95 \]`,
-sym: [[String.raw`\(\Delta\)`, "pixel size, about 10 nm in a typical 3D design"], ["grey fraction", "a simple measure of how far the design is from binary"]],
-how: ["Each pixel is an independent variable with its own gradient.", "Nothing couples neighbors, so the optimum can vary from pixel to pixel.", "Grey values are often optimal for a continuous problem.", "Both effects are removed by the filter (this lesson) and the projection (Lesson 7)."],
-say: "Without regularization the optimizer produces single-pixel features and grey regions, which is why a filter and a projection are added.",
-num: "At 10 nm pixels a single-pixel feature is 10 nm, an order of magnitude below a typical electron-beam lithography rule of about 100 nm.",
+/* from old ch3 L7 card 2 */
+{s: "2. Filter then project", t: "The full chain on a map: raw, filtered, projected",
+intu: String.raw`The full density chain is raw \(\rho\) → filter → \(\tilde\rho\) → projection → \(\hat\rho\) → \(\varepsilon\). The filter sets the shapes, the projection decides how sharp they are. At small \(\beta\) the projected map is still grey. Raise \(\beta\) and the same shapes become black and white, with a thin grey edge that shrinks as \(\beta\) grows. The readouts measure how binary the design is.`,
+eq: String.raw`\[ \rho \to \tilde\rho = \mathrm{filter}(\rho) \to \hat\rho = P_{\beta,\eta}(\tilde\rho) \to \varepsilon(\hat\rho) \]<div class="eqnote">binarization:</div>\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`,
+sym: [[String.raw`\(M\)`, "0 for a perfectly binary design, 1 if every pixel is 0.5"], ["grey fraction", String.raw`share of pixels with \(0.05 \lt \hat\rho \lt 0.95\)`]],
+how: ["The raw map is the same random design as in Lesson 6.", "The filter makes it smooth and grey.", String.raw`The projection sharpens it again, now with smooth outlines of size about \(R\).`, String.raw`Only the edge pixels stay grey at large \(\beta\).`],
+say: String.raw`Filtering sets the feature shapes and projection makes them binary, with only the edges left grey at large \(\beta\).`,
+num: String.raw`The grey edge is about one pixel wide once \(\beta\) is large enough that the filtered value crosses from 0.05 to 0.95 within one pixel.`,
 r(fig, ctl) {
-  const W = 90, H = 60, r = C3.rng(12), sp = new Float64Array(W * H), gr = new Float64Array(W * H);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const base = Math.sin(x / 9) * Math.cos(y / 7) > 0 ? 1 : 0; sp[y * W + x] = r() < 0.18 ? 1 - base : base; gr[y * W + x] = C3.clamp(0.5 + 0.55 * Math.sin(x / 11 + 0.6 * Math.sin(y / 9)) * Math.cos(y / 13), 0, 1); }
-  const stats = a => { let g = 0; a.forEach(v => { if (v > 0.05 && v < 0.95) g++; }); const B = Uint8Array.from(a, v => v > 0.5 ? 1 : 0), cs = C3.components(B, W, H, 1).concat(C3.components(B, W, H, 0)); return [g / a.length, cs.filter(c => c.area === 1).length]; };
-  const s1 = stats(sp), s2 = stats(gr);
-  C3.drawRow(fig, [{ a: sp }, { a: gr }], W, H, 3.6, "Two typical symptoms of an unregularized design.", ["speckle of single pixels", "grey regions"]);
-  ctl.innerHTML = `<div class="readout"><div><span>speckle: single-pixel islands and holes</span><b>${s1[1]}</b></div><div><span>grey map: grey fraction</span><b>${(100 * s2[0]).toFixed(0)} %</b></div></div>`;
+  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 0.6) + '<div class="readout" id="ro"></div>';
+  const W = 72, H = 50, raw = C3.noise(W, H, 5), f = C3.filter2D(raw, W, H, 3);
+  const u = () => {
+    const b = Math.pow(10, +$("b").value); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
+    const p = f.map(v => C3.proj(v, b, 0.5));
+    C3.drawRow(fig, [{ a: raw }, { a: f }, { a: p }], W, H, 2.95, "Filter radius 3 pixels, η = 0.5.", ["raw ρ", "filtered ρ̃", "projected ρ̂"]);
+    let g = 0, M = 0; p.forEach(v => { if (v > 0.05 && v < 0.95) g++; M += 4 * v * (1 - v); });
+    $("ro").innerHTML = `<div><span>grey fraction</span><b>${(100 * g / p.length).toFixed(1)} %</b></div><div><span>binarization M</span><b>${(M / p.length).toFixed(3)}</b></div>`;
+  };
+  $("b").oninput = u; u();
 }},
 
-{s: "3. The conic kernel", t: "The conic filter kernel and its rounded radius",
-intu: String.raw`The filter replaces each pixel by a weighted average of its neighbors. The weight falls linearly from 1 at the center to 0 at a radius \(\tilde R\), like a cone. Because the kernel lives on the pixel grid, Tidy3D rounds the radius up to a whole number of pixels, \(\tilde R = \lceil R/\Delta \rceil \Delta\), and builds a kernel of \(2\lceil R/\Delta \rceil + 1\) pixels per side. Pixels at exactly \(\tilde R\) get zero weight. Change \(R/\Delta\) and watch the rounding.`,
-eq: String.raw`\[ \tilde\rho_i = \frac{\sum_j K(r_{ij})\, \rho_j}{\sum_j K(r_{ij})} \]\[ K(r) = \max(0, 1 - r/\tilde R), \qquad \tilde R = \lceil R/\Delta \rceil \Delta \]<div class="eqref">Ch. 3 Eq. (3.9)</div>`,
-sym: [[String.raw`\(\tilde\rho_i\)`, String.raw`filtered density of pixel \(i\)`], [String.raw`\(r_{ij}\)`, String.raw`distance between the centers of pixels \(i\) and \(j\)`], [String.raw`\(K\)`, "cone-shaped weight"], [String.raw`\(R\)`, "requested filter radius"], [String.raw`\(\tilde R\)`, "radius actually used, rounded up to whole pixels"], [String.raw`\(\Delta\)`, "pixel size"]],
-how: [String.raw`Choose a radius \(R\) in nanometers.`, String.raw`Convert to pixels and round up: \(n = \lceil R/\Delta \rceil\).`, String.raw`Build a \((2n + 1) \times (2n + 1)\) kernel with \(K = \max(0, 1 - r/(n\Delta))\).`, "Normalize by the sum of the weights so a uniform design stays uniform."],
-say: "The conic filter averages the densities with weights that fall linearly to zero at the radius, which Tidy3D rounds up to a whole number of pixels.",
-num: String.raw`Example: \(R = 100\) nm on 9 nm pixels gives \(\lceil 11.1 \rceil = 12\) pixels, \(\tilde R = 108\) nm, a kernel of 25 × 25 pixels. A radius of one pixel leaves only the center weight, so the filter does nothing.`,
+/* from old ch3 L7 card 3 */
+{s: "3. The slope", t: "At large β the gradient lives only near the threshold",
+intu: String.raw`The gradient reaches the filtered density through the slope of the projection. At small \(\beta\) the slope is close to 1 everywhere, so every pixel can change. At large \(\beta\) the slope is huge near \(\eta\) and almost zero elsewhere. Pixels that are already clearly 0 or 1 hardly feel the gradient any more, and the few that do feel it very strongly. This is what a badly conditioned problem looks like. The readout counts the pixels of the map in card 2 whose slope is still at least a tenth of the peak.`,
+eq: String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]\[ \text{peak} \approx \beta/2 \text{ at } \tilde\rho = \eta = 0.5 \text{ for large } \beta \]`,
+sym: [[String.raw`\(\operatorname{sech}^2 = 1/\cosh^2\)`, String.raw`a bump of width about \(1/\beta\)`], ["peak", String.raw`slope at \(\tilde\rho = \eta\)`], ["active pixels", "pixels whose slope is at least 10 % of the peak"]],
+how: ["Differentiate the projection.", String.raw`The bump has height about \(\beta/2\) and width about \(1/\beta\).`, "So the product of height and width stays about the same, the gradient just concentrates.", "Concentrated gradients make the step size hard to choose: too large for the edge pixels, useless for the rest."],
+say: String.raw`At large \(\beta\) the projection slope is large near the threshold and nearly zero elsewhere, so the gradient concentrates on the edges and the problem becomes badly conditioned.`,
+num: String.raw`At \(\beta = 100\) the slope at \(\tilde\rho = 0.5\) is 50, while at \(\tilde\rho = 0.6\) it is below 0.01.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("R", "R / Δ (radius in pixels, before rounding)", 1, 8, 0.1, 3.4) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1.3) + '<div class="readout" id="ro"></div>';
+  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), xs = range(0, 1, 501);
   const u = () => {
-    const Rq = +$("R").value, n = Math.ceil(Rq - 1e-9); $("Rv").textContent = Rq.toFixed(1);
-    const K = C3.kernel2D(n), c = Math.min(14, 200 / (2 * n + 1));
-    let s = `<text class="ts" x="${40 + (2 * n + 1) * c / 2}" y="22" text-anchor="middle">kernel, ${2 * n + 1} × ${2 * n + 1} pixels</text>`;
-    for (let dy = -n; dy <= n; dy++) for (let dx = -n; dx <= n; dx++) { const w = Math.max(0, 1 - Math.hypot(dx, dy) / n); s += `<rect x="${40 + (dx + n) * c}" y="${32 + (dy + n) * c}" width="${c - 0.6}" height="${c - 0.6}" fill="${w > 0 ? "#D85A30" : "var(--sunk)"}" fill-opacity="${w > 0 ? 0.12 + 0.88 * w : 1}"/>`; }
-    const X = C3.X(330, 310, -8.5, 8.5), Y = C3.Y(40, 160, 0, 1.1), rs = range(-8.5, 8.5, 341);
-    s += C3.frame(330, 40, 310, 160, -8.5, 8.5, 0, 1.1, [-8, -4, 0, 4, 8], [0, 0.5, 1], "distance (pixels)", "K");
-    s += plot(330, 40, 310, 160, rs, rs.map(r => Math.max(0, 1 - Math.abs(r) / n)), -8.5, 8.5, 0, 1.1, "#D85A30", 2.5) + plot(330, 40, 310, 160, rs, rs.map(r => Math.max(0, 1 - Math.abs(r) / Rq)), -8.5, 8.5, 0, 1.1, "var(--p)", 1.5, "4 3");
-    for (let d = -n; d <= n; d++) s += `<circle cx="${X(d)}" cy="${Y(Math.max(0, 1 - Math.abs(d) / n))}" r="3" fill="#D85A30"/>`;
-    s += C3.legend(330, 262, [["used, R̃", "#D85A30"], ["requested R", "var(--p)", "4 3"]]);
-    fig.innerHTML = svg(272, s);
-    $("ro").innerHTML = `<div><span>⌈R/Δ⌉</span><b>${n} pixels</b></div><div><span>R̃ / R</span><b>${(n / Rq).toFixed(3)}</b></div><div><span>nonzero weights</span><b>${K.length}</b></div>`;
+    const b = Math.pow(10, +$("b").value); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
+    const d = xs.map(x => C3.dproj(x, b, 0.5)), pk = C3.dproj(0.5, b, 0.5), ymax = Math.max(1.2, pk * 1.1);
+    let s = C3.frame(70, 20, 330, 200, 0, 1, 0, ymax, [0, 0.5, 1], [0, ymax / 2, ymax], "filtered ρ̃", "slope dρ̂/dρ̃", v => v, v => v.toFixed(ymax < 10 ? 1 : 0)) + plot(70, 20, 330, 200, xs, d, 0, 1, 0, ymax, "#7F77DD", 2.5);
+    const hist = new Array(25).fill(0); f.forEach(v => hist[Math.min(24, Math.floor(v * 25))]++); const mh = Math.max(...hist);
+    hist.forEach((h, i) => s += `<rect x="${C3.X(70, 330, 0, 1)(i / 25) + 1}" y="${220 - 40 * h / mh}" width="${330 / 25 - 2}" height="${40 * h / mh}" fill="var(--b)" opacity="0.6"/>`);
+    let act = 0; f.forEach(v => { if (C3.dproj(v, b, 0.5) >= 0.1 * pk) act++; });
+    s += `<text class="ts" x="430" y="60">purple: projection slope</text><text class="ts" x="430" y="82">grey bars: how many pixels</text><text class="ts" x="430" y="100">of the card 2 map have</text><text class="ts" x="430" y="118">each filtered value</text>`;
+    fig.innerHTML = svg(258, s);
+    $("ro").innerHTML = `<div><span>peak slope</span><b>${pk.toFixed(2)}</b></div><div><span>slope at ρ̃ = 0.6</span><b>${C3.dproj(0.6, b, 0.5).toExponential(2)}</b></div><div><span>active pixels</span><b>${(100 * act / f.length).toFixed(1)} %</b></div>`;
   };
-  $("R").oninput = u; u();
+  $("b").oninput = u; u();
 }},
 
-{s: "4. Filtering", t: "The filter removes pixel noise and makes the design grey",
-intu: String.raw`Apply the filter to a map of random pixel values. Small-scale variation is averaged out and smooth blobs of size about \(R\) remain. Notice the side effect: the filtered values bunch up around the mean, 0.5. The filter alone turns a noisy design into a grey one. That is the reason a projection always follows the filter. Change the radius.`,
-eq: String.raw`\[ \tilde\rho = \frac{K \ast \rho}{K \ast 1} \qquad (\text{normalized convolution}) \]`,
-sym: [[String.raw`\(\ast\)`, "convolution over the pixel grid"], [String.raw`\(K \ast 1\)`, "sum of the weights inside the region, which normalizes at the edges"], ["std", "spread of the values around their mean"]],
-how: ["Each filtered pixel is a weighted mean of many raw pixels.", "Means of many random values cluster near their average.", String.raw`So the spread shrinks roughly like \(1/\sqrt{\text{number of pixels in the kernel}}\).`, String.raw`Spatial features smaller than about \(R\) are averaged away.`],
-say: String.raw`The filter smooths the design over a radius \(R\), removing pixel-scale features, but it also pushes values toward grey.`,
-num: "Raw uniform random values have a spread of 0.29. After a filter of radius 3 pixels it drops to 0.07, and at 4 pixels to 0.05, so almost every pixel is grey.",
+/* from old ch3 L7 card 4 */
+{s: "4. Continuation", t: "Raising β in stages: a geometric schedule",
+intu: String.raw`Continuation runs the optimizer at a fixed \(\beta\) for a number of steps, then raises \(\beta\) and continues. A geometric schedule multiplies \(\beta\) by the same factor at every level, so it spends equal effort on each decade from 1 to \(\beta_{\mathrm{max}}\). Early levels shape the layout while the problem is smooth, late levels make it binary. Change the schedule.`,
+eq: String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L - 1)}, \qquad k = 0, \dots, L - 1 \]\[ \text{each held for } s \text{ steps, total } L \cdot s \text{ steps} \]`,
+sym: [[String.raw`\(L\)`, "number of levels"], [String.raw`\(s\)`, "optimizer steps per level"], [String.raw`\(\beta_{\mathrm{max}}\)`, "final sharpness"], ["ratio", String.raw`\(\beta_{k+1}/\beta_k = \beta_{\mathrm{max}}^{1/(L-1)}\)`]],
+how: [String.raw`Start at \(\beta = 1\), where the projection is nearly the identity.`, String.raw`Multiply \(\beta\) by a fixed ratio at each level.`, String.raw`Stop at \(\beta_{\mathrm{max}}\), where the projection is close to a step.`, String.raw`Threshold the final design at \(\hat\rho = 0.5\) to make it exactly binary.`],
+say: String.raw`\(\beta\) is raised geometrically during the optimization, so the layout forms while the problem is smooth and becomes binary at the end.`,
+num: String.raw`Example: \(\beta\) from 1 to 100 in 11 levels of 7 steps gives 77 steps, a ratio of 1.585 per level, and the eighth level is \(\beta = 25.1\). Hammond et al. used three stages, \(\beta = 8\), 16 and 32, with 70 iterations each.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("n", "Filter radius (pixels)", 1, 8, 1, 4) + '<div class="readout" id="ro"></div>';
-  const W = 90, H = 60, raw = C3.noise(W, H, 77);
-  const sd = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length); };
+  ctl.innerHTML = sl("m", "β_max", 10, 200, 5, 100) + sl("L", "Levels L", 2, 15, 1, 11) + sl("s", "Steps per level", 1, 15, 1, 7) + '<div class="readout" id="ro"></div>';
   const u = () => {
-    const n = +$("n").value; $("nv").textContent = n; const f = C3.filter2D(raw, W, H, n);
-    C3.drawRow(fig, [{ a: raw }, { a: f }], W, H, 3.6, "Same colors as before: dark 1, white 0, grey in between.", ["raw ρ", "filtered ρ̃"]);
-    let g = 0; f.forEach(v => { if (v > 0.05 && v < 0.95) g++; });
-    $("ro").innerHTML = `<div><span>spread raw / filtered</span><b>${sd(raw).toFixed(3)} / ${sd(f).toFixed(3)}</b></div><div><span>grey fraction after filter</span><b>${(100 * g / f.length).toFixed(0)} %</b></div>`;
+    const bm = +$("m").value, L = +$("L").value, st = +$("s").value; $("mv").textContent = bm; $("Lv").textContent = L; $("sv").textContent = st;
+    const bs = Array.from({ length: L }, (_, k) => Math.pow(bm, k / (L - 1))), T = L * st;
+    const X = C3.X(70, 560, 0, T), Y = v => 210 - Math.log10(v) / Math.log10(250) * 180;
+    let s = `<rect x="70" y="30" width="560" height="180" fill="none" stroke="var(--b)"/>`;
+    [1, 10, 100].forEach(v => s += `<line x1="66" x2="70" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--p)"/><text class="ts" x="62" y="${Y(v) + 4}" text-anchor="end">${v}</text><line x1="70" x2="630" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--b)" stroke-dasharray="2 4"/>`);
+    let d = ""; bs.forEach((b, k) => d += `${k ? "L" : "M"}${X(k * st)} ${Y(b)} L${X((k + 1) * st)} ${Y(b)}`);
+    s += `<path d="${d}" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="350" y="236" text-anchor="middle">optimizer step (total ${T})</text><text class="ts" x="30" y="120" transform="rotate(-90 30 120)" text-anchor="middle">β (log)</text>`;
+    fig.innerHTML = svg(245, s);
+    $("ro").innerHTML = `<div><span>ratio per level</span><b>${Math.pow(bm, 1 / (L - 1)).toFixed(3)}</b></div><div><span>levels</span><b>${bs.map(b => b < 10 ? b.toFixed(1) : b.toFixed(0)).join(", ")}</b></div>`;
   };
-  $("n").oninput = u; u();
+  ["m", "L", "s"].forEach(k => $(k).oninput = u); u();
 }},
 
-{s: "5. A weak length scale", t: "Filter, then threshold: features grow with R, but no guarantee",
-intu: String.raw`Threshold the filtered map at 0.5 to see the shapes it encodes. A larger radius gives larger features, so the filter does set a length scale. Christiansen and Sigmund call it a weak sense of length scale, because nothing forbids a thin neck or a tiny island where the filtered value happens to cross 0.5. The readout tracks the smallest island or hole. Change \(R\) and look for small features.`,
-eq: String.raw`\[ \text{binary design: } \hat\rho = 1 \text{ if } \tilde\rho \gt 0.5, \text{ else } 0 \]<div class="eqref">the limit \(\beta \to \infty\) of the projection, Lesson 7</div>`,
-sym: [["island", "connected GaAs region"], ["hole", "connected air region surrounded by GaAs"], ["smallest feature", "area of the smallest island or hole, in pixels"]],
-how: [String.raw`Filtering limits how fast \(\tilde\rho\) can vary in space.`, String.raw`So the 0.5 contour cannot wiggle on scales much below \(R\).`, "But the contour can still pass close to itself, making thin necks and small islands.", "A hard guarantee needs more: the erosion and dilation penalty (Lesson 9) and a design rule check (Lesson 11)."],
-say: "The filter radius sets a typical feature size, but only a weak one: it does not guarantee a minimum feature size.",
-num: "In Christiansen and Sigmund's metalens, filtering and thresholding removed the pixel-scale features at a cost of only about 1 % of the figure of merit.",
+/* from old ch3 L7 card 5 */
+{s: "5. Why gradually", t: "How many pixels can still change, as β grows",
+intu: String.raw`Combine cards 3 and 4. For the filtered map of card 2, the curve shows the share of pixels whose projection slope is still at least a tenth of the peak, as a function of \(\beta\). At \(\beta = 1\) every pixel can move, so holes can open and arms can merge. At \(\beta = 100\) fewer than a fifth of the pixels respond, and at \(\beta = 200\) one in ten. This map is still very grey, because it is filtered noise. In a real run the design has moved toward 0 and 1 by then, so even fewer pixels respond: the topology is effectively frozen and only the outlines shift. Raising \(\beta\) slowly gives the layout time to settle before it freezes. Starting at a large \(\beta\) freezes whatever the initial design happens to be.`,
+eq: String.raw`\[ \text{active share}(\beta) = \frac{1}{N}\, \#\left\{ i : \frac{d\hat\rho}{d\tilde\rho}(\tilde\rho_i) \ge 0.1 \cdot \text{peak} \right\} \]`,
+sym: [["active share", "fraction of pixels that still receive a useful gradient"], ["freezing", "topology fixed, only boundaries move"]],
+how: ["Use the slope formula of card 3.", "Evaluate it for every pixel of the filtered map.", "Count the pixels above 10 % of the peak.", String.raw`Repeat for \(\beta\) from 1 to 200.`],
+say: String.raw`As \(\beta\) grows, fewer pixels receive a useful gradient, so the topology freezes, which is why \(\beta\) is raised gradually.`,
+num: "Christiansen and Sigmund: a sharp threshold early makes the problem badly conditioned and freezes the design too soon.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("n", "Filter radius (pixels)", 1, 8, 1, 3) + '<div class="readout" id="ro"></div>';
-  const W = 90, H = 60, raw = C3.noise(W, H, 5);
+  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + '<div class="readout" id="ro"></div>';
+  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), lb = range(0, 2.3, 70);
+  const share = b => { const pk = C3.dproj(0.5, b, 0.5); let a = 0; f.forEach(v => { if (C3.dproj(v, b, 0.5) >= 0.1 * pk) a++; }); return a / f.length; };
+  const curve = lb.map(l => share(Math.pow(10, l)));
   const u = () => {
-    const n = +$("n").value; $("nv").textContent = n; const f = C3.filter2D(raw, W, H, n), b = Uint8Array.from(f, v => v > 0.5 ? 1 : 0);
-    const isl = C3.components(b, W, H, 1), hol = C3.components(b, W, H, 0).filter(c => !c.edge), all = isl.concat(hol), mn = all.length ? Math.min(...all.map(c => c.area)) : 0;
-    const small = new Uint8Array(W * H); const lab1 = C3.label(b, W, H), sz = {}; lab1.forEach(l => { if (l >= 0) sz[l] = (sz[l] || 0) + 1; }); lab1.forEach((l, i) => { if (l >= 0 && sz[l] <= Math.max(4, n * n)) small[i] = 1; });
-    C3.drawRow(fig, [{ a: f }, { a: b, over: [[small, [216, 90, 48]]] }], W, H, 3.6, "Right: thresholded at 0.5. Islands no larger than R² pixels are marked orange.", ["filtered ρ̃", "thresholded"]);
-    $("ro").innerHTML = `<div><span>islands / holes</span><b>${isl.length} / ${hol.length}</b></div><div><span>smallest island or hole</span><b>${mn} px</b></div><div><span>R²</span><b>${n * n} px</b></div>`;
+    const l = +$("b").value, b = Math.pow(10, l); $("bv").textContent = b.toFixed(b < 10 ? 2 : 0);
+    const X = C3.X(70, 560, 0, 2.3), Y = C3.Y(20, 180, 0, 1);
+    let s = C3.frame(70, 20, 560, 180, 0, 2.3, 0, 1, [0, 1, 2], [0, 0.5, 1], "β", "active share", v => ["1", "10", "100"][v], v => (100 * v).toFixed(0) + " %") + plot(70, 20, 560, 180, lb, curve, 0, 2.3, 0, 1, "#1D9E75", 2.5);
+    const sh = share(b); s += `<circle cx="${X(l)}" cy="${Y(sh)}" r="6" fill="#D85A30"/>`;
+    fig.innerHTML = svg(240, s);
+    $("ro").innerHTML = `<div><span>β</span><b>${b.toFixed(b < 10 ? 2 : 0)}</b></div><div><span>pixels still active</span><b>${(100 * sh).toFixed(1)} %</b></div>`;
   };
-  $("n").oninput = u; u();
-}},
-
-{s: "6. Gradients through the filter", t: "The filter smooths the gradient too",
-intu: "The chain rule passes the gradient back through the filter. Because the conic kernel is symmetric, the backward pass is again a convolution with the same kernel (with the normalization moved inside). So a sensitivity that varies from pixel to pixel is smoothed before it reaches the design variables. A single-pixel spike becomes a cone, and a checkerboard pattern, the classic pixel-scale artifact, is almost wiped out. Pick a gradient pattern.",
-eq: String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum_k K(r_{ik})} \]`,
-sym: [[String.raw`\(\partial J/\partial \tilde\rho_i\)`, "gradient arriving at the filtered density (from projection and simulation)"], [String.raw`\(\partial J/\partial \rho_j\)`, "gradient with respect to the raw design variable"], ["red / blue", "positive / negative gradient"]],
-how: [String.raw`\(\tilde\rho\) is linear in \(\rho\), with matrix entries \(K(r_{ij})/\sum K\).`, "The vector-Jacobian product multiplies by the transpose of that matrix.", String.raw`\(K(r_{ij}) = K(r_{ji})\), so the transpose is again a cone-weighted sum.`, "High spatial frequencies are damped in the gradient as well as in the design."],
-say: String.raw`Backpropagation through the conic filter is again a cone-weighted average, so the gradient reaching the design variables is smoothed on the scale \(R\).`,
-num: "A checkerboard has the highest spatial frequency of the grid. A cone of radius 2 pixels reduces it to about 4 % of its amplitude, radius 3 to below 1 %.",
-r(fig, ctl) {
-  let m = "spike"; ctl.innerHTML = btns([["spike", "Single pixel"], ["check", "Checkerboard"], ["noise", "Random"]], "m") + sl("n", "Filter radius (pixels)", 1, 6, 1, 3) + '<div class="readout" id="ro"></div>';
-  const W = 60, H = 40;
-  const u = () => {
-    pick(ctl, "m", m); const n = +$("n").value; $("nv").textContent = n;
-    const g = new Float64Array(W * H), r = C3.rng(3);
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) g[y * W + x] = m === "spike" ? (x === 30 && y === 20 ? 1 : 0) : m === "check" ? ((x + y) % 2 ? 1 : -1) * (x > 8 && x < 52 && y > 6 && y < 34 ? 1 : 0) : 2 * r() - 1;
-    const b = C3.filter2DT(g, W, H, n), mg = Math.max(...g.map(Math.abs)), mb = Math.max(...b.map(Math.abs)) || 1;
-    C3.drawRow(fig, [{ rgb: i => C2.color(g[i] / mg) }, { rgb: i => C2.color(b[i] / mg) }], W, H, 5.2, "Both maps use the same color scale, set by the incoming gradient.", ["gradient arriving at ρ̃", "gradient reaching ρ"]);
-    $("ro").innerHTML = `<div><span>largest |gradient| in</span><b>${mg.toFixed(3)}</b></div><div><span>largest |gradient| out</span><b>${mb.toFixed(3)}</b></div><div><span>ratio</span><b>${(mb / mg).toFixed(3)}</b></div>`;
-  };
-  ctl.querySelectorAll("button").forEach(bt => bt.onclick = () => { m = bt.dataset.m; u(); }); $("n").oninput = u; u();
+  $("b").oninput = u; u();
 }}
+
 ],
-summary: String.raw`In density topology optimization each pixel has a density \(\rho\) in \([0, 1]\), and the permittivity is interpolated linearly between air and GaAs, so only 0 and 1 are physical. Unregularized, the optimizer produces single-pixel features and grey regions. A conic filter of radius \(R\) averages the densities with weights \(\max(0, 1 - r/\tilde R)\), where Tidy3D rounds \(R\) up to whole pixels. The filter removes pixel-scale features and smooths the gradient on the same scale, but it makes the design greyer and gives only a weak length scale, so a projection and further penalties are needed.`,
+summary: String.raw`The tanh projection \(\hat\rho = [\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))]/[\tanh(\beta\eta) + \tanh(\beta(1 - \eta))]\) pushes filtered densities toward 0 or 1, with sharpness \(\beta\) and threshold \(\eta\). Large \(\beta\) gives a binary design but concentrates the gradient on the edges and freezes the topology, small \(\beta\) keeps the problem smooth but grey. So \(\beta\) is raised geometrically during the optimization, for example from 1 to 100 in 11 levels, and the result is thresholded at 0.5. Shifting \(\eta\) above or below 0.5 erodes or dilates every feature, which models etch bias and leads to the morphological operations of the next lesson.`,
 sheet: [
-[String.raw`\[ \varepsilon = \varepsilon_{\mathrm{air}} + \hat\rho\, (\varepsilon_{\mathrm{GaAs}} - \varepsilon_{\mathrm{air}}) \]`, "Linear interpolation (Ch. 3 Eq. 3.11, Christiansen Eqs. 9, 19)"],
-[String.raw`\[ \tilde\rho_i = \frac{\sum K(r_{ij})\, \rho_j}{\sum K(r_{ij})}, \qquad K(r) = \max(0, 1 - r/\tilde R) \]`, "Conic filter (Ch. 3 Eq. 3.9, Tidy3D)"],
-[String.raw`\[ \tilde R = \lceil R/\Delta \rceil \Delta, \qquad \text{kernel } 2\lceil R/\Delta \rceil + 1 \text{ pixels per side} \]`, String.raw`Radius rounding (Tidy3D <code>get_kernel_size_px</code>)`],
-[String.raw`\[ \frac{\partial J}{\partial \rho_j} = \sum_i \frac{\partial J}{\partial \tilde\rho_i}\, \frac{K(r_{ij})}{\sum K} \]`, "Backward pass through the filter"]],
-consts: String.raw`\(\varepsilon_{\mathrm{air}} = 1\), \(\varepsilon_{\mathrm{GaAs}} = 12.19\). Maps are 90 × 60 pixels of random or drawn densities, filtered live with edge renormalization.`,
-sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eqs. (9), (17), (19) and Sec. 4 (interpolation, filtering, weak length scale)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/utilities.py (_kernel_conic, make_kernel, get_kernel_size_px), plugins/invdes/region.py (eps_values)"]
+[String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, "Projection (Ch. 3 Eq. 3.10, Christiansen Eq. 18)"],
+[String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, String.raw`Slope, peak \(\approx \beta/2\) at \(\eta = 0.5\)`],
+[String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L-1)} \]`, "Geometric continuation"],
+[String.raw`\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`, "Binarization measure (0 = binary)"],
+[String.raw`\[ \eta = 0.5 \pm \delta \]`, "Eroded and dilated designs"]],
+consts: "Maps: 72 × 50 pixels of uniform random values, conic filter radius 3 pixels.",
+sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eq. (18), continuation, eroded, nominal and dilated designs", "Hammond et al., Opt. Express 29, 23916 (2021) (β stages 8, 16, 32 and robustness to ±20 nm etch bias)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/projections.py (tanh_projection)"]
 });

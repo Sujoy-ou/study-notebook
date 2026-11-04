@@ -1,9 +1,11 @@
+/* TODO for this lesson: Thesis Sec. 2.1. Rewrite big/bridge/summary/sheet for this order. Animate fabrication (card 6). */
 addLesson("thesis", "ch2", {
 level: "Basic",
-id: "thesis-ch2-l1", title: "How a membrane guides light", short: "1. Guiding and effective index",
+id: "thesis-ch2-l1", title: "The suspended membrane and the effective index", short: "1. The suspended membrane",
 big: String.raw`Light stays inside a high-index layer because it hits the surfaces beyond the critical angle and is totally reflected. Only certain bounce angles survive, the ones whose round trip adds up in phase. Each surviving angle is a mode, and the speed at which it moves along the guide is described by one number, the effective index \(n_{\mathrm{eff}}\), which always lies between the cladding index and the core index. A suspended GaAs membrane in air gives the largest possible contrast.`,
 bridge: "All numbers on this page are computed live from textbook formulas with round example values (GaAs about 3.5, air 1, 800 nm). They are not thesis results.",
 cards: [
+/* from old ch2 L1 card 1 */
 {s: "1. Snell", t: "Bending and trapping light: Snell's law and the critical angle",
 intu: "When light crosses from a dense material (high index) into a thinner one (low index), it bends away from the normal. Tilt the ray more and more. At one angle the refracted ray skims along the surface, and beyond it no light can get out at all: everything is reflected back. That is total internal reflection, and the angle is the critical angle. The bigger the index contrast, the smaller the critical angle, so more ray directions are trapped. GaAs against air traps everything steeper than about 17° from the surface normal.",
 eq: String.raw`\[ n_{1}\sin\theta_{1} = n_{2}\sin\theta_{2} \qquad \theta_{\mathrm{c}} = \arcsin\!\left(\frac{n_{2}}{n_{1}}\right) \quad (n_{1} \gt n_{2}) \]`,
@@ -27,6 +29,7 @@ r(fig, ctl) {
   $("n1").oninput = u; $("th").oninput = u; u();
 }},
 
+/* from old ch2 L1 card 2 */
 {s: "2. Evanescent", t: "Light leaks a little: the evanescent tail",
 intu: "Total internal reflection does not mean the field stops sharply at the surface. On the air side there is a field that does not travel outward but decays exponentially with distance. It carries no power away on average, but it is real: it is the tail you will see on every mode profile in Lessons 2 and 3. Steeper angles (closer to grazing) give a shorter tail, angles just past the critical angle give a long tail. This tail is also why a nearby object, like a substrate or a quantum dot near the surface, can interact with the guided light.",
 eq: String.raw`\[ E(z) \propto e^{-\gamma z} \ \text{outside}, \qquad \gamma = k_{0}\sqrt{n_{\mathrm{eff}}^{2} - n_{\mathrm{c}}^{2}}, \qquad n_{\mathrm{eff}} = n_{1}\sin\theta_{1} \]\[ \text{decay length } 1/\gamma \]`,
@@ -46,6 +49,7 @@ r(fig, ctl) {
   $("N").oninput = u; u();
 }},
 
+/* from old ch2 L1 card 3 */
 {s: "3. Effective index", t: "One number for the whole mode: the effective index",
 intu: String.raw`Picture the guided light as a ray zig-zagging between the two surfaces at angle \(\theta\). Along the guide, its phase advances as if it travelled through a material of index \(n_{\mathrm{eff}} = n_1 \sin\theta\). That number is the effective index. A ray nearly parallel to the guide (\(\theta\) near 90°) has \(n_{\mathrm{eff}}\) close to the core index. A ray near the critical angle has \(n_{\mathrm{eff}}\) close to the cladding index. So every guided mode has \(n_{\mathrm{c}} \lt n_{\mathrm{eff}} \lt n_1\). The propagation constant \(\beta = k_0 n_{\mathrm{eff}}\), the phase velocity \(c/n_{\mathrm{eff}}\) and the wavelength in the guide \(\lambda_0/n_{\mathrm{eff}}\) all follow from \(n_{\mathrm{eff}}\).`,
 eq: String.raw`\[ \beta = k_{0} n_{\mathrm{eff}} = k_{0} n_{1} \sin\theta \qquad n_{\mathrm{c}} \lt n_{\mathrm{eff}} \lt n_{1} \ \text{(guided)} \]\[ \lambda_{\mathrm{guide}} = \frac{\lambda_{0}}{n_{\mathrm{eff}}}, \qquad v_{\mathrm{phase}} = \frac{c}{n_{\mathrm{eff}}} \]`,
@@ -67,31 +71,7 @@ r(fig, ctl) {
   $("th").oninput = u; u();
 }},
 
-{s: "4. Only some angles", t: "Only some angles survive: transverse resonance",
-intu: String.raw`Not every bounce angle works. Follow a ray up and back down: it crosses the core twice and reflects twice. If the phase it collects in that round trip is not a whole number of \(2\pi\), the ray interferes with itself destructively and dies out. Only a discrete set of angles, the modes, survive. The reflection at each surface adds its own phase, which depends on the angle and on the polarization. Make the core thicker and more angles fit, so more modes appear. The plot shows the round-trip phase against \(n_{\mathrm{eff}}\): wherever it crosses a multiple of \(2\pi\) there is a mode.`,
-eq: String.raw`\[ 2\kappa t - 2\varphi_{\mathrm{r}}(n_{\mathrm{eff}}) = 2\pi m, \qquad \kappa = k_{0}\sqrt{n^{2} - n_{\mathrm{eff}}^{2}}, \qquad \varphi_{\mathrm{r}} = 2\arctan\!\left(\frac{\zeta\gamma}{\kappa}\right) \]\[ \Longleftrightarrow\quad \tan\!\left(\frac{\kappa t}{2} - \frac{m\pi}{2}\right) = \frac{\zeta\gamma}{\kappa} \]<div class="eqref">the slab equation of Lesson 2</div>`,
-sym: [[String.raw`\(\kappa\)`, String.raw`transverse wavenumber inside the core (Andreani's \(q\))`], [String.raw`\(t\)`, "core thickness"], [String.raw`\(\varphi_{\mathrm{r}}\)`, "phase lost at one total internal reflection"], [String.raw`\(m\)`, "mode order, 0, 1, 2 …"], [String.raw`\(\zeta\)`, String.raw`1 for TE, \((n/n_{\mathrm{c}})^2\) for TM`]],
-how: [String.raw`Round trip across the core: transverse phase \(2\kappa t\).`, String.raw`Each total internal reflection adds a phase shift \(-\varphi_{\mathrm{r}}\), set by the Fresnel coefficient.`, String.raw`Self-consistency: total round-trip phase = \(2\pi m\).`, "Rearranging gives the slab dispersion equation of Lesson 2, which Andreani and Gerace write as their Eqs. (C1) to (C4)."],
-say: String.raw`Guided modes are the bounce angles whose round-trip phase is a multiple of \(2\pi\), the transverse resonance condition. It is equivalent to the slab dispersion relation.`,
-num: String.raw`Slab \(n = 3.5\) in air, \(\lambda = 800\) nm, TE:<br>\(t = 100\) nm: only <b>TE0</b> is guided<br>\(t = 160\) nm: <b>TE0 and TE1</b> (TE1 near cutoff)<br>\(t = 400\) nm: <b>4 TE modes</b> (a new one every 119 nm)`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("t", "Core thickness t", 40, 500, 5, 160) + '<div class="readout" id="ro"></div>';
-  const u = () => {
-    const t = +$("t").value, n = 3.5, lam = 800, k0 = 2 * Math.PI / lam; $("tv").textContent = t + " nm";
-    const Ns = range(1.0005, 3.4995, 300);
-    const ph = Ns.map(N => { const ka = k0 * Math.sqrt(n * n - N * N), ga = k0 * Math.sqrt(N * N - 1); return (2 * ka * t - 4 * Math.atan(ga / ka)) / (2 * Math.PI); });
-    const pmax = Math.max(3, Math.ceil(Math.max(...ph)));
-    const modes = []; for (let m = 0; m < 6; m++) { const N = C2.slabN(n, 1, t, lam, m, "TE"); if (N) modes.push(N); }
-    const X = N => 60 + (N - 1) / 2.5 * 560, Y = v => 230 - (v + 1) / (pmax + 1) * 190;
-    let grid = ""; for (let m = 0; m <= pmax; m++) grid += `<line x1="60" x2="620" y1="${Y(m)}" y2="${Y(m)}" stroke="var(--b)" stroke-dasharray="3 3"/><text class="ts" x="54" y="${Y(m) + 4}" text-anchor="end">${m}</text>`;
-    let pts = ""; modes.forEach((N, m) => pts += `<circle cx="${X(N)}" cy="${Y(m)}" r="6" fill="#D85A30"/><text class="ts" x="${X(N)}" y="${Y(m) - 10}" text-anchor="middle">TE${m}</text>`);
-    let d = ""; Ns.forEach((N, i) => { const v = ph[i]; if (v < -1) return; d += (d ? "L" : "M") + X(N).toFixed(1) + " " + Y(v).toFixed(1); });
-    fig.innerHTML = svg(270, `${grid}<path d="${d}" fill="none" stroke="#378ADD" stroke-width="2.5"/>${pts}<line x1="60" x2="620" y1="230" y2="230" stroke="var(--p)"/><text class="ts" x="60" y="250">n<tspan baseline-shift='sub' font-size='75%'>eff</tspan> = 1 (air)</text><text class="ts" x="620" y="250" text-anchor="end">n<tspan baseline-shift='sub' font-size='75%'>eff</tspan> = 3.5 (GaAs)</text><text class="ts" x="20" y="130" transform="rotate(-90 20 130)" text-anchor="middle">round-trip phase / 2π</text>`);
-    $("ro").innerHTML = `<div><span>guided TE modes</span><b>${modes.length}</b></div><div><span>n<sub>eff</sub> values</span><b>${modes.map(v => v.toFixed(3)).join(", ")}</b></div>`;
-  };
-  $("t").oninput = u; u();
-}},
-
+/* from old ch2 L1 card 5 */
 {s: "5. Light line", t: "The light line: where guided modes live",
 intu: String.raw`Plot frequency against propagation constant \(\beta\). Light in plain air follows the line \(\omega = c\beta\), the light line. Light in bulk GaAs follows \(\omega = c\beta/n\), a flatter line. A guided mode of the membrane must lie between the two lines: below the air light line (so it cannot leak into air) and above the GaAs line. Johnson et al. 1999 used exactly this picture to read the band diagrams of photonic crystal slabs: modes above the light cone leak, modes below it are truly guided. The blue curve is the TE0 mode of a slab, computed live. Move the slab thickness: thinner slabs hug the air light line (weakly guided), thicker ones approach the GaAs line.`,
 eq: String.raw`\[ \text{air light line: } \omega = \frac{c\beta}{n_{\mathrm{c}}} \qquad \text{bulk core: } \omega = \frac{c\beta}{n} \]\[ \text{guided: } \frac{c\beta}{n} \lt \omega \lt \frac{c\beta}{n_{\mathrm{c}}} \;\Longleftrightarrow\; n_{\mathrm{c}} \lt n_{\mathrm{eff}} \lt n \]`,
@@ -114,6 +94,10 @@ r(fig, ctl) {
   $("t").oninput = u; u();
 }},
 
+/* NEW CARD: The layer stack and coordinates of Fig. 2.1: membrane, air gap t_box, DBR, strip cross-section, x y z, mirror plane z = 0 */
+{s: "5. The stack", t: "TODO: The layer stack and coordinates of Fig. 2.1: membrane, air gap t_box, DBR, strip cross-section, x y z, mirror plane z = 0", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* from old ch2 L1 card 6 */
 {s: "6. Making it", t: "Why the membrane is suspended, and how it is made",
 intu: "Total internal reflection needs a lower index on both sides. For GaAs there is no low-index crystal that can be grown underneath it, so the trick is to grow GaAs on a sacrificial AlGaAs layer and later dissolve that layer, leaving the membrane hanging in air. Midolo et al. 2015 developed a simple version of this process for quantum photonic circuits: one electron-beam lithography step, dry etching straight through the resist (no hard mask), then a wet etch that removes the AlGaAs. Step through their process.",
 eq: String.raw`\[ \text{best index contrast: } \frac{n_{\mathrm{GaAs}}}{n_{\mathrm{air}}} \approx 3.5 \qquad \text{versus } \mathrm{GaAs}/\mathrm{AlGaAs} \approx 1.2 \]`,
@@ -135,6 +119,7 @@ r(fig, ctl) {
   };
   $("fb").onclick = () => { k--; u(); }; $("fn").onclick = () => { k++; u(); }; u();
 }}
+
 ],
 summary: String.raw`Light is trapped in a high-index layer by total internal reflection, with an evanescent tail outside that decays as \(e^{-\gamma z}\). Only bounce angles whose round-trip phase is a multiple of \(2\pi\) survive. These are the modes, each described by an effective index \(n_{\mathrm{eff}}\) between the cladding and core indices, with \(\beta = k_0 n_{\mathrm{eff}}\). Guided modes lie below the cladding light line. GaAs on air gives the largest contrast, which is why the membrane is suspended: it is grown on a sacrificial AlGaAs layer that is dissolved after patterning, as in Midolo et al. 2015.`,
 sheet: [

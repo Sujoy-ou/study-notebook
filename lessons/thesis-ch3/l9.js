@@ -1,9 +1,10 @@
 addLesson("thesis", "ch3", {
 level: "Advanced",
-id: "thesis-ch3-l9", title: "The erosion and dilation penalty", short: "9. Erosion-dilation penalty",
+id: "thesis-ch3-l9", title: "The erosion and dilation penalty", short: "9. The ED penalty",
 big: String.raw`The filter discourages small features but does not forbid them. The erosion and dilation penalty measures how far the projected design is from obeying a length scale. It closes the design and opens it with the smooth operations of Lesson 8 and takes the root-mean-square difference between the two. A design with no feature or gap below the length scale is unchanged by both, so its penalty is close to zero. Thin bars, narrow gaps, small islands, small holes and sharp corners all make the closed and opened designs differ, so they raise the penalty. Because everything is built from filters and projections, the penalty has a gradient, and subtracting it from the figure of merit pushes the optimizer to remove or widen the offending features. Its weight grows with \(\beta\), since it only means something once the design is nearly binary.`,
 bridge: "This is Ch. 3 Sec. 3.5, Eq. (3.16), implemented in Tidy3D as ErosionDilationPenalty (plugins/autograd/invdes/penalties.py) and applied to the projected density. Hammond et al. 2021 showed that such morphological transforms keep the problem differentiable, and found that rule-violating features are removed rather than grown. All maps and curves here are computed live with the same operations.",
 cards: [
+/* from old ch3 L9 card 1 */
 {s: "1. The penalty", t: "Close minus open, root mean square",
 intu: String.raw`Take the projected design \(\hat\rho\). Close it (fill narrow gaps and holes) and open it (remove thin parts and tips) with the smooth operations of radius \(R\). Where the design obeys the length scale, both give back \(\hat\rho\), so their difference is zero. Where it does not, the closed design has more GaAs than the opened one. The penalty is the root-mean-square of that difference over all pixels. The right map shows where it comes from. Change \(R\).`,
 eq: String.raw`\[ P_{\mathrm{ED}} = \frac{\lVert \mathcal{C}(\hat\rho) - \mathcal{O}(\hat\rho) \rVert_2}{\sqrt{N_p}} \]<div class="eqref">Ch. 3 Eq. (3.16), Tidy3D ErosionDilationPenalty</div>`,
@@ -23,6 +24,7 @@ r(fig, ctl) {
   $("n").oninput = u; u();
 }},
 
+/* from old ch3 L9 card 2 */
 {s: "2. Versus feature size", t: "The penalty switches off just below a width of 2R",
 intu: String.raw`Take a single vertical bar of GaAs (or a single gap of air in GaAs) and compute the penalty for every width. Narrow bars are removed by the opening but kept by the closing, so the penalty is large. Once the bar is wide enough to survive the opening, the penalty drops to nearly zero. For this implementation the switch happens at \(2R\) minus one pixel, about \(1.75R\) for typical radii. Bars and gaps behave the same, because closing a gap is opening the air. Change \(R\).`,
 eq: String.raw`\[ P_{\mathrm{ED}}(w) \text{ for a bar or gap of width } w \]\[ \text{switch-off at } w \approx 2R - \Delta \approx 1.75\,R \]`,
@@ -50,6 +52,7 @@ r(fig, ctl) {
   $("n").oninput = u; u();
 }},
 
+/* from old ch3 L9 card 3 */
 {s: "3. Its gradient", t: "Where the penalty pushes the design",
 intu: String.raw`The penalty is differentiable, so it has a gradient with respect to every pixel of \(\hat\rho\). On a nearly binary design that gradient is tiny almost everywhere, because the tanh projections inside the penalty are saturated, and it concentrates on a few edge pixels. Adam rescales each pixel's step (Lesson 12), so even small gradients move the design. The right map shows the change after the first few Adam steps on the penalty alone: red where GaAs is added, blue where it is removed. The thin bar, the island and the sharp corners are eaten away, the narrow gap and the small hole start to fill. This is the behavior Hammond et al. describe: violating features are removed rather than grown to the minimum size.`,
 eq: String.raw`\[ \frac{\partial P_{\mathrm{ED}}}{\partial \hat\rho} \;\text{ via the chain rule through }\; \mathcal{C} = E \circ D \;\text{ and }\; \mathcal{O} = D \circ E \]<div class="eqnote">each a filter followed by a projection</div>`,
@@ -71,6 +74,7 @@ r(fig, ctl) {
   $("n").oninput = u; $("k").oninput = u; u();
 }},
 
+/* from old ch3 L9 card 4 */
 {s: "4. Weight ramp", t: "The weight grows with β",
 intu: String.raw`Early in the optimization the design is grey, and the opened and closed versions of a grey design differ almost everywhere. A penalty at full weight then would fight the figure of merit for no good reason. So the weight follows \(\beta\): it rises linearly as \(\min(1, \beta/25)\) and reaches 1 once \(\beta\) reaches 25. With a geometric schedule from 1 to 100 in 11 levels, that happens at the eighth level, \(\beta = 25.1\). Change the schedule.`,
 eq: String.raw`\[ J = \mathrm{FOM} - \min\!\left(1, \frac{\beta}{25}\right) P_{\mathrm{ED}} \]<div class="eqref">Ch. 3 Eq. (3.16)</div>`,
@@ -94,6 +98,7 @@ r(fig, ctl) {
   ["L", "s", "m"].forEach(k => $(k).oninput = u); u();
 }},
 
+/* from old ch3 L9 card 5 */
 {s: "5. Penalty alone", t: "Minimize the penalty alone and watch violators vanish",
 intu: String.raw`To see what the penalty does by itself, minimize \(P_{\mathrm{ED}}\) alone with Adam, starting from the test pattern, with no figure of merit. Press run. The thin bar and the island fade away, the narrow gap and the hole fill in, and the corners round off, until the design obeys the length scale. In a real optimization the figure of merit pulls the other way, so the result is a compromise, but the direction of the push is the same.`,
 eq: String.raw`\[ \hat\rho \leftarrow \operatorname{clip}\!\left(\hat\rho - \operatorname{Adam}\!\left(\frac{\partial P_{\mathrm{ED}}}{\partial \hat\rho}\right),\, 0,\, 1\right) \]`,
@@ -116,6 +121,7 @@ r(fig, ctl) {
   reset(); draw();
 }},
 
+/* from old ch3 L9 card 6 */
 {s: "6. Soft, not a guarantee", t: "Against a figure of merit, the penalty only discourages",
 intu: String.raw`Now give the penalty an opponent. The stand-in figure of merit here rewards matching the test layout exactly, thin bar, island and all, so it wants the violations. Maximize \(J = F - wP_{\mathrm{ED}}\) with Adam for a chosen weight \(w\). At a small weight the violations survive and only shrink a little. At a medium weight the island goes but part of the bar stays. Only a large weight removes everything, at a visible cost in \(F\). That is what soft means: the penalty sets a price on violations, not a ban. It is why the final design still needs a hard design rule check (Lesson 11).`,
 eq: String.raw`\[ J = F - w\, P_{\mathrm{ED}} \qquad \text{stand-in } F = 1 - \frac{1}{N} \sum_i (\hat\rho_i - X_i)^2 \]`,
@@ -133,6 +139,7 @@ r(fig, ctl) {
     anim(() => { if (k >= 60) { stopAnim(); return; } const r = C3.edPenalty(a, W, H, n, 100, true), g = new Float64Array(N); for (let i = 0; i < N; i++) g[i] = -2 * (a[i] - X[i]) / N - w * r.grad[i]; const s = ad.step(g); for (let i = 0; i < N; i++) a[i] = C3.clamp(a[i] + s[i], 0, 1); k++; draw(); }); };
   $("wv").textContent = "1.00"; draw();
 }}
+
 ],
 summary: String.raw`The erosion and dilation penalty is \(P_{\mathrm{ED}} = \lVert \mathcal{C}(\hat\rho) - \mathcal{O}(\hat\rho) \rVert_2/\sqrt{N_p}\), the root-mean-square difference between the closed and the opened projected design, with smooth closing and opening built from filters and projections at thresholds 0.01 and 0.99. It is near zero for a design with no feature or gap narrower than about 1.75 times the penalty radius, and grows for thin bars, narrow gaps, islands, holes and sharp corners. Its gradient pushes violators to vanish or fill. It is subtracted with weight \(\min(1, \beta/25)\), so it acts only once the design is nearly binary. It is soft: it discourages violations but does not guarantee their absence.`,
 sheet: [

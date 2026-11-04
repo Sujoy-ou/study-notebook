@@ -4,6 +4,7 @@ id: "thesis-ch3-l10", title: "The curvature penalty for outlines", short: "10. C
 big: String.raw`When an outline is optimized directly, nothing stops it from forming sharp corners and tight wiggles. Lithography and etching round such corners anyway, so the fabricated device would differ from the simulated one, and a sharp corner also fails the morphological design rule check. The curvature penalty estimates the local radius of curvature at every vertex from a quadratic Bézier curve through that vertex and its two neighbors, and charges each vertex through a logistic function that switches on when the radius falls below a minimum \(r_{\mathrm{min}}\). The penalty is the average over the vertices and is subtracted from the figure of merit. Like the erosion and dilation penalty, it is soft.`,
 bridge: String.raw`This is Ch. 3 Sec. 3.5, Eq. (3.17). Michaels and Yablonovitch 2018 introduced it for their silicon taper: a quadratic curve through each vertex and its two neighbors gives the radius (their Eq. 34), and a logistic function of the radius is subtracted from the figure of merit (their Eqs. 17 and 35), with \(r_{\mathrm{min}} = 150\) nm because it can be easily fabricated. Tidy3D implements the same function in <code>make_curvature_penalty</code> and <code>bezier_curvature</code>, whose docstring credits that paper, and averages over the vertices instead of summing.`,
 cards: [
+/* from old ch3 L10 card 1 */
 {s: "1. Why corners matter", t: "A sharp corner is never fabricated as drawn",
 intu: String.raw`Electron-beam lithography and etching cannot reproduce a perfectly sharp corner. A simple way to picture the effect is an opening with a small radius \(r_{\mathrm{fab}}\): convex corners come out rounded with that radius (Lesson 8). A layout drawn with sharp corners therefore loses area at every corner, and the simulated device is not the one that gets made. A layout whose corners already have a radius of at least \(r_{\mathrm{fab}}\) is unchanged. Compare a sharp and a rounded design.`,
 eq: String.raw`\[ \text{fabricated} \approx \operatorname{open}_{r_{\mathrm{fab}}}(\text{drawn}) \]<div class="eqnote">a simple picture of corner rounding</div>\[ \text{unchanged if every convex corner radius} \ge r_{\mathrm{fab}} \]`,
@@ -24,6 +25,7 @@ r(fig, ctl) {
   $("f").oninput = u; $("c").oninput = u; u();
 }},
 
+/* from old ch3 L10 card 2 */
 {s: "2. Radius from three points", t: "The local radius from a Bézier curve through three vertices",
 intu: String.raw`Take a vertex \(\mathbf{p}_c\) and its two neighbors \(\mathbf{p}_0\) and \(\mathbf{p}_2\). Tidy3D builds a quadratic Bézier curve that starts at \(\mathbf{p}_0\), ends at \(\mathbf{p}_2\) and passes through \(\mathbf{p}_c\) at its middle, and takes the curvature there. The radius is one over the curvature. The orange circle has that radius. Move the middle vertex out and in and change the spacing. The readout compares with the circle through the three points.`,
 eq: String.raw`\[ B(t) = (1 - t)^2\, \mathbf{p}_0 + 2t(1 - t)\, \mathbf{p}_1 + t^2\, \mathbf{p}_2 \]\[ \mathbf{p}_1 = 2\mathbf{p}_c - \frac{\mathbf{p}_0 + \mathbf{p}_2}{2} \quad\Longrightarrow\quad B\!\left(\tfrac{1}{2}\right) = \mathbf{p}_c \]\[ \kappa = \frac{\lvert B' \times B'' \rvert}{\lvert B' \rvert^3} \;\text{ at } t = \tfrac{1}{2} \]\[ B' = \mathbf{p}_2 - \mathbf{p}_0 \qquad B'' = 4(\mathbf{p}_0 - 2\mathbf{p}_c + \mathbf{p}_2) \qquad r = \frac{1}{\lvert \kappa \rvert} \]`,
@@ -50,6 +52,7 @@ r(fig, ctl) {
   $("h").oninput = u; $("d").oninput = u; u();
 }},
 
+/* from old ch3 L10 card 3 */
 {s: "3. The logistic penalty", t: "A soft switch that charges radii below the minimum",
 intu: String.raw`Each vertex is charged a logistic function of its radius. Far above \(r_{\mathrm{min}}\) the charge is nearly 0, far below it is nearly 1, and exactly at \(r_{\mathrm{min}}\) it is ½. The steepness \(\kappa\) sets how wide the switch is: about \(4/\kappa\) in radius goes from 0.12 to 0.88. Note the units: \(\kappa\) is per micrometer, so \(\kappa = 10\,\mu\mathrm{m}^{-1}\) is a gentle switch hundreds of nanometers wide. Change \(\kappa\) and \(r_{\mathrm{min}}\).`,
 eq: String.raw`\[ p(r) = \frac{e^{-\kappa(r - r_{\mathrm{min}})}}{1 + e^{-\kappa(r - r_{\mathrm{min}})}} = \frac{1}{1 + e^{\kappa(r - r_{\mathrm{min}})}} \]<div class="eqref">Ch. 3 Eq. (3.17), Michaels Eq. 35</div>`,
@@ -71,6 +74,7 @@ r(fig, ctl) {
   $("k").oninput = u; $("m").oninput = u; u();
 }},
 
+/* from old ch3 L10 card 4 */
 {s: "4. A whole outline", t: "The penalty is the mean charge over the vertices",
 intu: "Apply the charge to every vertex of an outline and average. Here a closed outline has lobes and wiggles. Vertices are colored by their charge, red for nearly 1 and green for nearly 0. Make the wiggles stronger or more frequent and watch the tight spots turn red and the mean rise. Only vertices with a neighbor on each side are counted, which for a closed outline is all of them.",
 eq: String.raw`\[ P_{\kappa} = \frac{1}{N_v} \sum_i p(r_i) \qquad J = F - w_{\kappa} P_{\kappa} \]<div class="eqref">Ch. 3 Eq. (3.17)</div>`,
@@ -93,6 +97,7 @@ r(fig, ctl) {
   ["a", "f", "m"].forEach(k => $(k).oninput = u); u();
 }},
 
+/* from old ch3 L10 card 5 */
 {s: "5. Gentle or sharp", t: "Two settings of κ: gentle shaping and a near hard limit",
 intu: String.raw`The same function can play two roles. With a small \(\kappa\) the switch is hundreds of nanometers wide: every vertex feels some charge, so the penalty gently smooths the whole outline. With a large \(\kappa\) the switch is a few nanometers wide: vertices comfortably above \(r_{\mathrm{min}}\) pay almost nothing, and only those that cross it are charged, so it behaves almost like a hard limit. A gentle setting suits an early shape stage, a sharp one a final stage that must respect a rule. Compare the two curves.`,
 eq: String.raw`\[ p(r) \text{ for } \kappa = 10\,\mu\mathrm{m}^{-1} \text{ (gentle) and } \kappa = 200\,\mu\mathrm{m}^{-1} \text{ (sharp)} \]`,
@@ -115,6 +120,7 @@ r(fig, ctl) {
   $("m").oninput = u; $("r").oninput = u; u();
 }},
 
+/* from old ch3 L10 card 6 */
 {s: "6. The penalty smooths", t: "Following the curvature gradient alone",
 intu: String.raw`Start from an outline with tight wiggles and minimize \(P_{\kappa}\) alone, moving each vertex along its normal as in the shape stage (Lesson 5). Press run. The tightest spots relax first and the outline smooths until its radii clear \(r_{\mathrm{min}}\). Some vertices may stay below \(r_{\mathrm{min}}\) if the outline cannot fix them within the allowed move. In a real run the figure of merit pulls the other way, so the result is a compromise, and nothing guarantees every vertex ends above \(r_{\mathrm{min}}\).`,
 eq: String.raw`\[ \theta \leftarrow \theta - \operatorname{Adam}\!\left(\frac{\partial P_{\kappa}}{\partial \theta}\right) \qquad \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]`,
@@ -145,6 +151,7 @@ r(fig, ctl) {
   $("rs").onclick = () => { stopAnim(); reset(); draw(); };
   reset(); draw();
 }}
+
 ],
 summary: String.raw`The curvature penalty estimates the radius at every vertex as one over the curvature of the quadratic Bézier curve through that vertex and its two neighbors, charges each vertex with the logistic \(1/[1 + e^{\kappa(r - r_{\mathrm{min}})}]\), which is ½ at \(r_{\mathrm{min}}\), and averages the charges: \(P_{\kappa} = (1/N_v)\sum p(r_i)\), subtracted from the figure of merit with weight \(w_{\kappa}\). A small \(\kappa\) gives gentle smoothing, a large \(\kappa\) approaches a hard minimum radius. It comes from Michaels and Yablonovitch, who summed instead of averaging. It is soft, so it discourages tight corners without guaranteeing their absence.`,
 sheet: [

@@ -4,6 +4,7 @@ id: "thesis-ch3-l2", title: "The adjoint method: where two simulations come from
 big: String.raw`After discretization, Maxwell's equations at one frequency are a big linear system \(A\mathbf{x} = \mathbf{b}\), where the matrix \(A\) contains the permittivity and so depends on the design. Differentiating it gives the change of the fields for each parameter, but each one needs its own solve. The adjoint trick regroups the same product: solve once for an adjoint field \(\mathbf{y}\) with \(A^{T}\mathbf{y}\) equal to the derivative of \(F\) with respect to the fields, and every partial derivative becomes a cheap overlap \(-2\operatorname{Re}\{\mathbf{y}^{T}(\partial A/\partial p_i)\mathbf{x}\}\). For a pixel of permittivity this overlap is just the product of the forward and adjoint fields at that pixel. Everything in this lesson is computed live on a 1D wave problem, including a check against finite differences.`,
 bridge: "The derivation follows Michaels and Yablonovitch 2018, Sec. 2, Eqs. (3), (8), (9), (11) and (12), which Ch. 3 Sec. 3.2 quotes as Eqs. (3.2) to (3.4). Their paper rederives the adjoint method in matrix form before its own contribution, a way to smooth material boundaries on a grid. The 1D solver here is a finite-difference Helmholtz equation with exact one-way boundaries, a frequency-domain cousin of the FDTD of Chapter 2.",
 cards: [
+/* from old ch3 L2 card 1 */
 {s: "1. A x = b", t: "Maxwell's equations as one matrix equation",
 intu: String.raw`On a grid, the 1D wave equation at one frequency links each field value to its two neighbors. Writing that for every grid point gives a matrix equation. The matrix is almost empty: each row has three entries, and the permittivity of point \(i\) sits only on the diagonal. Pick a grid point. The highlighted row is its equation, and the right panel shows \(\partial A/\partial \varepsilon_i\), the change of the matrix when that one permittivity changes: a single nonzero entry.`,
 eq: String.raw`\[ A(\mathbf{p})\, \mathbf{x} = \mathbf{b} \]<div class="eqnote">1D:</div>\[ \frac{E_{i-1} - 2E_i + E_{i+1}}{\Delta^2} + k_0^2\, \varepsilon_i E_i = b_i \]\[ \Longrightarrow\quad \frac{\partial A}{\partial \varepsilon_i} = k_0^2\, \mathbf{e}_i \mathbf{e}_i^{T} \]<div class="eqref">Ch. 3 Eq. (3.2), Michaels Eq. 3</div>`,
@@ -30,6 +31,7 @@ r(fig, ctl) {
   $("i").oninput = u; u();
 }},
 
+/* from old ch3 L2 card 2 */
 {s: "2. The direct route", t: "Differentiating A x = b: one solve per parameter",
 intu: String.raw`Change one parameter \(p_i\) and both \(A\) and \(\mathbf{x}\) change. Differentiating \(A\mathbf{x} = \mathbf{b}\) gives \(\partial\mathbf{x}/\partial p_i = -A^{-1}(\partial A/\partial p_i)\mathbf{x}\). Each parameter has its own right-hand side \((\partial A/\partial p_i)\mathbf{x}\), so each needs its own solve of the big system. Play the animation: the boxes are solves, one per parameter.`,
 eq: String.raw`\[ \frac{\partial A}{\partial p_i}\mathbf{x} + A\frac{\partial \mathbf{x}}{\partial p_i} = 0 \quad\Longrightarrow\quad \frac{\partial \mathbf{x}}{\partial p_i} = -A^{-1} \frac{\partial A}{\partial p_i}\mathbf{x} \]\[ \frac{dF}{dp_i} = 2\operatorname{Re}\left\{ \frac{\partial F}{\partial \mathbf{x}} \frac{\partial \mathbf{x}}{\partial p_i} \right\} = -2\operatorname{Re}\left\{ \frac{\partial F}{\partial \mathbf{x}} A^{-1} \frac{\partial A}{\partial p_i}\mathbf{x} \right\} \]<div class="eqref">Michaels Eq. 8 and Eq. 9</div>`,
@@ -53,6 +55,7 @@ r(fig, ctl) {
   draw();
 }},
 
+/* from old ch3 L2 card 3 */
 {s: "3. Regroup the brackets", t: "The adjoint trick is just a different order of multiplication",
 intu: String.raw`Look at the product \((\partial F/\partial\mathbf{x})\, A^{-1}\, (\partial A/\partial p_i)\, \mathbf{x}\). The direct route groups the right part: \(A^{-1}(\partial A/\partial p_i)\mathbf{x}\), which changes with \(i\). The adjoint route groups the left part: \((\partial F/\partial\mathbf{x})A^{-1}\), which does not contain \(i\) at all. Compute it once, call it \(\mathbf{y}^{T}\), and every derivative is a cheap product \(\mathbf{y}^{T}(\partial A/\partial p_i)\mathbf{x}\). Transposing the definition of \(\mathbf{y}\) gives an ordinary system for \(\mathbf{y}\): the adjoint simulation. Switch the grouping.`,
 eq: String.raw`\[ \mathbf{y}^{T} = \frac{\partial F}{\partial \mathbf{x}} A^{-1} \quad\Longleftrightarrow\quad A^{T}\mathbf{y} = \left(\frac{\partial F}{\partial \mathbf{x}}\right)^{T} \]\[ \frac{dF}{dp_i} = -2\operatorname{Re}\left\{ \mathbf{y}^{T} \frac{\partial A}{\partial p_i}\mathbf{x} \right\} \]<div class="eqref">Ch. 3 Eq. (3.3) and Eq. (3.4), Michaels Eq. 11 and Eq. 12</div>`,
@@ -74,6 +77,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { g = b.dataset.g; u(); }); u();
 }},
 
+/* from old ch3 L2 card 4 */
 {s: "4. Field times field", t: "For a pixel, the gradient is the product of the two fields",
 intu: String.raw`For the permittivity of one pixel, \(\partial A/\partial \varepsilon_i\) has a single entry \(k_0^2\) (card 1). So the gradient formula collapses to the product of the forward and adjoint fields at that pixel. Below, a random 1D design (stripe, dark is GaAs) is lit from the left. The figure of merit is the transmitted power at the right probe. Top: \(|\mathbf{E}_{\mathrm{fwd}}|\). Middle: \(|\mathbf{E}_{\mathrm{adj}}|\), launched from the probe. Bottom: the gradient for every pixel, obtained from these two solves. Red bars say add permittivity there, blue bars say remove it. Change the wavelength.`,
 eq: String.raw`\[ \frac{\partial F}{\partial \varepsilon_i} = -2\operatorname{Re}\{ y_i\, k_0^2\, x_i \} = -2k_0^2 \operatorname{Re}\{ E_{\mathrm{adj},i}\, E_{\mathrm{fwd},i} \} \]\[ F = \frac{|E_{\mathrm{out}}|^2}{|E_{\mathrm{out,vac}}|^2} \]<div class="eqnote">adjoint source:</div>\[ \left(\frac{\partial F}{\partial \mathbf{x}}\right)^{T} = \frac{E_{\mathrm{out}}^{*}\, \mathbf{e}_{\mathrm{out}}}{|E_{\mathrm{out,vac}}|^2} \]`,
@@ -104,6 +108,7 @@ r(fig, ctl) {
   $("l").oninput = u; $("nd").onclick = () => { seed++; mk(); u(); }; mk(); u();
 }},
 
+/* from old ch3 L2 card 5 */
 {s: "5. Check it", t: "Adjoint gradient versus finite differences, live",
 intu: "Trust but verify. For every pixel, the gradient is computed twice: by the adjoint method from two solves (line), and by central finite differences, nudging each pixel up and down, from 120 solves (dots). They lie on top of each other. Make a new random design or change the wavelength and check again.",
 eq: String.raw`\[ \frac{\partial F}{\partial \varepsilon_i} \approx \frac{F(\varepsilon_i + h) - F(\varepsilon_i - h)}{2h}, \qquad h = 10^{-6} \]<div class="eqnote">versus</div>\[ -2k_0^2 \operatorname{Re}\{ y_i x_i \} \]`,
@@ -130,6 +135,7 @@ r(fig, ctl) {
   $("l").oninput = u; $("nd").onclick = () => { seed++; mk(); u(); }; mk(); u();
 }},
 
+/* from old ch3 L2 card 6 */
 {s: "6. Running backwards", t: "The adjoint field: the wanted output sent back in",
 intu: String.raw`Because the medium is reciprocal, \(A^{T} = A\), so the adjoint problem is the same structure with a new source. That source sits where \(F\) looks at the field, at the output probe, and it carries the conjugate of the forward field there. Conjugation is time reversal for a single frequency. So the adjoint field is the wanted output sent backwards through the device. Watch the two waves: the forward wave runs from the source to the right, the adjoint wave from the probe to the left. Where they overlap in phase, adding material helps.`,
 eq: String.raw`\[ A^{T} = A \quad (\text{reciprocal medium}) \quad\Longrightarrow\quad A\mathbf{y} = \left(\frac{\partial F}{\partial \mathbf{x}}\right)^{T} \]<div class="eqnote">same solver, source at the output</div>\[ \operatorname{Re}\{ E(x)\, e^{-i\omega t} \} \quad \text{animated for both fields} \]`,
@@ -156,6 +162,7 @@ r(fig, ctl) {
   };
   $("l").oninput = () => { solve(); anim(draw); }; solve(); anim(draw);
 }}
+
 ],
 summary: String.raw`Discretized at one frequency, Maxwell's equations are \(A\mathbf{x} = \mathbf{b}\), with the permittivity on the diagonal of \(A\). Differentiating gives \(\partial\mathbf{x}/\partial p_i = -A^{-1}(\partial A/\partial p_i)\mathbf{x}\), one solve per parameter. Grouping the product the other way defines the adjoint field by \(A^{T}\mathbf{y} = (\partial F/\partial\mathbf{x})^{T}\), so every derivative is \(-2\operatorname{Re}\{\mathbf{y}^{T}(\partial A/\partial p_i)\mathbf{x}\}\) and two solves give the whole gradient. For a permittivity pixel this is the local product of forward and adjoint fields. Since \(A^{T} = A\) for reciprocal media, the adjoint problem is the same structure excited at the output with the conjugated forward field, the wanted output sent backwards. A finite-difference check confirms the gradient.`,
 sheet: [

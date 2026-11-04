@@ -1,38 +1,17 @@
+/* TODO for this lesson: Thesis Sec. 2.2 second half (Tidy3D mode solver, n_eff vs width, four lowest modes, power in GaAs, why 200 nm). Rewrite big/bridge/summary/sheet. */
 addLesson("thesis", "ch2", {
 level: "Intermediate",
-id: "thesis-ch2-l3", title: "Strip waveguide modes", short: "3. Strip modes",
+id: "thesis-ch2-l3", title: "The mode solver: effective index and mode shapes", short: "3. The mode solver",
 big: "Etching the membrane into a narrow strip confines light in the width too. The modes are no longer purely TE or TM, so they are called TE-like and TM-like, and they are named by their mirror symmetries. A quick way to estimate them is the effective index method: solve the slab vertically, then use that slab index as the core of a second slab problem across the width. A narrow strip guides only the fundamental modes strongly, and when it becomes narrower than it is thick, the TM-like mode overtakes the TE-like one.",
 bridge: "The effective index method used here is an approximation (the same reduction Soldano and Pennings use for MMIs). A full 2D mode solver, like the one in Tidy3D, is needed for accurate numbers. Values here are illustrative.",
 cards: [
-{s: "1. EIM steps", t: "From slab to strip: the effective index method",
-intu: String.raw`A strip is a 2D problem, but it can be split into two 1D slab problems. Step 1: ignore the side walls and solve the vertical slab (thickness \(t\)). That gives a slab index \(n_{\mathrm{slab}}\). Step 2: replace the core by a material of index \(n_{\mathrm{slab}}\) and solve a slab of width \(w\) along \(y\), with air on both sides. The answer is the effective index of the strip. The trick for polarization: in step 2 the role of TE and TM swaps. A TE-like mode has \(\mathbf{E}\) along \(y\), which is normal to the side walls, so step 2 is a TM-type problem with the \(\times\varepsilon\) jump at the walls. Step through it.`,
-eq: String.raw`\[ \text{1: } \mathrm{slab}(n, t) \to n_{\mathrm{slab}} \qquad \text{2: } \mathrm{slab}(n_{\mathrm{slab}}, w) \to n_{\mathrm{eff}} \]<div class="eqnote">TE-like: step 1 TE, step 2 TM-type</div><div class="eqnote">TM-like: step 1 TM, step 2 TE-type</div>`,
-sym: [[String.raw`\(n_{\mathrm{slab}}\)`, "effective index of the vertical slab, used as the core in step 2"], [String.raw`\(w\)`, String.raw`strip width (along \(y\))`], [String.raw`\(t\)`, String.raw`membrane thickness (along \(z\))`], [String.raw`\(n_{\mathrm{eff}}\)`, "estimated effective index of the strip mode"]],
-how: [String.raw`Assume the field separates: \(E(y, z) \approx F(z)\,G(y)\).`, String.raw`Solve the vertical slab for \(F(z)\) and \(n_{\mathrm{slab}}\).`, String.raw`Use \(n_{\mathrm{slab}}\) as the core index of the lateral slab and solve for \(G(y)\) and \(n_{\mathrm{eff}}\).`, String.raw`Pick the lateral boundary type by which way the main \(\mathbf{E}\) field points relative to the side walls.`],
-say: String.raw`The effective index method reduces the strip to two slab problems, vertical then lateral. It is a good estimate for wide strips but overestimates \(n_{\mathrm{eff}}\) for narrow, high-contrast strips, where a full mode solver is needed.`,
-num: "Soldano and Pennings 1995 reduce their MMI sections to 2D with this same method (their Sec. II), because their guides are single mode vertically.",
-r(fig, ctl) {
-  let k = 0;
-  ctl.innerHTML = `<div class="row"><button id="eb">Back</button><button id="en">Next step</button><span class="note" id="et"></span></div>` + sl("w", "Strip width w", 100, 800, 5, 300) + btns([["TE", "TE-like"], ["TM", "TM-like"]], "f") + '<div class="readout" id="ro"></div>';
-  let fam = "TE";
-  const u = () => {
-    pick(ctl, "f", fam); const w = +$("w").value; $("wv").textContent = w + " nm";
-    const Ns = C2.slabN(3.5, 1, 160, 800, 0, fam), Ne = C2.eim(3.5, 1, 160, w, 800, fam);
-    const S = ["Step 0: the strip cross-section", "Step 1: vertical slab, infinitely wide", "Step 2: lateral slab with core index n<sub>slab</sub>"];
-    const sx = 340, ww = Math.min(400, w * 0.5);
-    let body = "";
-    if (k === 0) body = `<rect x="${sx - ww / 2}" y="110" width="${ww}" height="50" fill="#7FA6D9" stroke="var(--p)"/><text class="ts" x="${sx}" y="186" text-anchor="middle">w = ${w} nm, t = 160 nm, n = 3.5, air around</text>`;
-    if (k === 1) body = `<rect x="60" y="110" width="560" height="50" fill="#7FA6D9" stroke="var(--p)"/><line x1="${sx}" x2="${sx}" y1="80" y2="190" stroke="#EF9F27" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="${sx + 8}" y="76">solve along z (${fam})</text><text class="th" x="${sx}" y="214" text-anchor="middle">n<tspan baseline-shift='sub' font-size='75%'>slab</tspan> = ${Ns.toFixed(3)}</text>`;
-    if (k === 2) body = `<rect x="${sx - ww / 2}" y="60" width="${ww}" height="150" fill="#B9CCE8" stroke="var(--p)"/><text class="ts" x="${sx}" y="140" text-anchor="middle">core index n<tspan baseline-shift='sub' font-size='75%'>slab</tspan> = ${Ns.toFixed(3)}</text><line x1="${sx - ww / 2 - 40}" x2="${sx + ww / 2 + 40}" y1="230" y2="230" stroke="#EF9F27" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="${sx}" y="250" text-anchor="middle">solve along y (${fam === "TE" ? "TM-type: E normal to walls" : "TE-type: E parallel to walls"})</text><text class="th" x="${sx}" y="40" text-anchor="middle">n<tspan baseline-shift='sub' font-size='75%'>eff</tspan> ≈ ${Ne ? Ne.toFixed(3) : "cut off"}</text>`;
-    fig.innerHTML = svg(270, body);
-    $("et").innerHTML = S[k]; $("eb").disabled = k === 0; $("en").disabled = k === 2;
-    $("ro").innerHTML = `<div><span>n<sub>slab</sub> (${fam} slab)</span><b>${Ns.toFixed(3)}</b></div><div><span>n<sub>eff</sub> (EIM)</span><b>${Ne ? Ne.toFixed(3) : "—"}</b></div>`;
-  };
-  $("eb").onclick = () => { k--; u(); }; $("en").onclick = () => { k++; u(); };
-  ctl.querySelectorAll("button[data-f]").forEach(b => b.onclick = () => { fam = b.dataset.f; u(); });
-  $("w").oninput = u; u();
-}},
+/* NEW CARD: Fields as exp(i beta x): Maxwell becomes an eigenvalue problem on the cross-section, n_eff = beta/k0 */
+{s: "1. An eigenvalue problem", t: "TODO: Fields as exp(i beta x): Maxwell becomes an eigenvalue problem on the cross-section, n_eff = beta/k0", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
 
+/* NEW CARD: A live finite-difference mode solver: grid, matrix, eigenvalues give n_eff, eigenvectors give mode shapes */
+{s: "2. Solve it live", t: "TODO: A live finite-difference mode solver: grid, matrix, eigenvalues give n_eff, eigenvectors give mode shapes", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }},
+
+/* from old ch2 L3 card 2 */
 {s: "2. n<sub>eff</sub> vs width", t: "Effective index against width, and the TE/TM crossing",
 intu: String.raw`As the strip gets wider, both modes approach their slab values. As it gets narrower, more of the light sits in the air beside the strip and \(n_{\mathrm{eff}}\) drops. The two families drop at different rates. The TE-like mode has its field across the width, normal to the side walls, so narrowing the strip hurts it the way thinning a slab hurts a TM mode: strongly. The TM-like mode has its field along \(z\), parallel to the side walls, so it is hurt less. When the width falls below the thickness, the curves cross and the TM-like mode becomes the one with the higher index. Drag the marker to the crossing.`,
 eq: String.raw`\[ w \gg t: \quad N_{\text{TE-like}} \to n_{\mathrm{slab}}^{\mathrm{TE}}, \quad N_{\text{TM-like}} \to n_{\mathrm{slab}}^{\mathrm{TM}} \]\[ w \lesssim t: \quad N_{\text{TM-like}} \gt N_{\text{TE-like}} \]`,
@@ -55,30 +34,30 @@ r(fig, ctl) {
   $("w").oninput = u; u();
 }},
 
-{s: "3. Single mode", t: "How wide before a second mode appears",
-intu: "A wider strip holds more lateral modes, the same way a thicker slab holds more vertical modes. The first lateral higher-order mode has one zero across the width. Routing waveguides are usually kept narrow enough that this mode is cut off or only barely guided, so light cannot scatter into it and interfere. Drag the width and see when the first-order lateral modes switch on for each family. Johnson et al. described modes near cutoff as hugging the light line: they exist but are weakly guided and spread far into the air.",
-eq: String.raw`\[ \text{lateral cutoff of order } p \text{ (EIM): } \quad w_p = \frac{p\lambda_{0}}{2\sqrt{n_{\mathrm{slab}}^{2} - n_{\mathrm{c}}^{2}}} \]`,
-sym: [[String.raw`\(p\)`, "lateral mode order, number of zeros across the width"], [String.raw`\(w_p\)`, "width at which lateral mode p appears"], [String.raw`\(n_{\mathrm{slab}}\)`, "slab index used as the core in the lateral problem"]],
-how: ["Apply the slab cutoff of Lesson 2 to the lateral problem.", String.raw`The core index is now \(n_{\mathrm{slab}}\), not \(n\), so the cutoff width is larger than the cutoff thickness.`, String.raw`TE-like and TM-like have different \(n_{\mathrm{slab}}\), so their first lateral modes appear at different widths.`, String.raw`Below \(w_1\) the strip is single mode for that family.`],
-say: "A strip is single mode per polarization family below the cutoff width of the first lateral higher-order mode. Narrow routing waveguides are chosen so higher-order modes are absent or only weakly guided.",
-num: String.raw`\(n = 3.5\), \(t = 160\) nm, 800 nm, effective index method: TE-like \(p = 1\) appears near \(w \approx\) <b>138 nm</b>, TM-like \(p = 1\) near <b>170 nm</b>.<br>The effective index method puts these cutoffs too low for narrow, high-contrast strips. A full mode solver finds the first-order modes still close to cutoff at somewhat larger widths, which is why a strip around 200 nm wide is used for routing.`,
+/* from old ch2 L2 card 5 */
+{s: "5. Confinement", t: "How much light is inside the GaAs",
+intu: "The fraction of power that travels inside the core is the confinement factor. It decides how strongly the mode feels the GaAs: how much it is slowed down, how strongly a grating etched into it scatters, how strongly a dot in the core couples. A thin slab lets most of the mode leak into the air. A thick one holds almost all of it. Johnson et al. found that in their slab more than 90 % of the energy of the lowest modes sat inside the slab height. Move the thickness and compare TE0 with TE1.",
+eq: String.raw`\[ \Gamma_{\mathrm{core}} = \frac{\int_{\mathrm{core}} |E_{y}|^{2}\, \mathrm{d}z}{\int |E_{y}|^{2}\, \mathrm{d}z} \]<div class="eqref">TE, a good estimate of the power fraction</div>`,
+sym: [[String.raw`\(\Gamma_{\mathrm{core}}\)`, "confinement factor, fraction of the mode inside the core"], [String.raw`\(E_{y}\)`, "TE field profile from card 3"]],
+how: [String.raw`For a TE slab mode, the power flow along the guide is proportional to \(|E_y|^2\) at every \(z\).`, String.raw`Integrate \(|E_y|^2\) over the core and over all \(z\).`, "Their ratio is the fraction of power inside the core.", String.raw`The evanescent tail length \(1/\gamma\) controls how much is outside.`],
+say: "The confinement factor of the fundamental mode grows with thickness. Near cutoff a mode is mostly in the cladding and weakly guided.",
+num: String.raw`\(n = 3.5\), \(\lambda = 800\) nm, TE0: \(t = 80\) nm ≈ <b>70 %</b>, \(t = 160\) nm ≈ <b>91 %</b>, \(t = 300\) nm ≈ <b>98 %</b> (computed by this page)`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("w", "Strip width w", 100, 900, 5, 300) + '<div class="readout" id="ro"></div>';
-  const cut = fam => { const Ns = C2.slabN(3.5, 1, 160, 800, 0, fam); return 800 / (2 * Math.sqrt(Ns * Ns - 1)); };
-  const cTE = cut("TE"), cTM = cut("TM");
-  const ws = range(100, 900, 90), L = [["TE", 0, "#378ADD", ""], ["TM", 0, "#D85A30", ""], ["TE", 1, "#378ADD", "5 4"], ["TM", 1, "#D85A30", "5 4"]];
-  const cv = L.map(([f, p]) => ws.map(w => C2.eim(3.5, 1, 160, w, 800, f, p)));
+  ctl.innerHTML = sl("t", "Thickness t", 20, 400, 5, 160) + '<div class="readout" id="ro"></div>';
+  const ts = range(20, 400, 60);
+  const g0 = ts.map(t => { const N = C2.slabN(3.5, 1, t, 800, 0, "TE"); return N ? C2.slabConfinement(3.5, 1, t, 800, 0, N) : NaN; });
+  const g1 = ts.map(t => { const N = C2.slabN(3.5, 1, t, 800, 1, "TE"); return N ? C2.slabConfinement(3.5, 1, t, 800, 1, N) : NaN; });
   const u = () => {
-    const w = +$("w").value; $("wv").textContent = w + " nm";
-    const X = v => 60 + (v - 100) / 800 * 560, Y = v => 230 - (v - 1) / 2.2 * 200;
-    let s = ""; cv.forEach((a, i) => { let d = ""; a.forEach((v, j) => { if (!v) return; d += (d ? "L" : "M") + X(ws[j]).toFixed(1) + " " + Y(v).toFixed(1); }); s += `<path d="${d}" fill="none" stroke="${L[i][2]}" stroke-width="2" ${L[i][3] ? `stroke-dasharray="${L[i][3]}"` : ""}/>`; });
-    const n1 = C2.eim(3.5, 1, 160, w, 800, "TE", 1), m1 = C2.eim(3.5, 1, 160, w, 800, "TM", 1);
-    fig.innerHTML = svg(260, `${s}<line x1="${X(w)}" x2="${X(w)}" y1="30" y2="230" stroke="#EF9F27" stroke-width="2"/><line x1="${X(cTE)}" x2="${X(cTE)}" y1="215" y2="235" stroke="#378ADD" stroke-width="2"/><line x1="${X(cTM)}" x2="${X(cTM)}" y1="215" y2="235" stroke="#D85A30" stroke-width="2"/><line x1="60" x2="620" y1="230" y2="230" stroke="var(--p)"/><text class="ts" x="340" y="252" text-anchor="middle">width, 100 to 900 nm. Solid p = 0, dashed p = 1. Ticks: cutoffs of p = 1</text>`);
-    $("ro").innerHTML = `<div><span>TE-like p = 1 appears at</span><b>${cTE.toFixed(0)} nm</b></div><div><span>TM-like p = 1 appears at</span><b>${cTM.toFixed(0)} nm</b></div><div><span>at this width</span><b>${n1 || m1 ? "multimode" : "single mode"}</b></div>`;
+    const t = +$("t").value; $("tv").textContent = t + " nm";
+    const N0 = C2.slabN(3.5, 1, t, 800, 0, "TE"), N1 = C2.slabN(3.5, 1, t, 800, 1, "TE");
+    const c0 = N0 ? C2.slabConfinement(3.5, 1, t, 800, 0, N0) : 0, c1 = N1 ? C2.slabConfinement(3.5, 1, t, 800, 1, N1) : 0;
+    fig.innerHTML = svg(260, `${plot(60, 30, 560, 190, ts, g0, 20, 400, 0, 1, "#378ADD", 2.5)}${plot(60, 30, 560, 190, ts, g1, 20, 400, 0, 1, "#7F77DD", 2, "5 4")}<line x1="${60 + (t - 20) / 380 * 560}" x2="${60 + (t - 20) / 380 * 560}" y1="30" y2="220" stroke="#EF9F27" stroke-width="2"/><line x1="60" x2="620" y1="220" y2="220" stroke="var(--p)"/><line x1="60" x2="60" y1="30" y2="220" stroke="var(--p)"/><text class="ts" x="54" y="34" text-anchor="end">100 %</text><text class="ts" x="54" y="224" text-anchor="end">0</text><text class="ts" x="340" y="244" text-anchor="middle">thickness, 20 to 400 nm. Solid TE0, dashed TE1</text>`);
+    $("ro").innerHTML = `<div><span>TE0 in core</span><b>${(c0 * 100).toFixed(1)} %</b></div><div><span>TE1 in core</span><b>${N1 ? (c1 * 100).toFixed(1) + " %" : "cut off"}</b></div>`;
   };
-  $("w").oninput = u; u();
+  $("t").oninput = u; u();
 }},
 
+/* from old ch2 L3 card 4 */
 {s: "4. Field maps", t: "What the strip modes look like in cross-section",
 intu: String.raw`These maps show \(|E|^2\) over the cross-section, built from the two slab solutions of the effective index method. Look at the edges. The TE-like mode drops almost to zero just inside the side walls and jumps up again just outside them, because its main field is normal to the side walls (the jump of Lesson 2). The TM-like mode does the same at the top and bottom surfaces, where its main field is normal. The first-order lateral modes have a dark line down the middle. Change the width and see the field spread into the air as the strip narrows.`,
 eq: String.raw`\[ |E(y, z)|^{2} \approx |F(z)|^{2}\, |G(y)|^{2} \]<div class="eqref">separable approximation of the effective index method</div>`,
@@ -108,6 +87,32 @@ r(fig, ctl) {
   $("w").oninput = u; u();
 }},
 
+/* from old ch2 L3 card 3 */
+{s: "3. Single mode", t: "How wide before a second mode appears",
+intu: "A wider strip holds more lateral modes, the same way a thicker slab holds more vertical modes. The first lateral higher-order mode has one zero across the width. Routing waveguides are usually kept narrow enough that this mode is cut off or only barely guided, so light cannot scatter into it and interfere. Drag the width and see when the first-order lateral modes switch on for each family. Johnson et al. described modes near cutoff as hugging the light line: they exist but are weakly guided and spread far into the air.",
+eq: String.raw`\[ \text{lateral cutoff of order } p \text{ (EIM): } \quad w_p = \frac{p\lambda_{0}}{2\sqrt{n_{\mathrm{slab}}^{2} - n_{\mathrm{c}}^{2}}} \]`,
+sym: [[String.raw`\(p\)`, "lateral mode order, number of zeros across the width"], [String.raw`\(w_p\)`, "width at which lateral mode p appears"], [String.raw`\(n_{\mathrm{slab}}\)`, "slab index used as the core in the lateral problem"]],
+how: ["Apply the slab cutoff of Lesson 2 to the lateral problem.", String.raw`The core index is now \(n_{\mathrm{slab}}\), not \(n\), so the cutoff width is larger than the cutoff thickness.`, String.raw`TE-like and TM-like have different \(n_{\mathrm{slab}}\), so their first lateral modes appear at different widths.`, String.raw`Below \(w_1\) the strip is single mode for that family.`],
+say: "A strip is single mode per polarization family below the cutoff width of the first lateral higher-order mode. Narrow routing waveguides are chosen so higher-order modes are absent or only weakly guided.",
+num: String.raw`\(n = 3.5\), \(t = 160\) nm, 800 nm, effective index method: TE-like \(p = 1\) appears near \(w \approx\) <b>138 nm</b>, TM-like \(p = 1\) near <b>170 nm</b>.<br>The effective index method puts these cutoffs too low for narrow, high-contrast strips. A full mode solver finds the first-order modes still close to cutoff at somewhat larger widths, which is why a strip around 200 nm wide is used for routing.`,
+r(fig, ctl) {
+  ctl.innerHTML = sl("w", "Strip width w", 100, 900, 5, 300) + '<div class="readout" id="ro"></div>';
+  const cut = fam => { const Ns = C2.slabN(3.5, 1, 160, 800, 0, fam); return 800 / (2 * Math.sqrt(Ns * Ns - 1)); };
+  const cTE = cut("TE"), cTM = cut("TM");
+  const ws = range(100, 900, 90), L = [["TE", 0, "#378ADD", ""], ["TM", 0, "#D85A30", ""], ["TE", 1, "#378ADD", "5 4"], ["TM", 1, "#D85A30", "5 4"]];
+  const cv = L.map(([f, p]) => ws.map(w => C2.eim(3.5, 1, 160, w, 800, f, p)));
+  const u = () => {
+    const w = +$("w").value; $("wv").textContent = w + " nm";
+    const X = v => 60 + (v - 100) / 800 * 560, Y = v => 230 - (v - 1) / 2.2 * 200;
+    let s = ""; cv.forEach((a, i) => { let d = ""; a.forEach((v, j) => { if (!v) return; d += (d ? "L" : "M") + X(ws[j]).toFixed(1) + " " + Y(v).toFixed(1); }); s += `<path d="${d}" fill="none" stroke="${L[i][2]}" stroke-width="2" ${L[i][3] ? `stroke-dasharray="${L[i][3]}"` : ""}/>`; });
+    const n1 = C2.eim(3.5, 1, 160, w, 800, "TE", 1), m1 = C2.eim(3.5, 1, 160, w, 800, "TM", 1);
+    fig.innerHTML = svg(260, `${s}<line x1="${X(w)}" x2="${X(w)}" y1="30" y2="230" stroke="#EF9F27" stroke-width="2"/><line x1="${X(cTE)}" x2="${X(cTE)}" y1="215" y2="235" stroke="#378ADD" stroke-width="2"/><line x1="${X(cTM)}" x2="${X(cTM)}" y1="215" y2="235" stroke="#D85A30" stroke-width="2"/><line x1="60" x2="620" y1="230" y2="230" stroke="var(--p)"/><text class="ts" x="340" y="252" text-anchor="middle">width, 100 to 900 nm. Solid p = 0, dashed p = 1. Ticks: cutoffs of p = 1</text>`);
+    $("ro").innerHTML = `<div><span>TE-like p = 1 appears at</span><b>${cTE.toFixed(0)} nm</b></div><div><span>TM-like p = 1 appears at</span><b>${cTM.toFixed(0)} nm</b></div><div><span>at this width</span><b>${n1 || m1 ? "multimode" : "single mode"}</b></div>`;
+  };
+  $("w").oninput = u; u();
+}},
+
+/* from old ch2 L3 card 5 */
 {s: "5. TE-like naming", t: "Why 'TE-like', and how modes are named by symmetry",
 intu: String.raw`In a slab, TE and TM are exact. In a strip they are not: every mode has all six field components, so it is only mostly TE or mostly TM. Johnson et al. 1999 explain this for photonic crystal slabs: with no translation symmetry vertically, modes cannot be purely TE or TM, but they can still be classified exactly by mirror symmetry, and exactly at the mirror plane they are purely TE or TM. A practical way to name strip modes is by the sign pattern of \(E_y\) under the two mirrors \(y \to -y\) and \(z \to -z\). Click a mode to see its sign pattern in the four quadrants.`,
 eq: String.raw`\[ E_{y}(-y, z) = \sigma_{y} E_{y}(y, z), \qquad E_{y}(y, -z) = \sigma_{z} E_{y}(y, z), \qquad \sigma = \pm 1 \]\[ \text{TE0 } (+,+) \qquad \text{TM0 } (-,-) \qquad \text{TE1 } (-,+) \qquad \text{TM1 } (+,-) \]`,
@@ -128,6 +133,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { md = b.dataset.m; u(); }); u();
 }},
 
+/* from old ch2 L3 card 6 */
 {s: "6. Wide sections", t: "Wide sections behave like the slab",
 intu: String.raw`Couplers and multimode sections are often micrometers wide. There the side walls are far away from most of the light, and the fundamental mode has almost the slab index. Drag the width up to a few micrometers on a log scale and watch \(n_{\mathrm{eff}}\) approach the slab value. This is why a grating that is a few micrometers wide can be designed first as a 2D slab problem and then checked in 3D: the 3D index differs only slightly from the slab index. It is also why an MMI section can be treated with the 2D model of Lesson 7.`,
 eq: String.raw`\[ n_{\mathrm{eff}}(w) \to n_{\mathrm{slab}} \;\text{ as }\; w \to \infty \]\[ n_{\mathrm{slab}} - n_{\mathrm{eff}} \approx \frac{\lambda_{0}^{2}}{8 n_{\mathrm{slab}} w^{2}} \;\text{ for wide strips} \]`,
@@ -148,6 +154,7 @@ r(fig, ctl) {
   };
   $("lw").oninput = u; u();
 }}
+
 ],
 summary: "A strip confines light in both directions. Its modes are hybrid, so they are called TE-like and TM-like and are named exactly by their mirror symmetries. The effective index method estimates them with two slab problems, vertical then lateral, with the lateral boundary type swapped. Narrow strips lose effective index, and below a width close to the thickness the TM-like mode overtakes the TE-like one. Narrow strips are single mode per family, and sections several micrometers wide approach the slab index, which justifies 2D design of wide gratings and MMIs.",
 sheet: [

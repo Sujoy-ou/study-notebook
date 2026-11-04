@@ -1,164 +1,175 @@
+/* TODO for this lesson: Thesis Sec. 3.3: check taper tanh(pi p) form and N = 9 -> 18, 28 DBR params, M = 81, 395 vertices 15 nm. */
 addLesson("thesis", "ch3", {
 level: "Core",
-id: "thesis-ch3-l4", title: "Objective functions: mode overlap, band weights and the splitter FOM", short: "4. Objective functions",
-big: String.raw`Every figure of merit in the thesis is built from one quantity: the power carried by one guided mode through a monitor plane. It is obtained by projecting the simulated field onto the mode, which gives a complex amplitude \(a_m\), and \(|a_m|^2\) is the fraction of the input power delivered into that mode. Power that ends up in other modes or radiates does not count. Optimizing at a single wavelength tends to produce narrow resonances, so the objectives of the gratings and the splitter are averaged over a band with Gaussian weights that sum to one. For the polarization splitter, two such averages are added, TE into the cross port and TM into the bar port, so the maximum is 2.`,
-bridge: String.raw`This is Ch. 3 Sec. 3.4, Eqs. (3.13) to (3.15), and the reported quantities of Sec. 3.7, Eq. (3.19). The overlap formula is the one in Tidy3D's mode data (components/data/utils.py, <code>_dot_numpy</code>). The mode profiles below come from the slab solver of Chapter 2, Lesson 2.`,
+id: "thesis-ch3-l4", title: "Bounded parameterizations: widths, layers, tapers and outlines", short: "4. Parameterizations",
+big: String.raw`An optimizer like Adam takes steps of any size in any direction, but a geometry has limits: a tooth cannot be thinner than the smallest feature that can be written, a taper cannot be narrower than its input waveguide, and an outline should stay near the shape it started from. The thesis handles all of this the same way. Each bounded quantity is written as a smooth function of an unbounded variable \(q\), using tanh, which maps the whole real line into a finite interval. The optimizer moves \(q\) freely, and the geometry stays inside its limits automatically. The price is that a quantity near its bound responds less to a change of \(q\).`,
+bridge: String.raw`This is Ch. 3 Sec. 3.3: the grating widths of Eq. (3.7), the DBR scale \(1 + \tfrac{1}{2}\tanh q\), the taper half-widths of Eq. (3.8) and the vertex moves of Eq. (3.12). The DBR reflectance below uses the transfer matrix method of Chapter 2, Lesson 6. Michaels and Yablonovitch optimized a taper outline in the same spirit, with polygon vertices as parameters.`,
 cards: [
-{s: "1. Mode overlap", t: "How much of the field is in the target mode",
-intu: "The field arriving at the output plane is generally not a clean mode. It may be shifted, too wide or too narrow. The overlap integral measures how much of it looks like the mode. In the scalar picture, for fields traveling the same way in the same waveguide, Eq. (3.13) reduces to the normalized overlap of the two profiles. Here the target mode is the TE0 mode of a 2D guide (blue), and a Gaussian field (orange) arrives. Move and resize the field and watch the coupled fraction.",
-eq: String.raw`\[ a_m = \frac{1}{4} \int_S \left( \mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H} \right) \cdot \hat{\mathbf{n}}\, dS, \qquad T_m = |a_m|^2 \]<div class="eqnote">scalar picture:</div>\[ T = \frac{\left| \int E\, m\, dy \right|^2}{\int |E|^2\, dy \int |m|^2\, dy} \]<div class="eqref">Ch. 3 Eq. (3.13)</div>`,
-sym: [[String.raw`\(\mathbf{E}, \mathbf{H}\)`, String.raw`simulated fields on the monitor plane \(S\)`], [String.raw`\(\mathbf{E}_m, \mathbf{H}_m\)`, String.raw`fields of mode \(m\) from the mode solver at that plane, normalized to unit power`], [String.raw`\(\hat{\mathbf{n}}\)`, "normal of the plane"], [String.raw`\(T_m\)`, String.raw`fraction of the injected power in mode \(m\), when the source is normalized to unit power`]],
-how: ["Guided modes of a waveguide are orthogonal under this integral.", String.raw`So the field on the plane can be expanded in modes, and \(a_m\) picks out one coefficient.`, String.raw`With unit-power normalization, \(|a_m|^2\) is directly a power fraction.`, String.raw`In the scalar picture, \(\mathbf{H}\) follows from \(\mathbf{E}\) through the same impedance for both, and the integral becomes the profile overlap.`],
-say: "The transmission into a mode is the squared magnitude of the overlap of the simulated field with that mode, normalized so that it is a fraction of the input power.",
-num: String.raw`A centered Gaussian of 180 nm \(1/e\) width reaches 0.996 here. The mode's own \(1/e\) half-width is about 190 nm, and a shift of half that, about 95 nm, already costs about a quarter of the power.`,
+/* from old ch3 L5 card 1 */
+{s: "1. The tanh map", t: "From an unbounded q to a bounded width",
+intu: String.raw`\(\tanh q\) runs from −1 to +1 as \(q\) runs over all real numbers. Scaling and shifting it maps \(q\) onto the interval from \(w_{\mathrm{min}}\) to \(w_{\mathrm{max}}\). At \(q = 0\) the width sits in the middle of the interval. Whatever value the optimizer gives \(q\), the width can never leave the interval. Set the bounds and move \(q\).`,
+eq: String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]<div class="eqref">Ch. 3 Eq. (3.7)</div>`,
+sym: [[String.raw`\(q\)`, "free variable seen by the optimizer, any real number"], [String.raw`\(w_{\mathrm{min}}\)`, "smallest allowed width, the minimum feature of the device"], [String.raw`\(w_{\mathrm{max}}\)`, "largest allowed width"], [String.raw`\(w(q)\)`, "physical width used to build the geometry"]],
+how: [String.raw`\(\tanh: \mathbb{R} \to (-1, 1)\), smooth and monotonic.`, "Multiply by half the range and add the center.", String.raw`\(q = \pm\infty\) give the bounds, \(q = 0\) gives the center.`, String.raw`The chain rule gives \(\partial J/\partial q = (\partial J/\partial w)(dw/dq)\), which autograd applies automatically.`],
+say: "Each width is a tanh function of a free variable, so the optimizer can take any step and the width still stays between its bounds.",
+num: String.raw`For example, with \(w_{\mathrm{min}} = 100\) nm and \(w_{\mathrm{max}} = 800\) nm, \(q = 0\) gives 450 nm and \(q = 2\) gives 787 nm.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("d", "Field offset (nm)", -400, 400, 5, 120) + sl("w", "Field 1/e width (nm)", 60, 600, 5, 180) + '<div class="readout" id="ro"></div>';
-  const ys = range(-900, 900, 721), N = C2.slabN(3.0, 1.0, 400, 800, 0, "TE"), m = C2.slabProfile(3.0, 1.0, 400, 800, 0, "TE", N, ys).main;
+  ctl.innerHTML = sl("a", "w_min (nm)", 40, 300, 10, 100) + sl("b", "w_max (nm)", 400, 1200, 10, 800) + sl("q", "q", -4, 4, 0.05, 0.6) + '<div class="readout" id="ro"></div>';
+  const qs = range(-4, 4, 200);
   const u = () => {
-    const d = +$("d").value, w = +$("w").value; $("dv").textContent = d; $("wv").textContent = w;
-    const E = ys.map(y => Math.exp(-Math.pow((y - d) / w, 2)));
-    let a = 0, b = 0, c = 0; ys.forEach((_, i) => { a += E[i] * m[i]; b += E[i] * E[i]; c += m[i] * m[i]; });
-    const T = a * a / (b * c), X = C3.X(70, 560, -900, 900);
-    let s = `<rect x="${X(-200)}" y="30" width="${X(200) - X(-200)}" height="170" fill="var(--blue-bg)" opacity="0.6"/><text class="ts" x="${X(0)}" y="46" text-anchor="middle">core, 400 nm</text>`;
-    s += C3.frame(70, 30, 560, 170, -900, 900, 0, 1.05, [-800, -400, 0, 400, 800], [0, 0.5, 1], "position across the guide (nm)", "field") + plot(70, 30, 560, 170, ys, m, -900, 900, 0, 1.05, "#378ADD", 2.5) + plot(70, 30, 560, 170, ys, E, -900, 900, 0, 1.05, "#D85A30", 2.5);
-    s += C3.legend(90, 250, [["target mode TE0", "#378ADD"], ["arriving field", "#D85A30"]]);
-    fig.innerHTML = svg(260, s);
-    $("ro").innerHTML = `<div><span>T into the mode</span><b>${T.toFixed(3)}</b></div><div><span>lost to other modes and radiation</span><b>${(1 - T).toFixed(3)}</b></div><div><span>mode index N</span><b>${N.toFixed(3)}</b></div>`;
-  };
-  $("d").oninput = u; $("w").oninput = u; u();
-}},
-
-{s: "2. Only the target mode", t: "Power in the wrong mode counts as loss",
-intu: String.raw`A wider guide carries two modes, TE0 (even) and TE1 (odd). Suppose the arriving field is a mix of the two with all of the power guided. The total transmitted power is 1, yet the figure of merit only counts the TE0 part, \(\cos^2\theta\). This is intended: in a circuit, light in the wrong mode is lost at the next single-mode section. Change the mixing angle.`,
-eq: String.raw`\[ E = \cos\theta \cdot \mathrm{TE0} + \sin\theta \cdot \mathrm{TE1} \]\[ \Longrightarrow\quad T_{\mathrm{TE0}} = \cos^2\theta, \qquad T_{\mathrm{TE1}} = \sin^2\theta, \qquad T_{\mathrm{TE0}} + T_{\mathrm{TE1}} = 1 \]`,
-sym: [[String.raw`\(\theta\)`, "mixing angle between the two modes"], ["TE0, TE1", "even and odd modes, orthogonal so their powers add"], [String.raw`\(T_{\mathrm{TE0}}\)`, "what the figure of merit sees"]],
-how: ["The modes are orthogonal, so the overlap of TE1 with TE0 is zero.", String.raw`Projecting \(\mathbf{E}\) onto TE0 keeps only the \(\cos\theta\) part.`, String.raw`Its power is \(\cos^2\theta\).`, "A flux monitor would report 1 here, which is why the thesis uses mode monitors for the figure of merit."],
-say: "Projecting onto the target mode means that power carried by any other mode counts as loss, even though it is still guided.",
-num: String.raw`At \(\theta = 45^\circ\) the guided power is 100 % but only half is in TE0, a 3 dB loss for the figure of merit.`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("t", "Mixing angle θ (°)", 0, 90, 1, 30) + '<div class="readout" id="ro"></div>';
-  const ys = range(-900, 900, 721), n0 = C2.slabN(3.0, 1.0, 700, 800, 0, "TE"), n1 = C2.slabN(3.0, 1.0, 700, 800, 1, "TE");
-  const m0 = C2.slabProfile(3.0, 1.0, 700, 800, 0, "TE", n0, ys).main, m1 = C2.slabProfile(3.0, 1.0, 700, 800, 1, "TE", n1, ys).main;
-  const nrm = a => { const s = Math.sqrt(a.reduce((x, v) => x + v * v, 0)); return a.map(v => v / s); }, M0 = nrm(m0), M1 = nrm(m1);
-  const u = () => {
-    const th = +$("t").value * Math.PI / 180; $("tv").textContent = $("t").value;
-    const E = M0.map((v, i) => Math.cos(th) * v + Math.sin(th) * M1[i]), mx = Math.max(...M0, ...M1.map(Math.abs), ...E.map(Math.abs));
-    const X = C3.X(70, 560, -900, 900); let s = `<rect x="${X(-350)}" y="20" width="${X(350) - X(-350)}" height="170" fill="var(--blue-bg)" opacity="0.6"/>`;
-    s += C3.frame(70, 20, 560, 170, -900, 900, -mx, mx, [-800, -400, 0, 400, 800], [], "position across the guide (nm)", "field") + `<line x1="70" x2="630" y1="105" y2="105" stroke="var(--b)"/>`;
-    s += plot(70, 20, 560, 170, ys, M0, -900, 900, -mx, mx, "#378ADD", 1.5, "5 4") + plot(70, 20, 560, 170, ys, M1, -900, 900, -mx, mx, "#7F77DD", 1.5, "5 4") + plot(70, 20, 560, 170, ys, E, -900, 900, -mx, mx, "#D85A30", 2.5);
-    s += C3.legend(80, 245, [["TE0", "#378ADD", "5 4"], ["TE1", "#7F77DD", "5 4"], ["arriving field", "#D85A30"]]);
-    const T0 = Math.cos(th) ** 2;
-    s += `<rect x="470" y="230" width="${150 * T0}" height="12" fill="#378ADD"/><rect x="${470 + 150 * T0}" y="230" width="${150 * (1 - T0)}" height="12" fill="#7F77DD"/>`;
-    fig.innerHTML = svg(255, s);
-    $("ro").innerHTML = `<div><span>T into TE0 (counted)</span><b>${T0.toFixed(3)}</b></div><div><span>T into TE1 (lost)</span><b>${(1 - T0).toFixed(3)}</b></div><div><span>total guided power</span><b>1.000</b></div>`;
-  };
-  $("t").oninput = u; u();
-}},
-
-{s: "3. Band weights", t: "Gaussian weights over a band of wavelengths",
-intu: String.raw`Instead of one wavelength, the objective is a weighted average of the transmission at many wavelengths. The weights are a Gaussian centered at \(\lambda_0\), normalized so they sum to one, so the result is still a number between 0 and 1. The width \(\sigma\) sets how much the edges of the band matter. Some code writes the Gaussian as \(\exp[-((\lambda - \lambda_0)/\sigma_c)^2]\). That is the same curve with \(\sigma = \sigma_c/\sqrt{2}\). Change \(\sigma\) and the number of wavelengths.`,
-eq: String.raw`\[ \bar{T} = \sum_i w_i\, T(\lambda_i), \qquad w_i = \frac{\exp\!\left[ -(\lambda_i - \lambda_0)^2/(2\sigma^2) \right]}{\sum_j \exp\!\left[ -(\lambda_j - \lambda_0)^2/(2\sigma^2) \right]} \]\[ \exp\!\left[ -\left( \frac{\lambda - \lambda_0}{\sigma_c} \right)^2 \right] \quad\Longleftrightarrow\quad \sigma = \sigma_c/\sqrt{2} \]<div class="eqref">Ch. 3 Eq. (3.14)</div>`,
-sym: [[String.raw`\(\lambda_i\)`, "sampled wavelengths"], [String.raw`\(\lambda_0\)`, "center wavelength, 795 nm for the quantum dots of the thesis"], [String.raw`\(\sigma\)`, "standard deviation of the Gaussian"], [String.raw`\(\sigma_c\)`, "width parameter of the alternative form"], [String.raw`\(w_i\)`, String.raw`normalized weights, \(\sum w_i = 1\)`]],
-how: ["Choose the band and sample it.", String.raw`Give each sample a Gaussian weight around \(\lambda_0\).`, String.raw`Normalize so the weights sum to one: \(\bar{T}\) is a weighted mean.`, String.raw`Matching exponents: \((\lambda - \lambda_0)^2/(2\sigma^2) = (\lambda - \lambda_0)^2/\sigma_c^2\) gives \(\sigma = \sigma_c/\sqrt{2}\).`],
-say: "The broadband objective is a weighted mean of the transmission, with Gaussian weights centered at the design wavelength that sum to one.",
-num: String.raw`Example: \(\sigma_c = 12\) nm is \(\sigma = 8.5\) nm. The full width at half maximum of the weights is \(2.355\sigma\).`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("s", "σ (nm)", 3, 40, 0.5, 8) + sl("n", "Number of wavelengths", 5, 101, 2, 31) + '<div class="readout" id="ro"></div>';
-  const u = () => {
-    const sg = +$("s").value, n = +$("n").value; $("sv").textContent = sg; $("nv").textContent = n;
-    const ls = range(745, 845, n), w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S), mx = Math.max(...w);
-    const X = C3.X(70, 560, 745, 845), Y = C3.Y(30, 180, 0, mx * 1.1), bw = Math.max(1, 560 / n * 0.7);
-    let s = C3.frame(70, 30, 560, 180, 745, 845, 0, mx * 1.1, [745, 770, 795, 820, 845], [0, mx], "wavelength (nm)", "weight wᵢ", v => v, v => v.toFixed(3));
-    ls.forEach((l, i) => s += `<rect x="${X(l) - bw / 2}" y="${Y(w[i])}" width="${bw}" height="${210 - Y(w[i])}" fill="#378ADD" opacity="0.8"/>`);
-    s += `<line x1="${X(795 - 1.1774 * sg)}" x2="${X(795 + 1.1774 * sg)}" y1="${Y(mx / 2)}" y2="${Y(mx / 2)}" stroke="#D85A30" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/><text class="ts" x="${X(795 + 1.2 * sg) + 8}" y="${Y(mx / 2) + 4}">FWHM ${(2.355 * sg).toFixed(1)} nm</text>`;
+    const a = +$("a").value, b = +$("b").value, q = +$("q").value; $("av").textContent = a; $("bv").textContent = b; $("qv").textContent = q.toFixed(2);
+    const w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a), X = C3.X(70, 560, -4, 4), Y = C3.Y(30, 180, 0, 1250);
+    let s = C3.frame(70, 30, 560, 180, -4, 4, 0, 1250, [-4, -2, 0, 2, 4], [0, 400, 800, 1200], "free variable q", "width w (nm)");
+    s += `<line x1="70" x2="630" y1="${Y(a)}" y2="${Y(a)}" stroke="#D85A30" stroke-dasharray="5 4"/><line x1="70" x2="630" y1="${Y(b)}" y2="${Y(b)}" stroke="#D85A30" stroke-dasharray="5 4"/><text class="ts" x="625" y="${Y(a) - 5}" text-anchor="end">w_min</text><text class="ts" x="625" y="${Y(b) - 5}" text-anchor="end">w_max</text>`;
+    s += plot(70, 30, 560, 180, qs, qs.map(w), -4, 4, 0, 1250, "#378ADD", 2.5) + `<circle cx="${X(q)}" cy="${Y(w(q))}" r="6" fill="#D85A30"/>`;
     fig.innerHTML = svg(250, s);
-    $("ro").innerHTML = `<div><span>Σ wᵢ</span><b>${w.reduce((a, b) => a + b, 0).toFixed(3)}</b></div><div><span>equivalent σ_c</span><b>${(sg * Math.SQRT2).toFixed(1)} nm</b></div><div><span>weight at λ₀</span><b>${mx.toFixed(4)}</b></div>`;
+    const d = 0.5 * (b - a) / Math.cosh(q) ** 2;
+    $("ro").innerHTML = `<div><span>w(q)</span><b>${w(q).toFixed(1)} nm</b></div><div><span>dw/dq</span><b>${d.toFixed(1)} nm</b></div>`;
   };
-  $("s").oninput = u; $("n").oninput = u; u();
+  ["a", "b", "q"].forEach(k => $(k).oninput = u); u();
 }},
 
-{s: "4. Why a band", t: "A narrow resonance wins at one wavelength and loses over a band",
-intu: String.raw`Two imagined designs. Design A has a sharp resonance that reaches 1.0 exactly at \(\lambda_0\). Design B is flat and broad but only reaches 0.85. A single-wavelength objective prefers A. The band-weighted objective prefers B once \(\sigma\) is a few nanometers, because the resonance is gone a few nanometers away. Quantum dot emission wavelengths differ from dot to dot and fabrication shifts the response, so B is the useful device. Change \(\sigma\).`,
-eq: String.raw`\[ \bar{T}_A = \sum w_i\, T_A(\lambda_i) \quad \text{versus} \quad \bar{T}_B = \sum w_i\, T_B(\lambda_i) \]`,
-sym: [[String.raw`\(T_A\)`, "narrow Lorentzian resonance, peak 1.0, 4 nm wide (illustration)"], [String.raw`\(T_B\)`, "broad response, peak 0.85, 80 nm wide (illustration)"], [String.raw`\(\sigma\)`, "width of the weights"]],
-how: [String.raw`At \(\sigma \to 0\) the average equals the value at \(\lambda_0\): A wins.`, String.raw`As \(\sigma\) grows, A's average falls quickly because most weight sits outside its peak.`, "B's average hardly changes.", "So band weighting steers the optimizer away from fragile resonances."],
-say: "Averaging over a band with Gaussian weights steers the optimizer away from narrow resonances toward broadband designs.",
-num: "Ch. 3 states the motivation directly: optimizing at a single wavelength tends to produce narrow resonances.",
+/* from old ch3 L5 card 2 */
+{s: "2. Saturation", t: "Near a bound the width responds less",
+intu: String.raw`The slope \(dw/dq = \tfrac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q\) is largest at \(q = 0\) and falls off quickly. A width pressed against a bound has a large \(|q|\) and a tiny slope, so both its gradient \(\partial J/\partial q\) and its response to a step become small. This is the gentle way the bound is enforced. It also means a parameter that wandered deep into saturation needs many steps to come back. Move \(q\) and compare the effect of the same step \(\Delta q = 0.1\).`,
+eq: String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q, \qquad \frac{\partial J}{\partial q} = \frac{\partial J}{\partial w} \frac{dw}{dq} \]`,
+sym: [[String.raw`\(\operatorname{sech}^2 q = 1/\cosh^2 q\)`, String.raw`1 at \(q = 0\), about 0.07 at \(q = 2\), about 0.0013 at \(q = 4\)`], [String.raw`\(\Delta q\)`, String.raw`a step taken by the optimizer in \(q\)`], [String.raw`\(\Delta w \approx (dw/dq)\, \Delta q\)`, "the resulting change of width"]],
+how: [String.raw`Differentiate tanh: \(d\tanh q/dq = \operatorname{sech}^2 q\).`, "Multiply by the half range.", String.raw`Chain rule: the gradient reaching \(q\) is scaled by the same factor.`, "Adam partly compensates, because it normalizes each parameter's step by its own gradient history (Lesson 12)."],
+say: "Close to a bound the tanh map flattens, so the width responds less to the optimizer, which keeps it inside the limits without a hard clip.",
+num: String.raw`With the example bounds 100 and 800 nm, a step \(\Delta q = 0.1\) moves the width by 35 nm at \(q = 0\) but by only 2.2 nm at \(q = 2\).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("s", "σ (nm)", 0.5, 40, 0.5, 8) + '<div class="readout" id="ro"></div>';
-  const ls = range(735, 855, 241), TA = l => 1 / (1 + Math.pow((l - 795) / 2, 2)), TB = l => 0.85 * Math.exp(-Math.pow((l - 795) / 48, 2));
+  ctl.innerHTML = sl("q", "q", -4, 4, 0.05, 2) + '<div class="readout" id="ro"></div>';
+  const a = 100, b = 800, qs = range(-4, 4, 200), d = v => 0.5 * (b - a) / Math.cosh(v) ** 2, w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a);
   const u = () => {
-    const sg = +$("s").value; $("sv").textContent = sg;
-    const w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S);
-    let A = 0, B = 0; ls.forEach((l, i) => { A += w[i] * TA(l); B += w[i] * TB(l); });
-    const mw = Math.max(...w0);
-    let s = C3.frame(70, 30, 560, 180, 735, 855, 0, 1.05, [735, 765, 795, 825, 855], [0, 0.5, 1], "wavelength (nm)", "T") + plot(70, 30, 560, 180, ls, w0.map(v => v / mw), 735, 855, 0, 1.05, "#EF9F27", 1.5, "4 3");
-    s += plot(70, 30, 560, 180, ls, ls.map(TA), 735, 855, 0, 1.05, "#D85A30", 2.5) + plot(70, 30, 560, 180, ls, ls.map(TB), 735, 855, 0, 1.05, "#378ADD", 2.5);
-    s += C3.legend(80, 250, [["design A, resonance", "#D85A30"], ["design B, broad", "#378ADD"], ["weights (scaled)", "#EF9F27", "4 3"]]);
+    const q = +$("q").value; $("qv").textContent = q.toFixed(2);
+    const X = C3.X(70, 560, -4, 4), Y = C3.Y(30, 180, 0, 380);
+    let s = C3.frame(70, 30, 560, 180, -4, 4, 0, 380, [-4, -2, 0, 2, 4], [0, 175, 350], "free variable q", "dw/dq (nm)") + plot(70, 30, 560, 180, qs, qs.map(d), -4, 4, 0, 380, "#7F77DD", 2.5);
+    s += `<circle cx="${X(q)}" cy="${Y(d(q))}" r="6" fill="#D85A30"/><rect x="${X(q)}" y="${Y(d(q))}" width="${X(q + 0.1) - X(q)}" height="${210 - Y(d(q))}" fill="#D85A30" opacity="0.3"/>`;
+    fig.innerHTML = svg(250, s);
+    $("ro").innerHTML = `<div><span>w(q)</span><b>${w(q).toFixed(1)} nm</b></div><div><span>Δw for Δq = 0.1</span><b>${(w(q + 0.1) - w(q)).toFixed(2)} nm</b></div><div><span>sech²q</span><b>${(1 / Math.cosh(q) ** 2).toFixed(4)}</b></div>`;
+  };
+  $("q").oninput = u; u();
+}},
+
+/* from old ch3 L5 card 3 */
+{s: "3. A grating", t: "A grating described by its tooth and gap widths",
+intu: String.raw`A grating with \(N\) teeth is described by the widths of its \(N\) gaps and \(N\) teeth, \(2N\) numbers, each built with Eq. (3.7). Here the \(q\) values are random with a chosen spread. However large the spread, no tooth or gap ever falls below \(w_{\mathrm{min}}\), which is how the minimum feature of the grating is guaranteed. A uniform grating is the natural start: all \(q\) equal.`,
+eq: String.raw`\[ w_j = w(q_j), \qquad j = 1, \dots, 2N \qquad (\text{gaps and teeth alternating}) \]`,
+sym: [[String.raw`\(N\)`, "number of teeth"], [String.raw`\(q_j\)`, String.raw`free variable of width \(j\)`], ["spread", String.raw`standard deviation of the random \(q\) values in this demo`]],
+how: ["Each gap and tooth gets its own free variable.", "All widths share the same bounds.", "The grating is built tooth by tooth from the widths, so the period can vary along the grating (apodization).", String.raw`The bounds guarantee the minimum feature for any \(q\).`],
+say: String.raw`The grating is described by \(2N\) widths, each bounded by a tanh map, so every tooth and gap respects the minimum feature size.`,
+num: "Typical sizes: about 10 teeth, so about 20 parameters. Varying the period along the grating is how the radiated beam is shaped to match a fiber.",
+r(fig, ctl) {
+  ctl.innerHTML = sl("n", "Teeth N", 4, 14, 1, 9) + sl("s", "Spread of q", 0, 3, 0.05, 1) + `<div class="row"><button id="rn">New random q</button><button id="un">Uniform start (all q = −0.4)</button></div><div class="readout" id="ro"></div>`;
+  let seed = 3, uni = false; const a = 100, b = 800, w = v => 0.5 * (b - a) * Math.tanh(v) + 0.5 * (b + a);
+  const u = () => {
+    const N = +$("n").value, sp = +$("s").value; $("nv").textContent = N; $("sv").textContent = sp.toFixed(2);
+    const r = C3.rng(seed), g = () => { let x = 0; for (let k = 0; k < 6; k++) x += r(); return x - 3; };
+    const qs = Array.from({ length: 2 * N }, () => uni ? -0.4 : -0.4 + sp * g() * 0.7), ws = qs.map(w), L = ws.reduce((x, y) => x + y, 0), sc = 600 / L;
+    let x = 40, s = `<rect x="20" y="110" width="${640}" height="40" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+    ws.forEach((v, i) => { if (i % 2 === 0) s += `<rect x="${x}" y="110" width="${v * sc}" height="22" fill="var(--panel)" stroke="var(--blue)"/>`; x += v * sc; });
+    s += `<text class="ts" x="340" y="95" text-anchor="middle">etched gaps (white) and teeth, drawn to scale (total ${(L / 1000).toFixed(2)} µm)</text>`;
+    const X = C3.X(40, 600, 0, 2 * N - 1), Y = C3.Y(175, 70, 0, 850);
+    s += `<line x1="40" x2="640" y1="${Y(a)}" y2="${Y(a)}" stroke="#D85A30" stroke-dasharray="5 4"/><text class="ts" x="645" y="${Y(a) + 4}">w_min</text>`;
+    ws.forEach((v, i) => s += `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="${i % 2 ? "#378ADD" : "var(--p)"}"/>`);
+    fig.innerHTML = svg(255, s + `<text class="ts" x="340" y="252" text-anchor="middle">each dot is one width (gaps dark, teeth blue)</text>`);
+    $("ro").innerHTML = `<div><span>parameters 2N</span><b>${2 * N}</b></div><div><span>smallest width</span><b>${Math.min(...ws).toFixed(1)} nm</b></div><div><span>largest width</span><b>${Math.max(...ws).toFixed(1)} nm</b></div>`;
+  };
+  $("rn").onclick = () => { uni = false; seed++; u(); }; $("un").onclick = () => { uni = true; u(); }; $("n").oninput = u; $("s").oninput = () => { uni = false; u(); }; u();
+}},
+
+/* from old ch3 L5 card 4 */
+{s: "4. DBR layers", t: "Scaling the mirror layers between 0.5 and 1.5",
+intu: String.raw`The bottom mirror can also be designed. Each layer keeps its quarter-wave thickness times a scale \(1 + \tfrac{1}{2}\tanh q\), which stays between 0.5 and 1.5. At \(q = 0\) the stack is the ideal quarter-wave mirror of Chapter 2. Here all high-index layers share one \(q\) and all low-index layers another, so you can see what the scales do: thicker layers shift the stopband to longer wavelengths, unequal scales narrow it. The reflectance is computed live with the transfer matrix method.`,
+eq: String.raw`\[ d_j = d_j^{\mathrm{QW}} \left( 1 + \tfrac{1}{2} \tanh q_j \right) \]\[ d^{\mathrm{QW}} = \frac{\lambda_0}{4n}, \qquad 0.5 \lt d_j/d_j^{\mathrm{QW}} \lt 1.5 \]`,
+sym: [[String.raw`\(d_j\)`, String.raw`thickness of layer \(j\)`], [String.raw`\(d^{\mathrm{QW}}\)`, String.raw`quarter-wave thickness at \(\lambda_0\)`], [String.raw`\(q_j\)`, String.raw`free variable of layer \(j\)`], [String.raw`\(n_H, n_L\)`, "3.5 and 3.0 in this example"]],
+how: [String.raw`Start from the quarter-wave stack, the best mirror at \(\lambda_0\) for a fixed number of pairs.`, "Allow each layer to change by at most ±50 %.", "The scale is a tanh map with center 1 and half range ½.", "With per-layer scales the optimizer can tune the phase of the reflection, not just its strength."],
+say: "Each DBR layer thickness is its quarter-wave value times a tanh-bounded scale between 0.5 and 1.5, starting from the quarter-wave stack.",
+num: String.raw`Example stack: 10 pairs, \(n_H = 3.5\), \(n_L = 3.0\), \(\lambda_0 = 800\) nm, so \(d^{\mathrm{QW}} = 57.1\) and 66.7 nm. Each pair adds two parameters.`,
+r(fig, ctl) {
+  ctl.innerHTML = sl("h", "q of high-index layers", -2.5, 2.5, 0.05, 0) + sl("l", "q of low-index layers", -2.5, 2.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
+  const nH = 3.5, nL = 3.0, l0 = 800, ls = range(600, 1050, 226);
+  const u = () => {
+    const qh = +$("h").value, ql = +$("l").value; $("hv").textContent = qh.toFixed(2); $("lv").textContent = ql.toFixed(2);
+    const sh = 1 + 0.5 * Math.tanh(qh), sL = 1 + 0.5 * Math.tanh(ql), lay = []; for (let i = 0; i < 10; i++) { lay.push([nH, l0 / (4 * nH) * sh]); lay.push([nL, l0 / (4 * nL) * sL]); }
+    const R = ls.map(l => C2.tmmR(1.0, lay, 3.5, l)), R0 = ls.map(l => C2.tmmR(1.0, C2.dbrLayers(nH, nL, 10, l0), 3.5, l));
+    let im = 0; R.forEach((v, i) => { if (v > R[im]) im = i; });
+    let s = C3.frame(70, 30, 560, 180, 600, 1050, 0, 1, [600, 700, 800, 900, 1000], [0, 0.5, 1], "wavelength (nm)", "reflectance R") + plot(70, 30, 560, 180, ls, R0, 600, 1050, 0, 1, "var(--p)", 1.5, "4 3") + plot(70, 30, 560, 180, ls, R, 600, 1050, 0, 1, "#378ADD", 2.5);
+    s += C3.legend(80, 250, [["quarter-wave start (q = 0)", "var(--p)", "4 3"], ["scaled stack", "#378ADD"]]);
     fig.innerHTML = svg(260, s);
-    $("ro").innerHTML = `<div><span>T̄ of A</span><b>${A.toFixed(3)}</b></div><div><span>T̄ of B</span><b>${B.toFixed(3)}</b></div><div><span>preferred</span><b>${A > B ? "A" : "B"}</b></div>`;
+    $("ro").innerHTML = `<div><span>scale H / L</span><b>${sh.toFixed(3)} / ${sL.toFixed(3)}</b></div><div><span>peak R at</span><b>${ls[im].toFixed(0)} nm</b></div><div><span>R at 800 nm</span><b>${C2.tmmR(1.0, lay, 3.5, 800).toFixed(3)}</b></div>`;
   };
-  $("s").oninput = u; u();
+  $("h").oninput = u; $("l").oninput = u; u();
 }},
 
-{s: "5. Splitter objective", t: "The polarization splitter: two transmissions added",
-intu: String.raw`A polarization beam splitter must send \(\mathrm{TE}_0\) to the cross port and \(\mathrm{TM}_0\) to the bar port. The figure of merit adds the two band-weighted transmissions, so its maximum is 2. Leakage into the wrong port is not penalized directly, since power in the wrong port cannot be in the right one. The reported quantities are the extinction ratio, how much more power goes to the intended port than to the other, and the insertion loss. Set the four transmissions.`,
-eq: String.raw`\[ \mathrm{FOM} = \sum_i w_i\, T_{\mathrm{TE}\to\mathrm{cross}}(\lambda_i) + \sum_i w_i\, T_{\mathrm{TM}\to\mathrm{bar}}(\lambda_i) \]\[ \mathrm{ER} = 10 \log_{10}\frac{T_{\mathrm{target}}}{T_{\mathrm{leak}}}, \qquad \mathrm{IL} = -10 \log_{10} T_{\mathrm{target}} \]<div class="eqref">Ch. 3 Eq. (3.15) and Eq. (3.19)</div>`,
-sym: [[String.raw`\(T_{\mathrm{TE}\to\mathrm{cross}}\)`, String.raw`\(\mathrm{TE}_0\) input reaching the cross port in \(\mathrm{TE}_0\)`], [String.raw`\(T_{\mathrm{TM}\to\mathrm{bar}}\)`, String.raw`\(\mathrm{TM}_0\) input reaching the bar port in \(\mathrm{TM}_0\)`], [String.raw`\(T_{\mathrm{leak}}\)`, "power in the other port"], [String.raw`\(\mathrm{ER}\)`, "extinction ratio in dB"], [String.raw`\(\mathrm{IL}\)`, "insertion loss in dB"]],
-how: ["Each polarization is a separate input, so each needs its own forward and adjoint runs.", "Each term is a band-weighted mode transmission (cards 1 and 3).", "Adding them treats both polarizations as equally important.", String.raw`Energy conservation \(T_{\mathrm{target}} + T_{\mathrm{leak}} + \text{losses} = 1\) means maximizing \(T_{\mathrm{target}}\) already pushes \(T_{\mathrm{leak}}\) down.`],
-say: "The splitter figure of merit is the sum of the band-weighted transmissions of TE into the cross port and TM into the bar port, with a maximum of 2.",
-num: String.raw`Example: \(T_{\mathrm{target}} = 0.9\) and \(T_{\mathrm{leak}} = 0.01\) give IL = 0.46 dB and ER = 19.5 dB. The thesis defines the operating band as the range where both polarizations reach \(T_{\mathrm{target}} \ge 0.8\).`,
+/* from old ch3 L5 card 5 */
+{s: "5. A taper", t: "Taper half-widths bounded between the two waveguides",
+intu: String.raw`A taper from a narrow waveguide to a wide section is described by its half-width \(y_i\) at \(M\) fixed, equally spaced positions. Each \(y_i\) is a tanh map of its own \(q_i\), bounded by the two half-widths. The map bounds the width but does not prescribe a profile: the outline can bulge or even wiggle, and the optimizer decides. Choose a starting profile and add a ripple in \(q\) to see that the outline always stays between the dashed limits. The outline is mirrored about the axis.`,
+eq: String.raw`\[ y_i = \frac{w_{\mathrm{in}}}{2} + \frac{w_{\mathrm{out}} - w_{\mathrm{in}}}{2} \cdot \frac{\tanh(\pi q_i) + 1}{2} \]<div class="eqref">Ch. 3 Eq. (3.8)</div>`,
+sym: [[String.raw`\(y_i\)`, String.raw`half-width at position \(x_i\)`], [String.raw`\(w_{\mathrm{in}}, w_{\mathrm{out}}\)`, "widths of the narrow and the wide waveguide"], [String.raw`\(q_i\)`, String.raw`free variable of point \(i\)`], [String.raw`\([\tanh(\pi q) + 1]/2\)`, String.raw`runs from 0 to 1, so \(y_i\) runs from \(w_{\mathrm{in}}/2\) to \(w_{\mathrm{out}}/2\)`]],
+how: [String.raw`Fix \(M\) positions along the taper.`, "Let only the half-width at each position change.", String.raw`Map each \(q_i\) through \((\tanh(\pi q_i) + 1)/2\) onto \([0, 1]\), then onto the allowed half-width range.`, "Mirror the outline about the axis and etch it through the membrane."],
+say: "The taper outline is a set of half-widths at fixed positions, each bounded between the two waveguide half-widths by a tanh map, with no profile imposed.",
+num: String.raw`Typical: about 100 points along a few micrometers. The first and last points connect to the waveguides. A linear start uses \(q_i = \operatorname{atanh}(2t_i - 1)/\pi\) with \(t_i\) the fractional position.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("a", "TE → cross (target)", 0, 1, 0.01, 0.9) + sl("b", "TE → bar (leak)", 0, 1, 0.005, 0.02) + sl("c", "TM → bar (target)", 0, 1, 0.01, 0.85) + sl("d", "TM → cross (leak)", 0, 1, 0.005, 0.04) + '<div class="readout" id="ro"></div>';
+  let prof = "lin"; ctl.innerHTML = btns([["lin", "Linear start"], ["cvx", "Bulging"], ["cnc", "Hollow"]], "p") + sl("r", "Ripple in q", 0, 1.5, 0.05, 0) + '<div class="readout" id="ro"></div>';
+  const M = 41, wi = 0.3, wo = 2.0;
   const u = () => {
-    let a = +$("a").value, b = +$("b").value, c = +$("c").value, d = +$("d").value;
-    if (a + b > 1) { b = Math.max(0, 1 - a); $("b").value = b; } if (c + d > 1) { d = Math.max(0, 1 - c); $("d").value = d; }
-    $("av").textContent = a.toFixed(2); $("bv").textContent = b.toFixed(3); $("cv").textContent = c.toFixed(2); $("dv").textContent = d.toFixed(3);
-    const W = v => 1 + 14 * v;
-    let s = `<rect x="250" y="70" width="180" height="110" rx="6" fill="var(--sunk)" stroke="var(--p)"/><text class="th" x="340" y="130" text-anchor="middle">PBS</text>`;
-    s += `<path d="M40 125 L250 125" stroke="var(--p)" stroke-width="16" stroke-opacity="0.15"/><text class="ts" x="40" y="110">input: TE₀ and TM₀</text>`;
-    s += `<path d="M430 90 L640 60" stroke="var(--p)" stroke-width="34" stroke-opacity="0.12"/><path d="M430 160 L640 190" stroke="var(--p)" stroke-width="34" stroke-opacity="0.15"/><text class="ts" x="640" y="34" text-anchor="end">bar port</text><text class="ts" x="640" y="228" text-anchor="end">cross port</text>`;
-    s += `<path d="M430 166 L640 196" stroke="#378ADD" stroke-width="${W(a)}" opacity="0.85"/><path d="M430 154 L640 184" stroke="#D85A30" stroke-width="${W(d)}" opacity="0.85" stroke-dasharray="6 4"/>`;
-    s += `<path d="M430 84 L640 54" stroke="#D85A30" stroke-width="${W(c)}" opacity="0.85"/><path d="M430 96 L640 66" stroke="#378ADD" stroke-width="${W(b)}" opacity="0.85" stroke-dasharray="6 4"/>`;
-    s += C3.legend(40, 250, [["TE₀", "#378ADD"], ["TM₀", "#D85A30"], ["leak", "var(--p)", "6 4"]]);
-    fig.innerHTML = svg(255, s);
-    const er = (t, l) => l > 0 ? (10 * Math.log10(t / l)).toFixed(1) + " dB" : "∞", il = t => t > 0 ? (-10 * Math.log10(t)).toFixed(2) + " dB" : "∞";
-    $("ro").innerHTML = `<div><span>FOM (max 2)</span><b>${(a + c).toFixed(3)}</b></div><div><span>TE: ER / IL</span><b>${er(a, b)} / ${il(a)}</b></div><div><span>TM: ER / IL</span><b>${er(c, d)} / ${il(c)}</b></div>`;
+    pick(ctl, "p", prof); const rp = +$("r").value; $("rv").textContent = rp.toFixed(2);
+    const t = range(0.02, 0.98, M), base = t.map(v => prof === "lin" ? v : prof === "cvx" ? Math.sqrt(v) : v * v);
+    const q = base.map((v, i) => Math.atanh(C3.clamp(2 * v - 1, -0.999, 0.999)) / Math.PI + rp * Math.sin(i * 1.3));
+    const y = q.map(v => wi / 2 + (wo - wi) / 2 * (Math.tanh(Math.PI * v) + 1) / 2);
+    const X = C3.X(60, 560, 0, 1), Y = v => 130 - v * 100;
+    let top = "", bot = ""; t.forEach((v, i) => { top += (i ? "L" : "M") + X(v).toFixed(1) + " " + Y(y[i]).toFixed(1); bot += (i ? "L" : "M") + X(v).toFixed(1) + " " + (260 - Y(y[i])).toFixed(1); });
+    let s = `<rect x="10" y="${Y(wi / 2)}" width="50" height="${2 * (130 - Y(wi / 2))}" fill="var(--blue-bg)" stroke="var(--blue)"/><rect x="620" y="${Y(wo / 2)}" width="50" height="${2 * (130 - Y(wo / 2))}" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+    const poly = t.map((v, i) => `${X(v).toFixed(1)} ${Y(y[i]).toFixed(1)}`).concat(t.map((v, i) => `${X(v).toFixed(1)} ${(260 - Y(y[i])).toFixed(1)}`).reverse());
+    s += `<path d="M${poly.join("L")}Z" fill="var(--blue-bg)" stroke="none"/>`;
+    s += `<path d="${top}" fill="none" stroke="var(--blue)" stroke-width="2"/><path d="${bot}" fill="none" stroke="var(--blue)" stroke-width="2"/>`;
+    for (const yy of [wi / 2, wo / 2]) s += `<line x1="60" x2="620" y1="${Y(yy)}" y2="${Y(yy)}" stroke="#D85A30" stroke-dasharray="5 4"/><line x1="60" x2="620" y1="${260 - Y(yy)}" y2="${260 - Y(yy)}" stroke="#D85A30" stroke-dasharray="5 4"/>`;
+    t.forEach((v, i) => s += `<circle cx="${X(v)}" cy="${Y(y[i])}" r="2.5" fill="#D85A30"/>`);
+    s += `<line x1="60" x2="620" y1="130" y2="130" stroke="var(--b)" stroke-dasharray="2 4"/>`;
+    fig.innerHTML = svg(262, s);
+    $("ro").innerHTML = `<div><span>points M</span><b>${M}</b></div><div><span>narrowest half-width</span><b>${(Math.min(...y) * 1000).toFixed(0)} nm</b></div><div><span>widest half-width</span><b>${(Math.max(...y) * 1000).toFixed(0)} nm</b></div>`;
   };
-  ["a", "b", "c", "d"].forEach(k => $(k).oninput = u); u();
+  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { prof = b.dataset.p; u(); }); $("r").oninput = u; u();
 }},
 
-{s: "6. Objective sets the adjoint source", t: "Which wavelengths drive the adjoint run",
-intu: String.raw`The adjoint source amplitude at each frequency is \(\partial J/\partial a_m\). For a band-weighted objective \(J = \sum w_i |a_i|^2\) this is proportional to \(w_i a_i^{*}\). So a wavelength drives the adjoint run strongly when it has a large weight and the device already sends some light into the mode there. Below, a current transmission spectrum (blue) and the weights (orange) give the adjoint amplitudes (bars). Shift the spectrum and change \(\sigma\).`,
-eq: String.raw`\[ J = \sum_i w_i\, |a_m(\lambda_i)|^2 \quad\Longrightarrow\quad \frac{\partial J}{\partial a_m(\lambda_i)} \propto w_i\, a_m^{*}(\lambda_i) \]\[ |\text{amplitude}| \propto w_i \sqrt{T_i} \]`,
-sym: [[String.raw`\(a_m(\lambda_i)\)`, String.raw`mode amplitude at wavelength \(i\)`], [String.raw`\(w_i\)`, "band weight"], [String.raw`\(a^{*}\)`, "complex conjugate, the time reversal of Lesson 2 card 6"]],
-how: [String.raw`\(J\) depends on each \(a_i\) through \(w_i a_i a_i^{*}\).`, String.raw`Its derivative with respect to \(a_i\), holding \(a_i^{*}\) fixed, is \(w_i a_i^{*}\).`, "Tidy3D uses this as the adjoint source amplitude, with its own constant factors.", String.raw`This is the 1D result \(\operatorname{conj}(E_{\mathrm{out}})\) of Lesson 2, now per frequency and per mode.`],
-say: "The adjoint source of each frequency is proportional to its band weight times the conjugate mode amplitude, so the objective decides which wavelengths drive the gradient.",
-num: "A wavelength with zero weight contributes nothing to the gradient, however the device behaves there.",
+/* from old ch3 L5 card 6 */
+{s: "6. An outline", t: "Polygon vertices that move along their normals",
+intu: String.raw`After a topology design is traced into a polygon, its boundary can be optimized directly. Each free vertex moves along its outward normal by \(\Delta_{\mathrm{max}} \tanh \theta_i\), so it never leaves a band of half-width \(\Delta_{\mathrm{max}}\) around the starting outline (shaded), and \(\theta = 0\) reproduces the start exactly. Because the boundary moves continuously instead of in pixel steps, staircase edges disappear and corner radii can be controlled (Lesson 10). Shuffle the \(\theta\) values and change \(\Delta_{\mathrm{max}}\).`,
+eq: String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]<div class="eqref">Ch. 3 Eq. (3.12)</div>`,
+sym: [[String.raw`\(\mathbf{r}_i^{(0)}\)`, String.raw`starting position of vertex \(i\)`], [String.raw`\(\hat{\mathbf{n}}_i\)`, String.raw`outward unit normal at vertex \(i\)`], [String.raw`\(\theta_i\)`, String.raw`free variable of vertex \(i\)`], [String.raw`\(\Delta_{\mathrm{max}}\)`, "largest allowed move"]],
+how: ["Compute the normal at each vertex from its two neighbors.", "Let the vertex move only along that normal.", String.raw`Bound the move with \(\Delta_{\mathrm{max}} \tanh \theta\).`, String.raw`The boundary gradient of Eq. (3.6) gives \(\partial J/\partial \mathbf{r}_i\), and the chain rule gives \(\partial J/\partial \theta_i = (\partial J/\partial \mathbf{r}_i) \cdot \hat{\mathbf{n}}_i\, \Delta_{\mathrm{max}} \operatorname{sech}^2 \theta_i\).`],
+say: String.raw`In the shape stage each vertex moves along its normal by a tanh-bounded amount, so the outline stays within \(\Delta_{\mathrm{max}}\) of where it started.`,
+num: String.raw`A larger \(\Delta_{\mathrm{max}}\) gives the optimizer more freedom. A small one, a few nanometers, keeps a design that already passed a design rule check close to passing (Lesson 11).`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("c", "Spectrum peak (nm)", 760, 830, 1, 805) + sl("s", "σ of the weights (nm)", 3, 30, 0.5, 10);
+  ctl.innerHTML = sl("d", "Δ_max (nm)", 0, 60, 1, 30) + sl("a", "Spread of θ", 0, 3, 0.05, 1.5) + `<div class="row"><button id="rn">New random θ</button></div><div class="readout" id="ro"></div>`;
+  let seed = 8; const n = 48, sc = 0.45;
+  const base = Array.from({ length: n }, (_, i) => { const a = 2 * Math.PI * i / n, r = 220 + 50 * Math.sin(2 * a) + 25 * Math.cos(3 * a); return [r * Math.cos(a) * 1.3, r * Math.sin(a) * 0.9]; });
+  const nor = base.map((p, i) => { const a = base[(i + n - 1) % n], b = base[(i + 1) % n], tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty); return [ty / l, -tx / l]; });
   const u = () => {
-    const pc = +$("c").value, sg = +$("s").value; $("cv").textContent = pc; $("sv").textContent = sg;
-    const ls = range(755, 835, 33), T = ls.map(l => 0.8 * Math.exp(-Math.pow((l - pc) / 25, 2))), w0 = ls.map(l => Math.exp(-Math.pow(l - 795, 2) / (2 * sg * sg))), S = w0.reduce((a, b) => a + b, 0), w = w0.map(v => v / S);
-    const amp = ls.map((_, i) => w[i] * Math.sqrt(T[i])), ma = Math.max(...amp), mw = Math.max(...w);
-    const X = C3.X(70, 560, 755, 835), Y = C3.Y(30, 180, 0, 1.05);
-    let s = C3.frame(70, 30, 560, 180, 755, 835, 0, 1.05, [755, 775, 795, 815, 835], [0, 0.5, 1], "wavelength (nm)", "scaled");
-    ls.forEach((l, i) => s += `<rect x="${X(l) - 5}" y="${Y(amp[i] / ma)}" width="10" height="${210 - Y(amp[i] / ma)}" fill="#7F77DD" opacity="0.75"/>`);
-    s += plot(70, 30, 560, 180, ls, T, 755, 835, 0, 1.05, "#378ADD", 2.5) + plot(70, 30, 560, 180, ls, w.map(v => v / mw), 755, 835, 0, 1.05, "#EF9F27", 2, "4 3");
-    s += C3.legend(80, 250, [["T(λ) now", "#378ADD"], ["weights (scaled)", "#EF9F27", "4 3"]]) + `<rect x="380" y="240" width="12" height="12" fill="#7F77DD"/><text class="ts" x="398" y="250">adjoint amplitude (scaled)</text>`;
-    fig.innerHTML = svg(260, s);
+    const D = +$("d").value, sp = +$("a").value; $("dv").textContent = D; $("av").textContent = sp.toFixed(2);
+    const r = C3.rng(seed), th = base.map(() => sp * (2 * r() - 1)), pts = base.map((p, i) => [p[0] + D * Math.tanh(th[i]) * nor[i][0], p[1] + D * Math.tanh(th[i]) * nor[i][1]]);
+    const P = p => `${(340 + p[0] * sc).toFixed(1)} ${(135 + p[1] * sc).toFixed(1)}`;
+    const outer = base.map((p, i) => [p[0] + D * nor[i][0], p[1] + D * nor[i][1]]), inner = base.map((p, i) => [p[0] - D * nor[i][0], p[1] - D * nor[i][1]]);
+    let s = `<path d="M${outer.map(P).join("L")}Z M${inner.map(P).join("L")}Z" fill="#EF9F27" fill-opacity="0.18" fill-rule="evenodd"/>`;
+    s += `<path d="M${base.map(P).join("L")}Z" fill="none" stroke="var(--p)" stroke-dasharray="4 3"/><path d="M${pts.map(P).join("L")}Z" fill="var(--blue-bg)" fill-opacity="0.7" stroke="var(--blue)" stroke-width="2"/>`;
+    base.forEach((p, i) => { if (i % 4 === 0) s += `<line x1="${340 + p[0] * sc}" y1="${135 + p[1] * sc}" x2="${340 + (p[0] + 50 * nor[i][0]) * sc}" y2="${135 + (p[1] + 50 * nor[i][1]) * sc}" stroke="#7F77DD" stroke-width="1.2" marker-end="url(#ar)"/>`; });
+    pts.forEach(p => s += `<circle cx="${340 + p[0] * sc}" cy="${135 + p[1] * sc}" r="2.5" fill="#D85A30"/>`);
+    fig.innerHTML = svg(270, s + `<text class="ts" x="20" y="262">dashed: start, shaded: ±Δ_max band, purple: normals</text>`);
+    let mm = 0; pts.forEach((p, i) => mm = Math.max(mm, Math.hypot(p[0] - base[i][0], p[1] - base[i][1])));
+    $("ro").innerHTML = `<div><span>vertices</span><b>${n}</b></div><div><span>largest move</span><b>${mm.toFixed(1)} nm</b></div><div><span>allowed</span><b>${D} nm</b></div>`;
   };
-  $("c").oninput = u; $("s").oninput = u; u();
+  $("d").oninput = u; $("a").oninput = u; $("rn").onclick = () => { seed++; u(); }; u();
 }}
+
 ],
-summary: String.raw`Every figure of merit is a mode transmission \(T_m = |a_m|^2\), with \(a_m\) the overlap of the simulated field with the mode at the monitor, normalized to unit power. Power in other modes or radiated counts as loss. Objectives are averaged over a band with normalized Gaussian weights, which steers the optimizer away from narrow resonances. The polarization splitter adds TE into the cross port and TM into the bar port, maximum 2, and is reported with extinction ratio and insertion loss. The objective also fixes the adjoint source: at each frequency its amplitude is proportional to \(w_i a_i^{*}\).`,
+summary: String.raw`Every bounded geometric quantity is written as a tanh function of a free variable, so the optimizer moves freely while the geometry stays inside its limits. Grating widths lie between \(w_{\mathrm{min}}\) and \(w_{\mathrm{max}}\) (Eq. 3.7), DBR layers between 0.5 and 1.5 times their quarter-wave thickness, taper half-widths between those of the two waveguides (Eq. 3.8), and outline vertices within \(\Delta_{\mathrm{max}}\) of their start along the normal (Eq. 3.12). Near a bound the tanh flattens, so the quantity responds less, which enforces the bound gently. The chain rule through the tanh is applied automatically.`,
 sheet: [
-[String.raw`\[ a_m = \frac{1}{4} \int_S \left( \mathbf{E} \times \mathbf{H}_m^{*} + \mathbf{E}_m^{*} \times \mathbf{H} \right) \cdot \hat{\mathbf{n}}\, dS, \qquad T_m = |a_m|^2 \]`, "Mode overlap (Ch. 3 Eq. 3.13)"],
-[String.raw`\[ \bar{T} = \sum w_i\, T(\lambda_i), \qquad w_i \propto \exp\!\left[ -(\lambda_i - \lambda_0)^2/(2\sigma^2) \right], \qquad \sum w_i = 1 \]`, "Band weights (Ch. 3 Eq. 3.14)"],
-[String.raw`\[ \sigma = \sigma_c/\sqrt{2} \]`, "Converting the alternative Gaussian form"],
-[String.raw`\[ \mathrm{FOM} = \sum w_i\, T_{\mathrm{TE}\to\mathrm{cross}} + \sum w_i\, T_{\mathrm{TM}\to\mathrm{bar}} \le 2 \]`, "Splitter objective (Ch. 3 Eq. 3.15)"],
-[String.raw`\[ \mathrm{ER} = 10 \log_{10}(T_{\mathrm{target}}/T_{\mathrm{leak}}), \qquad \mathrm{IL} = -10 \log_{10} T_{\mathrm{target}} \]`, "Reported quantities (Ch. 3 Eq. 3.19)"],
-[String.raw`\[ \text{adjoint amplitude} \propto w_i\, a_m^{*}(\lambda_i) \]`, "Objective to adjoint source"]],
-consts: "Mode profiles: 2D slab guides with core index 3.0 in air at 800 nm. The spectra in cards 4 and 6 are illustrations.",
-sources: ["Flexcompute, Tidy3D 2.11.2 source: components/data/utils.py _dot_numpy (mode overlap), ModeData._adjoint_source_amp", "Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (figure of merit from mode overlap, adjoint source from ∂F/∂x)"]
+[String.raw`\[ w(q) = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \tanh q + \frac{1}{2}(w_{\mathrm{max}} + w_{\mathrm{min}}) \]`, "Grating widths (Ch. 3 Eq. 3.7)"],
+[String.raw`\[ \frac{dw}{dq} = \frac{1}{2}(w_{\mathrm{max}} - w_{\mathrm{min}}) \operatorname{sech}^2 q \]`, "Saturation near the bounds"],
+[String.raw`\[ d_j = d_j^{\mathrm{QW}} \left( 1 + \tfrac{1}{2} \tanh q_j \right) \]`, "DBR layer scale, 0.5 to 1.5"],
+[String.raw`\[ y_i = \frac{w_{\mathrm{in}}}{2} + \frac{w_{\mathrm{out}} - w_{\mathrm{in}}}{2} \cdot \frac{\tanh(\pi q_i) + 1}{2} \]`, "Taper half-widths (Ch. 3 Eq. 3.8)"],
+[String.raw`\[ \mathbf{r}_i = \mathbf{r}_i^{(0)} + \Delta_{\mathrm{max}} \tanh(\theta_i)\, \hat{\mathbf{n}}_i \]`, "Outline vertices (Ch. 3 Eq. 3.12)"]],
+consts: "Example values are generic: widths 100 to 800 nm, DBR 3.5/3.0 at 800 nm with 10 pairs, taper from 0.3 to 2.0 µm.",
+sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (polygon vertices as design parameters, shape optimization after topology optimization)", "Flexcompute, Tidy3D 2.11.2 (autograd through the geometry and the chain rule)"]
 });

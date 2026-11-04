@@ -4,6 +4,7 @@ id: "thesis-ch3-l8", title: "Erosion, dilation, opening and closing", short: "8.
 big: String.raw`Mathematical morphology describes shapes by what a small disk can do inside them. Erosion keeps only the points where the whole disk fits inside the GaAs, so every feature shrinks by the disk radius \(r\). Dilation adds every point within \(r\) of the GaAs, so every feature grows. Opening is erosion followed by dilation: whatever survived the shrinking grows back, but solid parts thinner than \(2r\) and sharp convex tips are gone for good. Closing is dilation followed by erosion: it fills gaps narrower than \(2r\), small holes and sharp concave notches. A layout that respects a minimum feature of \(2r\), with corner radii of at least \(r\), is unchanged by both. That single property is the basis of the erosion and dilation penalty (Lesson 9) and of the design rule check and repair (Lesson 11).`,
 bridge: "This is the background of Ch. 3 Sec. 3.5. Hammond et al. 2021 showed that differentiable morphological transforms can be used inside photonic topology optimization. Christiansen and Sigmund 2021 build eroded and dilated designs with thresholds above and below 0.5. Tidy3D builds erosion and dilation the same way, as a filter plus a projection with thresholds 0.99 and 0.01 (ErosionDilationPenalty). The binary operations below are exact on the pixel grid, computed with a Euclidean distance transform.",
 cards: [
+/* from old ch3 L8 card 1 */
 {s: "1. Erosion and dilation", t: "Shrinking and growing every feature by a disk",
 intu: String.raw`The test layout (dark is GaAs) has a big block, a second block separated by a narrow gap, a thin bar, a block with a small hole and a small island. Erosion removes everything within \(r\) of the air (red): the thin bar and the island disappear completely. Dilation adds everything within \(r\) of the GaAs (blue): the gap closes and the hole fills. Switch the operation and change \(r\).`,
 eq: String.raw`\[ \operatorname{erode}_r(X) = \{\, p : \operatorname{disk}(p, r) \subseteq X \,\} \]\[ \operatorname{dilate}_r(X) = \{\, p : \operatorname{disk}(p, r) \cap X \neq \emptyset \,\} \]`,
@@ -24,6 +25,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { op = b.dataset.o; u(); }); $("r").oninput = u; u();
 }},
 
+/* from old ch3 L8 card 2 */
 {s: "2. Opening", t: "Opening: erode, then dilate back",
 intu: String.raw`Opening first erodes, then dilates by the same radius. Features that were thick enough survive the erosion and grow back to almost exactly their old shape. Features thinner than \(2r\) vanished during the erosion and cannot grow back. Sharp convex corners come back rounded with radius \(r\), because the disk cannot reach into a tip. So the GaAs removed by opening, \(X \setminus \operatorname{open}_r(X)\), marks exactly the solid features that are too thin or too sharp. Change \(r\).`,
 eq: String.raw`\[ \operatorname{open}_r(X) = \operatorname{dilate}_r\big(\operatorname{erode}_r(X)\big) \]\[ = \text{union of all disks of radius } r \text{ that fit inside } X \]`,
@@ -42,6 +44,7 @@ r(fig, ctl) {
   $("r").oninput = u; u();
 }},
 
+/* from old ch3 L8 card 3 */
 {s: "3. Closing", t: "Closing: dilate, then erode back",
 intu: String.raw`Closing is opening applied to the air. Dilation first fills every gap narrower than \(2r\) and every small hole. The erosion then pulls the outer edges back to where they were, but the filled gaps and holes stay filled. Sharp concave corners, inside notches, also get filled with a rounded fillet. The air filled by closing, \(\operatorname{close}_r(X) \setminus X\), marks exactly the gaps that are too narrow. Change \(r\).`,
 eq: String.raw`\[ \operatorname{close}_r(X) = \operatorname{erode}_r\big(\operatorname{dilate}_r(X)\big) \]\[ = \text{complement of the opening of the air} \]`,
@@ -60,6 +63,7 @@ r(fig, ctl) {
   $("r").oninput = u; u();
 }},
 
+/* from old ch3 L8 card 4 */
 {s: "4. Both at once", t: "A layout that obeys the length scale is unchanged by both",
 intu: String.raw`Put opening and closing together. Red marks solid that is too thin or too sharp, blue marks gaps that are too narrow. If neither color appears, every solid feature and every gap is at least \(2r\) wide and every corner has a radius of at least \(r\). Here you can choose the layout: the test pattern with its violations, or a clean layout built from rounded shapes with wide gaps. The clean one passes up to \(r = 6\) pixels and fails from \(r = 7\), when its narrowest parts, 14 pixels wide, reach \(2r\).`,
 eq: String.raw`\[ X \text{ obeys length scale } r \quad\Longleftrightarrow\quad \operatorname{open}_r(X) = X = \operatorname{close}_r(X) \]`,
@@ -79,6 +83,7 @@ r(fig, ctl) {
   ctl.querySelectorAll("button").forEach(b => b.onclick = () => { L = b.dataset.l; u(); }); $("r").oninput = u; u();
 }},
 
+/* from old ch3 L8 card 5 */
 {s: "5. Differentiable version", t: "Erosion and dilation as a filter and a projection",
 intu: "The binary operations have no useful gradient. Tidy3D builds smooth versions from the tools of Lessons 6 and 7. Filter the density with the conic kernel, then project with a threshold near 1: only pixels whose whole neighborhood is GaAs stay, which is erosion. Project with a threshold near 0 instead: any GaAs in the neighborhood is enough, which is dilation. Combining them gives smooth opening and closing. Compare the smooth opening (middle) with the binary opening of the same radius (right). The readout measures how far a straight edge moves under the smooth erosion.",
 eq: String.raw`\[ \operatorname{erode}(\hat\rho) = P_{\beta,\,0.99}\big(\operatorname{filter}_R(\hat\rho)\big) \qquad \operatorname{dilate}(\hat\rho) = P_{\beta,\,0.01}\big(\operatorname{filter}_R(\hat\rho)\big) \]\[ \mathcal{O} = \operatorname{dilate} \circ \operatorname{erode} \qquad \mathcal{C} = \operatorname{erode} \circ \operatorname{dilate} \]`,
@@ -101,6 +106,7 @@ r(fig, ctl) {
   $("n").oninput = u; $("b").oninput = u; u();
 }},
 
+/* from old ch3 L8 card 6 */
 {s: "6. The rolling disk", t: "Why opening removes thin parts and sharp tips",
 intu: String.raw`Picture a disk of radius \(r\) rolled everywhere inside the GaAs without crossing into air. The opened shape is everything the disk can touch. The orange pixels are the possible centers of the disk, the eroded set, and the circles show a few disks. The disk cannot enter a bar thinner than its diameter, and it cannot reach into a sharp tip. Rolled in the air instead, the same disk explains closing. Change the radius.`,
 eq: String.raw`\[ \operatorname{open}_r(X) = \bigcup \left\{\, \operatorname{disk}(c, r) : c \in \operatorname{erode}_r(X) \,\right\} \]`,
@@ -120,6 +126,7 @@ r(fig, ctl) {
   };
   $("r").oninput = u; u();
 }}
+
 ],
 summary: String.raw`Erosion keeps the points where a disk of radius \(r\) fits inside the GaAs, dilation adds the points within \(r\) of it. Opening, erosion then dilation, is the union of all disks that fit, so it removes solid features narrower than \(2r\) and rounds convex corners to radius \(r\). Closing, dilation then erosion, fills gaps narrower than \(2r\), small holes and concave notches. A layout with no feature or gap below \(2r\) and no corner sharper than \(r\) is unchanged by both. Tidy3D builds differentiable versions by filtering and projecting with thresholds 0.99 and 0.01, which move edges by nearly the filter radius \(R\), so the radius \(R\) corresponds to a minimum feature just under \(2R\).`,
 sheet: [
