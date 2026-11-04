@@ -1,9 +1,8 @@
-/* TODO for this lesson: Thesis Sec. 3.1. */
 addLesson("thesis", "ch3", {
 level: "Foundations",
 id: "thesis-ch3-l1", title: "The inverse design problem", short: "1. The design problem",
-big: "In forward design you guess a geometry, simulate it and look at the result. Inverse design turns this around. You write down what the device should do as one number, the figure of merit, and let an optimizer change the geometry to make that number as large as possible. Each step needs the figure of merit and its gradient with respect to every design parameter. The adjoint method gives that gradient from just two simulations, however many parameters there are, which is what makes designs with thousands of free pixels possible. Penalty terms are subtracted from the figure of merit so that the optimizer is pushed away from shapes that cannot be fabricated.",
-bridge: "This lesson follows Ch. 3 Sec. 3.1. The idea that design rules belong inside the optimization comes from Hammond et al. 2021 (Georgia Tech and MIT), a methods paper that adds foundry rules to photonic topology optimization. The cost argument for the adjoint method is from Michaels and Yablonovitch 2018 (UC Berkeley).",
+big: "In forward design you guess a geometry, simulate it and look at the result. Inverse design turns this around. You write down what the device should do as one number, the figure of merit, and let an optimizer change the geometry to make that number as large as possible. Each step needs the figure of merit and its gradient with respect to every design parameter. The adjoint method gives that gradient from just two simulations, however many parameters there are, which is what makes designs with thousands of free pixels possible. Penalty terms are subtracted from the figure of merit so that the optimizer is pushed away from shapes that cannot be fabricated. A gradient method finds a local optimum that depends on where it starts, so every device starts from a simple design that already works in part: a uniform grating, a linear taper or a Y-shaped splitter.",
+bridge: "This lesson follows Ch. 3 Sec. 3.1, the design problem of Eq. (3.1), the loop of Fig. 3.1 and the starting devices, with the cost count of Sec. 3.2. The idea that design rules belong inside the optimization comes from Hammond et al. 2021 (Georgia Tech and MIT), a methods paper that adds foundry rules to photonic topology optimization. The cost argument for the adjoint method is from Michaels and Yablonovitch 2018 (UC Berkeley) and Lalau-Keraly et al. 2013.",
 cards: [
 /* from old ch3 L1 card 1 */
 {s: "1. Forward and inverse", t: "Forward design versus inverse design",
@@ -29,9 +28,9 @@ r(fig, ctl) {
 
 /* from old ch3 L1 card 2 */
 {s: "2. The loop", t: "One optimization step, stage by stage",
-intu: String.raw`Every device in the thesis is designed with the same loop (Ch. 3 Fig. 3.1a). The parameters build a geometry. A forward simulation gives the fields and the figure of merit. An adjoint simulation, with a source placed where the light should arrive, gives a second set of fields. Their overlap gives the gradient with respect to every parameter. The optimizer turns the gradient into a step, and the loop repeats until \(F\) stops improving. Step through the stages.`,
+intu: String.raw`Every device in the thesis is designed with the same loop (Ch. 3 Fig. 3.1). The parameters build a geometry. A forward simulation gives the fields and the figure of merit. An adjoint simulation, with a source placed where the light should arrive, gives a second set of fields. Their overlap gives the gradient with respect to every parameter. The optimizer turns the gradient into a step, and the loop repeats until \(F\) stops improving. Step through the stages.`,
 eq: String.raw`\[ \mathbf{p}^{(k)} \to \varepsilon \to \mathbf{E}_{\mathrm{fwd}},\, F \to \mathbf{E}_{\mathrm{adj}} \to \frac{\partial J}{\partial \mathbf{p}} \to \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \Delta\mathbf{p}\!\left(\frac{\partial J}{\partial \mathbf{p}}\right) \]`,
-sym: [[String.raw`\(k\)`, "iteration number"], [String.raw`\(\mathbf{E}_{\mathrm{fwd}}\)`, "fields of the forward simulation (source at the input)"], [String.raw`\(\mathbf{E}_{\mathrm{adj}}\)`, "fields of the adjoint simulation (source at the output monitor)"], [String.raw`\(\Delta\mathbf{p}\)`, "the step chosen by the optimizer, here Adam (Lesson 12)"]],
+sym: [[String.raw`\(k\)`, "iteration number"], [String.raw`\(\mathbf{E}_{\mathrm{fwd}}\)`, "fields of the forward simulation (source at the input)"], [String.raw`\(\mathbf{E}_{\mathrm{adj}}\)`, "fields of the adjoint simulation (source at the output monitor)"], [String.raw`\(\Delta\mathbf{p}\)`, "the step chosen by the optimizer, here Adam (Lesson 13)"]],
 how: ["Forward simulation: needed anyway to know how good the design is.", "Adjoint simulation: one more run of the same structure with a different source (Lessons 2 and 3).", "Gradient: an overlap of the two field sets, then the chain rule back to the parameters.", "Penalties depend only on the geometry, so their gradients need no simulation."],
 say: "Each iteration needs one forward and one adjoint simulation, and the gradient with respect to all parameters comes from the overlap of their fields.",
 num: "With two input polarizations, as for a polarization splitter, each step needs two forward and two adjoint simulations.",
@@ -80,7 +79,7 @@ r(fig, ctl) {
 
 /* from old ch3 L1 card 4 */
 {s: "4. Local optima", t: "A gradient method finds the nearest hill",
-intu: "A gradient-based optimizer only sees the local slope. It climbs the hill it starts on and stops at the top, even if a higher hill exists elsewhere. Pick a starting point and run the climb. This is why every design in the thesis starts from a simple device that already works partly: a uniform grating, a linear or earlier taper, a Y-shaped splitter. A good start puts the optimizer on a good hill.",
+intu: "A gradient-based optimizer only sees the local slope. It climbs the hill it starts on and stops at the top, even if a higher hill exists elsewhere. Pick a starting point and run the climb. This is why every design in the thesis starts from a simple device that already works partly: a uniform grating, a linear taper, a Y-shaped splitter (card 7). A good start puts the optimizer on a good hill.",
 eq: String.raw`\[ \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \alpha\, \frac{\partial J}{\partial \mathbf{p}} \]<div class="eqref">plain gradient ascent, for illustration</div>`,
 sym: [[String.raw`\(\alpha\)`, "step size (learning rate)"], [String.raw`\(\partial J/\partial \mathbf{p}\)`, "local slope, the only information the method uses"], ["local optimum", "a point where the slope is zero and every nearby step goes down"]],
 how: ["The gradient points uphill locally.", String.raw`Small steps along it increase \(J\) until the slope vanishes.`, "Nothing in the method looks beyond the current hill.", "Inverse design problems are not convex, so many local optima exist (Kingma and Ba note their theory covers only convex problems)."],
@@ -108,9 +107,9 @@ r(fig, ctl) {
 /* from old ch3 L1 card 5 */
 {s: "5. Three descriptions", t: "How a geometry is described: numbers, outlines, pixels",
 intu: String.raw`The optimizer only sees numbers, so the geometry has to be described by a vector \(\mathbf{p}\). The thesis uses three kinds of description. A few physical numbers, like the widths of grating teeth and gaps or the DBR layer thicknesses. An outline, given by the positions of points or polygon vertices. Or pixels, each with a density between air and GaAs, which lets even the number of holes change (topology optimization). More freedom finds more unusual devices but is harder to keep fabricable. Pick one.`,
-eq: String.raw`\[ \text{grating: } \mathbf{p} = (w_1, \dots, w_{2N}) \qquad \text{outline: } \mathbf{p} = (\theta_1, \dots, \theta_M) \]\[ \text{topology: } \mathbf{p} = (\rho_1, \dots, \rho_{N_p}) \]`,
-sym: [[String.raw`\(w_i\)`, "widths of teeth and gaps"], [String.raw`\(\theta_i\)`, "vertex move variables (Lesson 5)"], [String.raw`\(\rho_i\)`, "pixel density between 0 (air) and 1 (GaAs), Lesson 6"], [String.raw`\(N_p\)`, "number of pixels"]],
-how: ["Few numbers: easy to fabricate, limited freedom.", "Outline: smooth edges, controllable corners, fixed topology.", "Pixels: full freedom, needs filters, projection and penalties to stay fabricable (Lessons 6 to 9).", "A common sequence is pixels first, then trace the outline and refine it as a shape (Michaels and Yablonovitch suggest exactly this fine-tuning)."],
+eq: String.raw`\[ \text{grating: } \mathbf{p} = (w_1, \dots, w_{2N}) \qquad \text{outline: } \mathbf{p} = (p_1, \dots, p_{N_v}) \]\[ \text{topology: } \mathbf{p} = (\rho_1, \dots, \rho_{N_p}) \]`,
+sym: [[String.raw`\(w_i\)`, "widths of teeth and gaps"], [String.raw`\(p_i\)`, "free variable of a vertex or taper point (Lesson 4)"], [String.raw`\(N_v\)`, "number of free vertices"], [String.raw`\(\rho_i\)`, "pixel density between 0 (air) and 1 (GaAs), Lesson 5"], [String.raw`\(N_p\)`, "number of pixels"]],
+how: ["Few numbers: easy to fabricate, limited freedom.", "Outline: smooth edges, controllable corners, fixed topology.", "Pixels: full freedom, needs filters, projection and penalties to stay fabricable (Lessons 5 to 10).", "A common sequence is pixels first, then trace the outline and refine it as a shape (Michaels and Yablonovitch suggest exactly this fine-tuning)."],
 say: "The parameterization decides how much freedom the optimizer has: a few widths, a set of outline points, or a density per pixel.",
 num: "Typical counts: tens of parameters for a grating, around a hundred outline points for a taper, and tens of thousands of pixels for a free-topology region of a few micrometers at about 10 nm pixels.",
 r(fig, ctl) {
@@ -129,18 +128,18 @@ r(fig, ctl) {
 
 /* from old ch3 L1 card 6 */
 {s: "6. Cost of a gradient", t: "Why finite differences are hopeless and the adjoint method is not",
-intu: String.raw`To know which way to change \(M\) parameters you need \(M\) partial derivatives. By finite differences, each one costs a new simulation with one parameter nudged, so a gradient costs \(M + 1\) simulations. The adjoint method gets all \(M\) derivatives from one forward and one adjoint simulation. Slide the number of parameters and watch the two bars. On a log scale the adjoint bar never moves.`,
-eq: String.raw`\[ \frac{\partial F}{\partial p_i} \approx \frac{F(\mathbf{p} + h\,\mathbf{e}_i) - F(\mathbf{p})}{h} \quad\Longrightarrow\quad M + 1 \text{ simulations} \]\[ \text{adjoint method} \quad\Longrightarrow\quad 2 \text{ simulations, for any } M \]<div class="eqref">Michaels and Yablonovitch, Sec. 2</div>`,
-sym: [[String.raw`\(M\)`, "number of design parameters"], [String.raw`\(h\)`, "small nudge of one parameter"], [String.raw`\(\mathbf{e}_i\)`, String.raw`unit vector of parameter \(i\)`]],
-how: ["Finite differences: one simulation per nudged parameter, plus the unperturbed one.", String.raw`Michaels and Yablonovitch write this as \(M + 1\) simulations per gradient.`, String.raw`The adjoint method reorganizes the chain rule so that the expensive part does not depend on \(i\) (Lesson 2).`, "So the cost stays at two simulations, and for many parameters the saving is enormous."],
-say: "Finite differences need one simulation per parameter, while the adjoint method gives the full gradient from two simulations, independent of the number of parameters.",
-num: "Christiansen and Sigmund make the same point in their tutorial: finite differences need one extra solve per design variable, the adjoint needs one extra solve in total.",
+intu: String.raw`To know which way to change \(N\) parameters you need \(N\) partial derivatives. By finite differences, each parameter is changed slightly up and down and the simulation is repeated, so a gradient costs \(2N\) simulations, as Ch. 3 Sec. 3.2 counts it. The adjoint method gets all \(N\) derivatives from one forward and one adjoint simulation. Slide the number of parameters and watch the two bars. On a log scale the adjoint bar never moves.`,
+eq: String.raw`\[ \frac{\partial F}{\partial p_i} \approx \frac{F(\mathbf{p} + h\,\mathbf{e}_i) - F(\mathbf{p} - h\,\mathbf{e}_i)}{2h} \quad\Longrightarrow\quad 2N \text{ simulations} \]\[ \text{adjoint method} \quad\Longrightarrow\quad 2 \text{ simulations, for any } N \]<div class="eqref">Ch. 3 Sec. 3.2, Michaels and Yablonovitch Sec. 2</div>`,
+sym: [[String.raw`\(N\)`, "number of design parameters"], [String.raw`\(h\)`, "small change of one parameter"], [String.raw`\(\mathbf{e}_i\)`, String.raw`unit vector of parameter \(i\)`]],
+how: ["Finite differences: two simulations per parameter, one with it nudged up and one with it nudged down.", String.raw`So \(N\) parameters cost \(2N\) simulations every optimization step. A one-sided difference needs \(N + 1\), which Michaels and Yablonovitch quote, and is no better in principle.`, String.raw`The adjoint method reorganizes the chain rule so that the expensive part does not depend on \(i\) (Lesson 2).`, "So the cost stays at two simulations, and for many parameters the saving is enormous."],
+say: "Finite differences need two simulations per parameter, while the adjoint method gives the full gradient from two simulations, independent of the number of parameters.",
+num: String.raw`The PBS has 48 400 pixels, so finite differences would need 96 800 simulations per step. Christiansen and Sigmund make the same point in their tutorial: finite differences need extra solves for every design variable, the adjoint only one extra solve in total.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("m", "Number of parameters M (log)", 0, 5, 0.01, 1.26) + sl("t", "Minutes per simulation", 1, 60, 1, 5) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("m", "Number of parameters N (log)", 0, 5, 0.01, 1.26) + sl("t", "Minutes per simulation", 1, 60, 1, 5) + '<div class="readout" id="ro"></div>';
   const fmt = mins => mins < 120 ? mins.toFixed(0) + " min" : mins < 2880 ? (mins / 60).toFixed(1) + " h" : mins < 525600 ? (mins / 1440).toFixed(1) + " days" : (mins / 525600).toFixed(1) + " years";
   const u = () => {
     const M = Math.round(Math.pow(10, +$("m").value)), t = +$("t").value; $("mv").textContent = M.toLocaleString("en-US"); $("tv").textContent = t;
-    const fd = M + 1, ad = 2, L = v => 60 + Math.log10(v) / 5.5 * 560;
+    const fd = 2 * M, ad = 2, L = v => 60 + Math.log10(v) / 5.5 * 560;
     let s = `<text class="th" x="20" y="70">finite differences</text><rect x="60" y="80" width="${Math.max(2, L(fd) - 60)}" height="34" fill="#D85A30" opacity="0.8"/><text class="ts" x="${L(fd) + 8}" y="102">${fd.toLocaleString("en-US")} simulations</text>`;
     s += `<text class="th" x="20" y="150">adjoint method</text><rect x="60" y="160" width="${Math.max(2, L(ad) - 60)}" height="34" fill="#1D9E75" opacity="0.85"/><text class="ts" x="${L(ad) + 8}" y="182">2 simulations</text>`;
     for (let e = 0; e <= 5; e++) s += `<line x1="${L(Math.pow(10, e))}" x2="${L(Math.pow(10, e))}" y1="205" y2="211" stroke="var(--p)"/><text class="ts" x="${L(Math.pow(10, e))}" y="225" text-anchor="middle">10${["⁰", "¹", "²", "³", "⁴", "⁵"][e]}</text>`;
@@ -151,16 +150,88 @@ r(fig, ctl) {
   $("m").oninput = u; $("t").oninput = u; u();
 }},
 
-/* NEW CARD: Starting points: uniform grating, linear taper, Y-shaped splitter (Sec. 3.1), local optimum depends on start */
-{s: "7. Where each design starts", t: "TODO: Starting points: uniform grating, linear taper, Y-shaped splitter (Sec. 3.1), local optimum depends on start", intu: "TODO", eq: "", sym: [], how: [], say: "TODO", num: "", r(fig, ctl) { fig.innerHTML = "<p class=\"note\">TODO</p>"; }}
+/* Sec. 3.1: where each design starts */
+{s: "7. Where each design starts", t: "Three starting devices, and why the start matters",
+intu: String.raw`A gradient-based optimizer climbs the hill it starts on, so the local optimum it finds depends on the starting point. Every design in the thesis therefore starts from a simple device that already works in part. The grating couplers start from a uniform grating, with the same tooth and the same gap repeated. The tapers start from a linear taper between the two waveguide widths. The PBS starts from a Y-shaped splitter drawn as a density image, \(\rho = 0.9\) in the arms and \(\rho = 0.1\) elsewhere. Pick a device to see its start. The curve below is a cartoon of \(J\) along one direction of parameter space. Press Run and five optimizers start from five points at once. Each one stops on the top of its own hill, and the one started from the working device is on a good hill from the first step.`,
+eq: String.raw`\[ \mathbf{p}^{(0)} \;\xrightarrow{\ \text{gradient steps}\ }\; \mathbf{p}^{\star}\big(\mathbf{p}^{(0)}\big), \qquad \left.\frac{\partial J}{\partial \mathbf{p}}\right|_{\mathbf{p}^{\star}} = 0 \]<div class="eqnote">starting devices</div>\[ \begin{aligned} \text{grating couplers:}&\ \ \text{uniform grating} \\ \text{tapers:}&\ \ \text{linear taper} \\ \text{PBS:}&\ \ \text{Y-shaped splitter, } \rho = 0.9 \text{ in the arms, } \rho = 0.1 \text{ elsewhere} \end{aligned} \]<div class="eqref">Ch. 3 Sec. 3.1, starting densities in Sec. 3.3</div>`,
+sym: [[String.raw`\(\mathbf{p}^{(0)}\)`, "the starting parameters, the simple device"], [String.raw`\(\mathbf{p}^{\star}\)`, "the local optimum the optimizer reaches from that start"], [String.raw`\(\partial J/\partial \mathbf{p} = 0\)`, "at a hilltop the slope vanishes, so the gradient method stops"], [String.raw`\(\rho\)`, "pixel density, 0 for air and 1 for GaAs (Lesson 5)"]],
+how: ["A gradient method only knows the local slope, so it moves uphill from wherever it starts.", "It stops where the slope is zero, the top of the nearest hill: a local optimum.", "Inverse design problems have many such hills, so different starts end in different devices.", "A start that already works in part sits on a hill that is already fairly high, so the optimizer improves a working device instead of searching from nothing.", String.raw`The PBS start uses 0.9 and 0.1 instead of 1 and 0, so that every pixel still has a useful gradient at the first steps (the projection slope of Lesson 6).`],
+say: "A gradient method finds a local optimum that depends on the start, so every device starts from a simple design that already works in part: a uniform grating, a linear taper and a Y-shaped splitter.",
+num: String.raw`Method settings of Sec. 3.3: the gratings have \(N = 9\) teeth, so 18 widths. The tapers have \(M = 81\) points from 200 nm to 1.9 µm over 4 µm. The PBS region is 2.5 × 2.5 µm with 220 × 220 pixels. The landscape is an illustration, not a simulation.`,
+note: "If asked whether the result is the global optimum: no gradient method can promise that. What can be said is that the start is a working device, that the optimizer improves it, and that the final design is checked by an independent simulation.",
+r(fig, ctl) {
+  let dev = "g", runs = null;
+  ctl.innerHTML = btns([["g", "Uniform grating"], ["t", "Linear taper"], ["y", "Y-shaped splitter"]], "d") + `<div class="row"><button id="c7go">Run from five starts</button><button id="c7rs">Reset</button></div><div class="readout" id="ro"></div>`;
+  const J = p => 0.5 * Math.exp(-(((p - 0.15) / 0.08) ** 2)) + 0.9 * Math.exp(-(((p - 0.5) / 0.11) ** 2)) + 0.65 * Math.exp(-(((p - 0.83) / 0.07) ** 2));
+  const dJ = p => (J(p + 1e-5) - J(p - 1e-5)) / 2e-5, ps = range(0, 1, 300);
+  const starts = [0.04, 0.27, 0.4, 0.72, 0.97], DEV = 2, cols = ["#7F77DD", "#378ADD", "#D85A30", "#1D9E75", "#BA7517"];
+  // Y splitter density image: 44 x 44 drawing pixels standing for the 220 x 220 design pixels
+  const NY = 44, yrho = [];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NY; i++) {
+    const x = (i + 0.5) / NY, y = (j + 0.5) / NY, hw = 0.07;
+    const cy = x < 0.35 ? 0.5 : 0.5 + Math.sign(y - 0.5 || 1) * (x - 0.35) / 0.65 * 0.28;
+    const onStem = x < 0.42 && Math.abs(y - 0.5) < hw, onArm = x >= 0.3 && (Math.abs(y - (0.5 + (x - 0.35) / 0.65 * 0.28)) < hw || Math.abs(y - (0.5 - (x - 0.35) / 0.65 * 0.28)) < hw);
+    yrho.push(onStem || onArm ? 0.9 : 0.1);
+  }
+  const top = () => {
+    let s = "";
+    if (dev === "g") {
+      s += `<text class="ts" x="20" y="18">side view: uniform grating, every tooth and every gap the same</text>`;
+      s += `<rect x="40" y="96" width="150" height="20" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+      for (let k = 0; k < 9; k++) s += `<rect x="${200 + k * 46}" y="96" width="28" height="20" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+      s += arrow(200, 128, 246, 128, "var(--p)", 1.2, null, true) + `<text class="ts" x="223" y="146" text-anchor="middle">period Λ</text>` + arrow(200, 88, 228, 88, "#D85A30", 1.2, null, true) + `<text class="ts" x="214" y="80" text-anchor="middle">tooth</text>`;
+      s += `<g transform="rotate(5 410 40)"><rect x="385" y="26" width="50" height="34" fill="#EEE6D3" stroke="var(--t)" stroke-width="0.6"/></g>` + arrow(408, 62, 404, 92, "#378ADD", 2) + `<text class="ts" x="445" y="44">Gaussian beam (fiber)</text>`;
+      s += `<text class="ts" x="115" y="88" text-anchor="middle">access waveguide</text><text class="ts" x="520" y="146">9 teeth, 18 widths</text>`;
+    } else if (dev === "t") {
+      s += `<text class="ts" x="20" y="18">top view: linear taper, M = 81 points joined by straight lines</text>`;
+      const x0 = 140, L = 400, cy = 90, hy = v => v * 34;
+      s += `<rect x="40" y="${cy - hy(0.1)}" width="${x0 - 40}" height="${2 * hy(0.1)}" fill="var(--blue-bg)" stroke="var(--blue)"/><rect x="${x0 + L}" y="${cy - hy(0.95)}" width="${640 - x0 - L}" height="${2 * hy(0.95)}" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+      s += `<path d="M${x0} ${cy - hy(0.1)} L${x0 + L} ${cy - hy(0.95)} L${x0 + L} ${cy + hy(0.95)} L${x0} ${cy + hy(0.1)} Z" fill="var(--blue-bg)" stroke="var(--blue)" stroke-width="1.5"/>`;
+      for (let i = 0; i < 81; i++) { const x = x0 + L * i / 80, y = 0.1 + 0.85 * i / 80; s += `<circle cx="${x.toFixed(1)}" cy="${(cy - hy(y)).toFixed(1)}" r="1.6" fill="#D85A30"/>`; }
+      s += `<text class="ts" x="90" y="${cy + 30}" text-anchor="middle">200 nm</text><text class="ts" x="${x0 + L + 50}" y="${cy + hy(0.95) + 16}" text-anchor="middle">1.9 µm</text><text class="ts" x="${x0 + L / 2}" y="${cy + hy(0.95) + 16}" text-anchor="middle">4 µm long</text>`;
+    } else {
+      s += `<text class="ts" x="20" y="18">density image: Y-shaped splitter, ρ = 0.9 in the arms, 0.1 elsewhere</text>`;
+      const px = 3, x0 = 250, y0 = 28;
+      for (let j = 0; j < NY; j++) for (let i = 0; i < NY; i++) s += `<rect x="${x0 + i * px}" y="${y0 + j * px}" width="${px + 0.2}" height="${px + 0.2}" fill="var(--blue)" fill-opacity="${yrho[j * NY + i].toFixed(2)}"/>`;
+      const S = NY * px, yc = y0 + S / 2, d = 0.28 * S;
+      s += `<rect x="${x0}" y="${y0}" width="${S}" height="${S}" fill="none" stroke="var(--p)" stroke-dasharray="4 3"/>`;
+      s += `<rect x="150" y="${yc - 0.07 * S}" width="100" height="${0.14 * S}" fill="var(--blue)" fill-opacity="0.9"/><rect x="${x0 + S}" y="${yc - d - 0.07 * S}" width="100" height="${0.14 * S}" fill="var(--blue)" fill-opacity="0.9"/><rect x="${x0 + S}" y="${yc + d - 0.07 * S}" width="100" height="${0.14 * S}" fill="var(--blue)" fill-opacity="0.9"/>`;
+      s += `<text class="ts" x="200" y="${yc - 14}" text-anchor="middle">input</text><text class="ts" x="${x0 + S + 108}" y="${yc - d + 4}">output</text><text class="ts" x="${x0 + S + 108}" y="${yc + d + 4}">output</text><text class="ts" x="${x0 + S / 2}" y="${y0 + S + 14}" text-anchor="middle">2.5 × 2.5 µm design region</text>`;
+    }
+    return s;
+  };
+  const u = () => {
+    pick(ctl, "d", dev);
+    const X = C3.X(70, 560, 0, 1), Y = C3.Y(212, 110, 0, 1);
+    let s = top() + C3.frame(70, 212, 560, 110, 0, 1, 0, 1, [0, 0.5, 1], [0, 0.5, 1], "one direction in parameter space (illustration)", "J") + plot(70, 212, 560, 110, ps, ps.map(J), 0, 1, 0, 1, "var(--p)", 2);
+    starts.forEach((p0, k) => {
+      const P = runs ? runs[k] : [p0], e = P[P.length - 1];
+      if (P.length > 1) { let d = ""; P.forEach((p, i) => { if (i % 3 === 0 || i === P.length - 1) d += (d ? "L" : "M") + X(p).toFixed(1) + " " + Y(J(p)).toFixed(1); }); s += `<path d="${d}" fill="none" stroke="${cols[k]}" stroke-width="2"/>`; }
+      s += `<circle cx="${X(p0)}" cy="${Y(J(p0))}" r="4" fill="none" stroke="${cols[k]}" stroke-width="2"/><circle cx="${X(e)}" cy="${Y(J(e))}" r="${k === DEV ? 7 : 5}" fill="${cols[k]}"/>`;
+    });
+    s += `<text class="ts" x="70" y="200">rings: the five starts. Dots: where each run is now. <tspan fill="#D85A30">Big orange dot: started from the working device</tspan></text>`;
+    fig.innerHTML = svg(362, s);
+    const ends = starts.map((p0, k) => runs ? runs[k][runs[k].length - 1] : p0);
+    const info = { g: ["parameters", "18 widths (N = 9)", "start", "all teeth equal, all gaps equal"], t: ["parameters", "81 half-widths", "start", "straight line, 200 nm to 1.9 µm"], y: ["parameters", "48 400 pixels", "start", "ρ = 0.9 arms, 0.1 elsewhere"] }[dev];
+    $("ro").innerHTML = `<div><span>${info[0]}</span><b>${info[1]}</b></div><div><span>${info[2]}</span><b>${info[3]}</b></div><div><span>J reached from the five starts</span><b>${ends.map(e => J(e).toFixed(2)).join(", ")}</b></div>`;
+  };
+  ctl.querySelectorAll("button[data-d]").forEach(b => b.onclick = () => { dev = b.dataset.d; u(); });
+  $("c7rs").onclick = () => { stopAnim(); runs = null; u(); };
+  $("c7go").onclick = () => {
+    runs = starts.map(p0 => [p0]); let n = 0;
+    anim(() => { if (!fig.isConnected) { stopAnim(); return; } if (n >= 420) { stopAnim(); return; } for (let i = 0; i < 4; i++) { runs.forEach(P => { const p = P[P.length - 1]; P.push(C3.clamp(p + 0.0015 * dJ(p), 0, 1)); }); n++; } u(); });
+  };
+  u();
+}}
 
 ],
-summary: String.raw`Inverse design writes the job of a device as a figure of merit \(F\) computed from simulated fields and maximizes \(J = F - \sum_k w_k P_k\), where the penalties discourage geometries that cannot be fabricated. The geometry is described by parameters: a few widths, an outline, or a density per pixel. Each step needs a forward simulation for \(F\) and an adjoint simulation, and the overlap of the two field sets gives the gradient with respect to all parameters, at a cost of two simulations instead of \(M + 1\). A gradient method finds a local optimum, so the starting design matters, and fabrication rules have to be built into the optimization rather than applied afterwards.`,
+summary: String.raw`Inverse design writes the job of a device as a figure of merit \(F\) computed from simulated fields and maximizes \(J = F - \sum_k w_k P_k\), where the penalties discourage geometries that cannot be fabricated. The geometry is described by parameters: a few widths, an outline, or a density per pixel. Each step needs a forward simulation for \(F\) and an adjoint simulation, and the overlap of the two field sets gives the gradient with respect to all parameters, at a cost of two simulations instead of \(2N\) for finite differences. A gradient method finds a local optimum, so the starting design matters, and fabrication rules have to be built into the optimization rather than applied afterwards.`,
 sheet: [
 [String.raw`\[ \max_{\mathbf{p}}\, J(\mathbf{p}) = F(\mathbf{p}) - \sum_k w_k P_k(\mathbf{p}) \]`, "Design problem (Ch. 3 Eq. 3.1)"],
-[String.raw`\[ \text{finite differences: } M + 1 \text{ simulations per gradient} \]`, "Michaels and Yablonovitch, Sec. 2"],
-[String.raw`\[ \text{adjoint method: } 2 \text{ simulations per gradient, independent of } M \]`, "Michaels and Yablonovitch, Sec. 2"],
-[String.raw`\[ \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \Delta\mathbf{p}\!\left(\frac{\partial J}{\partial \mathbf{p}}\right) \]`, "One optimizer step (Adam in Lesson 12)"]],
-consts: "The curves in cards 3 and 4 are illustrative functions, not simulations.",
-sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (adjoint method in matrix form, curvature penalty, shape optimization of a silicon taper)", "Hammond et al., Opt. Express 29, 23916 (2021) (foundry design rules inside photonic topology optimization, robustness to etch bias; simulations only)", "Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021) (tutorial on density-based topology optimization for photonics)", "Kingma and Ba, ICLR 2015 (Adam)"]
+[String.raw`\[ \mathbf{p}^{(0)} \to \mathbf{p}^{\star}\big(\mathbf{p}^{(0)}\big) \]`, "The local optimum depends on the start: uniform grating, linear taper, Y-shaped splitter (Sec. 3.1)"],
+[String.raw`\[ \text{finite differences: } 2N \text{ simulations per gradient} \]`, "Changing each parameter up and down (Sec. 3.2)"],
+[String.raw`\[ \text{adjoint method: } 2 \text{ simulations per gradient, independent of } N \]`, "Michaels and Yablonovitch, Sec. 2, Lalau-Keraly et al. 2013"],
+[String.raw`\[ \mathbf{p}^{(k+1)} = \mathbf{p}^{(k)} + \Delta\mathbf{p}\!\left(\frac{\partial J}{\partial \mathbf{p}}\right) \]`, "One optimizer step (Adam in Lesson 13)"]],
+consts: "The curves in cards 3, 4 and 7 are illustrative functions, not simulations.",
+sources: ["Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (adjoint method in matrix form, curvature penalty, shape optimization of a silicon taper)", "Hammond et al., Opt. Express 29, 23916 (2021) (foundry design rules inside photonic topology optimization, robustness to etch bias, simulations only)", "Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021) (tutorial on density-based topology optimization for photonics)", "Lalau-Keraly, Bhargava, Miller and Yablonovitch, Opt. Express 21, 21693 (2013) (adjoint shape optimization, gradient from two simulations)", "Kingma and Ba, ICLR 2015 (Adam)"]
 });

@@ -1,16 +1,16 @@
-/* TODO for this lesson: Beyond the thesis. */
+/* Beyond the thesis B2: FDTD stability, numerical dispersion, staircasing, cost and convergence (not in the final Chapter 2). */
 addLesson("thesis", "ch2x", {
 level: "Beyond",
 id: "thesis-ch2-x2", title: "FDTD stability, dispersion and accuracy", short: "B2. FDTD stability and accuracy",
-big: String.raw`Two numbers decide whether an FDTD result can be trusted. The time step must obey the Courant limit or the simulation blows up. And the grid must be fine enough, because on a grid light travels at a slightly wrong speed that depends on the wavelength and direction: numerical dispersion. Along a grid axis the relative phase error is at most \((k\Delta x)^2/24\), about 0.4 % at 20 steps per wavelength. Small, but it accumulates over long devices, which is why interference devices need fine grids and why every result should be reported with its resolution.`,
-bridge: "This lesson follows Section 3 of Dohlus and Zagorodnov 2009. Their paper builds a new FDTD scheme for particle accelerators, where the ordinary Yee scheme's phase error piles up over long structures. On the way they write the Yee dispersion and stability in a short, clean form, which is what your Chapter 2 Eq. 2.17 uses.",
+big: String.raw`This material is not in the final thesis but may come up in questions. Two things decide whether an FDTD result can be trusted. The time step must obey the Courant limit, or the simulation blows up. And the grid must be fine enough, because on a grid light travels at a slightly wrong speed that depends on the wavelength and the direction, the numerical dispersion. Along a grid axis the relative phase error is at most \((k\Delta x)^2/24\), about 0.4 % at 20 steps per wavelength in the material. Small, but it accumulates over long devices. Curved and slanted edges are staircased by the grid, and every refinement costs roughly the fourth power of the resolution in 3D. That is why interference devices need fine grids, why results are quoted with their resolution, and why convergence is checked by refining.`,
+bridge: String.raw`A self-contained extra behind Lesson 8 (the Yee leapfrog) and Lesson 9, card 6 (grid resolution). The thesis states only the resolutions used, 30 steps per wavelength in GaAs for the 2D gratings and 20 in 3D (Ch. 3 Sec. 3.6). The stability and dispersion relations follow Section 3 of Dohlus and Zagorodnov 2009, who write them in a short, clean form while building an FDTD scheme for particle accelerators, where the Yee phase error piles up over long structures. Subpixel averaging follows Oskooi et al. 2010.`,
 cards: [
 /* from old ch2 L8 card 5 */
-{s: "5. Too big a step", t: "What happens if the time step is too large",
-intu: String.raw`The time step cannot be chosen freely. In one time step, information on the grid can only move one cell, because each update only looks at its nearest neighbours. If light would travel more than one cell in one step (\(S = c\Delta t/\Delta x \gt 1\) in 1D), the grid cannot keep up, and the scheme becomes unstable: a tiny ripple at the finest grid scale grows exponentially until it swamps everything. Push \(S\) just above 1 and restart. Below 1 the pulse travels cleanly. Lesson 10 derives the limit properly for 2D and 3D.`,
+{s: "1. Too big a step", t: "What happens if the time step is too large",
+intu: String.raw`The time step cannot be chosen freely. In one time step, information on the grid can only move one cell, because each update only looks at its nearest neighbours. If light would travel more than one cell in one step (\(S = c\Delta t/\Delta x \gt 1\) in 1D), the grid cannot keep up, and the scheme becomes unstable: a tiny ripple at the finest grid scale grows exponentially until it swamps everything. Push \(S\) just above 1 and restart. Below 1 the pulse travels cleanly. Card 2 gives the limit for 2D and 3D.`,
 eq: String.raw`\[ \text{1D stability: } S = \frac{c\,\Delta t}{\Delta x} \le 1 \qquad \text{3D cubic grid: } c\,\Delta t \le \frac{\Delta x}{\sqrt{3}} \]<div class="eqref">Dohlus Eq. 8</div>`,
 sym: [[String.raw`\(S\)`, "Courant number"], ["unstable", "errors grow by a factor larger than 1 every step"]],
-how: [String.raw`Insert a wave \(e^{i(kx - \omega t)}\) into the update equations.`, String.raw`This gives a relation between \(\omega\) and \(k\) on the grid (the numerical dispersion relation of Lesson 10).`, String.raw`For \(S \gt 1\) some \(k\) give complex \(\omega\) with a growing part.`, "Those wavelengths, the shortest the grid can hold, explode."],
+how: [String.raw`Insert a wave \(e^{i(kx - \omega t)}\) into the update equations.`, String.raw`This gives a relation between \(\omega\) and \(k\) on the grid (the numerical dispersion relation of card 4).`, String.raw`For \(S \gt 1\) some \(k\) give complex \(\omega\) with a growing part.`, "Those wavelengths, the shortest the grid can hold, explode."],
 say: "The FDTD time step is limited by the Courant condition. Above it the scheme is unstable and the solution grows without bound.",
 num: String.raw`In 1D, \(S = 1\) is the 'magic time step', where the scheme happens to be exact for waves along the grid. In 2D and 3D the limit is \(1/\sqrt{2}\) and \(1/\sqrt{3}\) of a cell per step, so that case cannot be reached.`,
 r(fig, ctl) {
@@ -29,7 +29,7 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 1 */
-{s: "1. Courant limit", t: "The Courant limit in 1D, 2D and 3D",
+{s: "2. Courant limit", t: "The Courant limit in 1D, 2D and 3D",
 intu: String.raw`In one time step, an update can only use information from neighbouring cells. Light must not travel farther than the grid can pass information in one step. In 1D that is one cell per step. In 2D and 3D, light moving along a diagonal crosses cells fastest, so the limit is stricter: the step must be smaller by \(\sqrt{2}\) or \(\sqrt{3}\) on a square or cubic grid. Dohlus and Zagorodnov write the general rule for a rectangular grid as their Eq. (8). Change the cell sizes and dimension to get the largest stable time step.`,
 eq: String.raw`\[ c\,\Delta t \le \left(\frac{1}{\Delta x^2} + \frac{1}{\Delta y^2} + \frac{1}{\Delta z^2}\right)^{-1/2} \]<div class="eqnote">cubic grid</div>\[ c\,\Delta t \le \frac{\Delta x}{\sqrt{3}}\ \text{(3D)}, \qquad \frac{\Delta x}{\sqrt{2}}\ \text{(2D)}, \qquad \Delta x\ \text{(1D)} \]<div class="eqref">Dohlus Eq. 8, with \(\tau = ct\)</div>`,
 sym: [[String.raw`\(\Delta t\)`, "time step"], [String.raw`\(\Delta x, \Delta y, \Delta z\)`, "cell sizes"], [String.raw`\(\tau = ct\)`, String.raw`Dohlus and Zagorodnov's scaled time, so \(c\Delta t\) is a length`], ["Courant factor", "the fraction of the limit actually used"]],
@@ -50,7 +50,7 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 2 */
-{s: "2. Why it explodes", t: "Why the scheme explodes: the growth factor",
+{s: "3. Why it explodes", t: "Why the scheme explodes: the growth factor",
 intu: String.raw`Put a single wave of wavenumber \(k\) on the 1D grid and ask how its amplitude changes in one step. That multiplier is the growth factor \(g\). Below the Courant limit, \(|g| = 1\) for every \(k\): waves neither grow nor shrink, they only rotate in phase. Above the limit, the shortest waves on the grid (\(k\Delta x\) near \(\pi\)) get \(|g| \gt 1\), and because they multiply every step, a rounding error of \(10^{-16}\) grows to order 1 within a few hundred steps. The plot shows \(|g|\) against \(k\Delta x\) for your chosen \(S\).`,
 eq: String.raw`<div class="eqnote">1D</div>\[ g^2 - 2(1 - 2a^2)\,g + 1 = 0, \qquad a = S \sin\frac{k\Delta x}{2} \]\[ |a| \le 1 \;\Longrightarrow\; |g| = 1 \qquad |a| \gt 1 \;\Longrightarrow\; |g| = 2a^2 - 1 + 2a\sqrt{a^2 - 1} \gt 1 \]`,
 sym: [[String.raw`\(g\)`, "amplification of one Fourier component per time step"], [String.raw`\(S\)`, String.raw`\(c\Delta t/\Delta x\)`], [String.raw`\(k\Delta x\)`, String.raw`phase per cell, \(\pi\) is the shortest wave the grid can hold`]],
@@ -70,7 +70,7 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 3 */
-{s: "3. Wrong speed", t: "On a grid, light travels at the wrong speed",
+{s: "4. Wrong speed", t: "On a grid, light travels at the wrong speed",
 intu: String.raw`Even below the Courant limit, a wave on the grid does not travel exactly at \(c\). The finite differences slightly underestimate the derivative, so the grid needs a larger \(k\) to reach the same frequency: the wave is too slow. Dohlus and Zagorodnov write the exact relation for a wave along a grid axis as their Eq. (10). The plot shows the numerical phase velocity against points per wavelength for several Courant numbers. Coarse grids are badly slow. Above about 20 points per wavelength the error is well below 1 %. In 1D at \(S = 1\) the error vanishes, the magic step.`,
 eq: String.raw`\[ \frac{\sin(k\Delta x/2)}{\Delta x/2} = \frac{\sin(\omega\Delta t/2)}{c\,\Delta t/2} \]\[ \frac{v_{\mathrm{num}}}{c} = \frac{k_{\mathrm{exact}}}{k_{\mathrm{num}}} \]<div class="eqref">Dohlus Eq. 10, written with \(\Delta\tau = c\,\Delta t\)</div>`,
 sym: [[String.raw`\(k\)`, "numerical wavenumber on the grid"], [String.raw`\(\omega\)`, "frequency of the source"], [String.raw`\(v_{\mathrm{num}}\)`, "phase velocity on the grid"], [String.raw`\(N_\lambda\)`, String.raw`points per wavelength, \(2\pi/(k\Delta x)\)`]],
@@ -90,13 +90,13 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 4 */
-{s: "4. The 0.4 % rule", t: "The error bound in your Chapter 2: (kΔx)²/24",
+{s: "5. The 0.4 % rule", t: "A rule of thumb for the phase error: (kΔx)²/24",
 intu: String.raw`Expand Dohlus and Zagorodnov's relation for small \(k\Delta x\) and you get their Eq. (11): the wavenumber error grows as \((\Delta x/2)^2\) minus \((\Delta\tau/2)^2\). The time-step term has the opposite sign and only reduces the error, so dropping it gives an upper bound: \(\delta n/n \le (k\Delta x)^2/24\). Here \(k\) is the wavenumber in the material, which is why resolution is counted as steps per wavelength in the highest-index material. Drag the resolution and the index and read the bound and the cell size.`,
-eq: String.raw`\[ \delta k \approx \frac{1}{6}\left(\frac{\omega}{c}\right)^3\left[\left(\frac{\Delta z}{2}\right)^2 - \left(\frac{\Delta\tau}{2}\right)^2\right] \]\[ \frac{\delta n}{n} = \frac{\delta k}{k} \approx \frac{(k\Delta x)^2}{24}\left[1 - \left(\frac{c\,\Delta t}{\Delta x}\right)^2\right] \le \frac{(k\Delta x)^2}{24} \]<div class="eqref">Dohlus Eq. 11, Ch. 2 Eq. 2.17</div>`,
+eq: String.raw`\[ \delta k \approx \frac{1}{6}\left(\frac{\omega}{c}\right)^3\left[\left(\frac{\Delta z}{2}\right)^2 - \left(\frac{\Delta\tau}{2}\right)^2\right] \]\[ \frac{\delta n}{n} = \frac{\delta k}{k} \approx \frac{(k\Delta x)^2}{24}\left[1 - \left(\frac{c\,\Delta t}{\Delta x}\right)^2\right] \le \frac{(k\Delta x)^2}{24} \]<div class="eqref">Dohlus Eq. 11</div>`,
 sym: [[String.raw`\(\delta n/n\)`, "relative error in the phase (and so effective index) on the grid"], [String.raw`\(k\)`, String.raw`\(2\pi n/\lambda_0\), the wavenumber in the material`], [String.raw`\(\Delta x\)`, String.raw`cell size, \(\lambda_0/(N_\lambda n)\)`], [String.raw`\(N_\lambda\)`, "steps per wavelength in the material"]],
 how: ["Expand both sines in Eq. (10) to third order.", String.raw`The leading correction to \(k\) is \((1/6)(\omega/c)^3[(\Delta z/2)^2 - (\Delta\tau/2)^2]\), Eq. (11).`, String.raw`Divide by \(k = \omega/c\) and drop the negative time-step term for a bound.`, String.raw`With \(k\Delta x = 2\pi/N_\lambda\) the bound is \((2\pi/N_\lambda)^2/24\).`],
 say: String.raw`Along a grid axis the relative phase error of the Yee scheme is at most \((k\Delta x)^2/24\), with \(k\) the wavenumber in the material. At 20 steps per wavelength that is about 0.4 %, at 30 about 0.2 %.`,
-num: String.raw`20 steps: \((2\pi/20)^2/24\) = <b>0.41 %</b>. 30 steps: <b>0.18 %</b>.<br>\(\lambda_0 = 800\) nm, \(n = 3.5\): 20 steps means \(\Delta x = 800/(20 \times 3.5)\) = <b>11.4 nm</b>.<br>Dohlus and Zagorodnov note the error is direction dependent and can vanish along diagonals (card 6).`,
+num: String.raw`20 steps: \((2\pi/20)^2/24\) = <b>0.41 %</b>. 30 steps: <b>0.18 %</b>.<br>\(\lambda_0 = 800\) nm, \(n = 3.5\): 20 steps means \(\Delta x = 800/(20 \times 3.5)\) = <b>11.4 nm</b>.<br>Dohlus and Zagorodnov note the error is direction dependent and can vanish along diagonals (card 7).`,
 r(fig, ctl) {
   ctl.innerHTML = sl("N", "Steps per wavelength in the material", 6, 50, 1, 20) + sl("n", "Highest index n", 1, 4, 0.01, 3.5) + sl("S", "Courant number S", 0.1, 0.99, 0.01, 0.57) + '<div class="readout" id="ro"></div>';
   const u = () => {
@@ -110,10 +110,10 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 5 */
-{s: "5. It adds up", t: "Small errors add up over long devices",
+{s: "6. It adds up", t: "Small errors add up over long devices",
 intu: String.raw`A 0.4 % speed error sounds harmless, but phase accumulates with distance. After travelling a length \(L\), the wave's phase is off by about \(2\pi (L/\lambda_m)(\delta n/n)\) radians, where \(\lambda_m\) is the wavelength in the material. Dohlus and Zagorodnov make this point for accelerators in their Eq. (12): the phase error grows in proportion to the structure length. For an interference device like an MMI, whose function depends on the phase difference after many beat lengths, a few degrees of error can shift the operating wavelength. Drag the length and resolution.`,
 eq: String.raw`\[ \Delta\varphi \approx 2\pi\, \frac{L}{\lambda_m}\, \frac{\delta n}{n}, \qquad \lambda_m = \frac{\lambda_0}{n} \]<div class="eqref">accumulated phase error, cf. Dohlus Eq. 12</div>`,
-sym: [[String.raw`\(\Delta\varphi\)`, String.raw`accumulated phase error after a length \(L\)`], [String.raw`\(L\)`, "propagation length"], [String.raw`\(\lambda_m\)`, "wavelength in the material"], [String.raw`\(\delta n/n\)`, "relative phase velocity error (card 4)"]],
+sym: [[String.raw`\(\Delta\varphi\)`, String.raw`accumulated phase error after a length \(L\)`], [String.raw`\(L\)`, "propagation length"], [String.raw`\(\lambda_m\)`, "wavelength in the material"], [String.raw`\(\delta n/n\)`, "relative phase velocity error (card 5)"]],
 how: [String.raw`Phase after length \(L\): \(\varphi = kL = 2\pi L/\lambda_m\).`, String.raw`A relative error \(\delta n/n\) in \(k\) gives \(\Delta\varphi = \varphi\cdot\delta n/n\).`, String.raw`So the error grows linearly with \(L\).`, "Devices whose output depends on a phase difference are the most sensitive, for example MMIs and interferometers."],
 say: "Numerical dispersion produces a phase error that grows linearly with propagation length, so long interference devices need finer grids than short ones, and results should be checked by refining the grid.",
 num: String.raw`\(L = 20\) µm, \(\lambda_0 = 800\) nm, \(n = 3.5\) (\(\lambda_m = 229\) nm), 20 steps (0.41 %): \(\Delta\varphi \approx 2\pi \times 87.5 \times 0.0041\) ≈ <b>2.3 rad</b> (bound, along an axis).<br>At 30 steps: ≈ <b>1.0 rad</b>.`,
@@ -130,8 +130,8 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L10 card 6 */
-{s: "6. Direction matters", t: "The error depends on direction",
-intu: "The grid is not round. A wave travelling along a grid axis sees the cells edge-on, one travelling along a diagonal sees them corner-on, and the numerical speed differs. This polar plot shows the speed error against propagation direction for a 2D square grid, computed from the 2D dispersion relation. Along the axes the error is largest. Along the diagonals it is smaller, and at the stability limit it vanishes there, which Dohlus and Zagorodnov note on their page 4 for the 3D cubic grid. This is why Chapter 2 quotes the axis value: it is the worst case for a structure aligned with the grid.",
+{s: "7. Direction matters", t: "The error depends on direction",
+intu: "The grid is not round. A wave travelling along a grid axis sees the cells edge-on, one travelling along a diagonal sees them corner-on, and the numerical speed differs. This polar plot shows the speed error against propagation direction for a 2D square grid, computed from the 2D dispersion relation. Along the axes the error is largest. Along the diagonals it is smaller, and at the stability limit it vanishes there, which Dohlus and Zagorodnov note on their page 4 for the 3D cubic grid. This is why the axis value is the one usually quoted: it is the worst case for a structure aligned with the grid.",
 eq: String.raw`<div class="eqnote">2D</div>\[ \frac{\sin^2(\omega\Delta t/2)}{(c\,\Delta t)^2} = \frac{\sin^2(k_x\Delta x/2)}{\Delta x^2} + \frac{\sin^2(k_y\Delta y/2)}{\Delta y^2} \]\[ k_x = k\cos\varphi, \qquad k_y = k\sin\varphi \]`,
 sym: [[String.raw`\(\varphi\)`, String.raw`propagation direction relative to the \(x\) axis`], ["anisotropy", "dependence of the numerical speed on direction"]],
 how: ["Use the full multi-dimensional dispersion relation (Dohlus Eq. 9 in 3D, the 2D form above).", String.raw`For each direction \(\varphi\), solve for \(k\) at the source frequency.`, String.raw`Compare with the exact \(k\) to get the speed error.`, String.raw`At \(S = 1/\sqrt{2}\) in 2D the diagonal error is exactly zero.`],
@@ -151,7 +151,7 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L9 card 5 */
-{s: "5. Geometry on a grid", t: "Curved shapes on a square grid: staircasing",
+{s: "8. Geometry on a grid", t: "Curved shapes on a square grid: staircasing",
 intu: String.raw`The grid only knows \(\varepsilon\) per cell. A smooth shape, like a circle or a slanted wall, has to be drawn with square pixels, which gives a staircase. That makes the shape slightly wrong in size and position, and the error falls only slowly as the grid is refined. The fix used by MEEP, which Oskooi et al. describe, and by Tidy3D, is subpixel averaging: a cell cut by an interface gets an effective \(\varepsilon\) from the fraction of each material inside it (and, done properly, from the field direction). Then the effective boundary sits in the right place even between grid points. Change the resolution and compare the staircased and the averaged circle.`,
 eq: String.raw`\[ \text{staircase: } \varepsilon_{\mathrm{cell}} = \varepsilon(\text{centre of the cell}) \]\[ \text{averaged: } \varepsilon_{\mathrm{cell}} = f\,\varepsilon_1 + (1 - f)\,\varepsilon_2 \quad \text{(simplest form)} \]\[ f = \text{fraction of the cell inside material 1} \]`,
 sym: [[String.raw`\(f\)`, "filling fraction of the cell"], ["staircasing", "representing a smooth boundary by whole cells"], ["subpixel averaging", String.raw`assigning an effective \(\varepsilon\) to cells cut by a boundary`]],
@@ -180,8 +180,8 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L9 card 6 */
-{s: "6. What it costs", t: "How big a 3D simulation gets",
-intu: String.raw`A 3D FDTD simulation stores six numbers per cell and updates all of them every step. The cell size is set by the shortest wavelength in the structure: \(\lambda_0\) divided by the steps per wavelength and by the highest index. The time step is tied to the cell size by the Courant limit, so a finer grid also needs more steps for the same physical time. Together the cost grows as the fourth power of the resolution. Change the numbers: going from 20 to 30 steps per wavelength makes the run about five times more expensive. Symmetry planes (Lesson 4) cut the cells by 2 each.`,
+{s: "9. What it costs", t: "How big a 3D simulation gets",
+intu: String.raw`A 3D FDTD simulation stores six numbers per cell and updates all of them every step. The cell size is set by the shortest wavelength in the structure: \(\lambda_0\) divided by the steps per wavelength and by the highest index. The time step is tied to the cell size by the Courant limit, so a finer grid also needs more steps for the same physical time. Together the cost grows as the fourth power of the resolution. Change the numbers: going from 20 to 30 steps per wavelength makes the run about five times more expensive. Symmetry planes (Lesson 2) cut the cells by 2 each.`,
 eq: String.raw`\[ \Delta x = \frac{\lambda_0}{N_\lambda\, n_{\mathrm{max}}} \qquad \text{cells} = \frac{L_x L_y L_z}{\Delta x^3} \qquad \Delta t \approx \frac{0.99\,\Delta x}{c\sqrt{3}} \]\[ \text{cost} \propto \text{cells} \times \text{steps} \propto N_\lambda^4 \]`,
 sym: [[String.raw`\(N_\lambda\)`, "steps per wavelength in the highest-index material"], [String.raw`\(n_{\mathrm{max}}\)`, "largest refractive index in the domain"], [String.raw`\(L_x, L_y, L_z\)`, "domain size"], ["steps", String.raw`number of time steps for the run time \(T\), \(T/\Delta t\)`]],
 how: [String.raw`Cell size from resolution: \(\Delta x = \lambda_0/(N_\lambda n_{\mathrm{max}})\).`, String.raw`Number of cells scales as \(N_\lambda^3\).`, String.raw`Courant: \(\Delta t \propto \Delta x\), so the number of time steps for a fixed physical time scales as \(N_\lambda\).`, String.raw`Total work \(\propto N_\lambda^4\). Memory \(\propto N_\lambda^3\).`],
@@ -204,11 +204,11 @@ r(fig, ctl) {
 }},
 
 /* from old ch2 L11 card 5 */
-{s: "5. Convergence", t: "How do you know the grid is fine enough?",
-intu: String.raw`No single run proves that a result is right. The standard check is to repeat the simulation at several resolutions and watch the result settle. For a second-order method like Yee, the error falls roughly as \(1/N^2\) once the grid is fine enough, so the curve flattens. Two resolutions in that regime even let you estimate the converged value by Richardson extrapolation. The curve here is an illustrative example of that behaviour, not a thesis result. Pick the two resolutions used for the estimate. This is the logic behind the rule in your Chapter 2: report every result with the resolution it was computed at.`,
+{s: "10. Convergence", t: "How do you know the grid is fine enough?",
+intu: String.raw`No single run proves that a result is right. The standard check is to repeat the simulation at several resolutions and watch the result settle. For a second-order method like Yee, the error falls roughly as \(1/N^2\) once the grid is fine enough, so the curve flattens. Two resolutions in that regime even let you estimate the converged value by Richardson extrapolation. The curve here is an illustrative example of that behaviour, not a thesis result. Pick the two resolutions used for the estimate. It is also why a result is quoted with the resolution it was computed at, as Ch. 3 Sec. 3.6 does for every device.`,
 eq: String.raw`\[ Q(N) \approx Q_\infty + \frac{C}{N^2} \quad \text{(second order)} \]<div class="eqnote">Richardson</div>\[ Q_\infty \approx \frac{N_2^2\, Q(N_2) - N_1^2\, Q(N_1)}{N_2^2 - N_1^2} \]`,
 sym: [[String.raw`\(Q(N)\)`, String.raw`result (for example a transmission) at \(N\) steps per wavelength`], [String.raw`\(Q_\infty\)`, "the result an infinitely fine grid would give"], [String.raw`\(C\)`, "unknown error constant"], [String.raw`\(N_1, N_2\)`, "two resolutions used for the estimate"]],
-how: [String.raw`The phase error is \(\propto (k\Delta x)^2\), so smooth quantities have errors \(\propto 1/N^2\) (Lesson 10).`, String.raw`Write \(Q(N) = Q_\infty + C/N^2\) at two resolutions.`, String.raw`Two equations, two unknowns: eliminate \(C\) to get \(Q_\infty\).`, String.raw`If the extrapolation changes a lot when you swap in a third resolution, the grid is not yet in the \(1/N^2\) regime.`],
+how: [String.raw`The phase error is \(\propto (k\Delta x)^2\), so smooth quantities have errors \(\propto 1/N^2\) (card 5).`, String.raw`Write \(Q(N) = Q_\infty + C/N^2\) at two resolutions.`, String.raw`Two equations, two unknowns: eliminate \(C\) to get \(Q_\infty\).`, String.raw`If the extrapolation changes a lot when you swap in a third resolution, the grid is not yet in the \(1/N^2\) regime.`],
 say: String.raw`Convergence is shown by refining the grid until the result stops changing. For a second-order scheme the error falls as \(1/N^2\), and two fine resolutions give a Richardson estimate of the converged value.`,
 num: String.raw`Illustrative curve: \(Q(N) = 0.70 - 9/N^2\). At \(N = 20\): <b>0.6775</b>, at 30: <b>0.6900</b>. Richardson from 20 and 30: <b>0.7000</b>.`,
 r(fig, ctl) {
@@ -225,13 +225,15 @@ r(fig, ctl) {
 }}
 
 ],
-summary: String.raw`The Courant condition \(c\Delta t \le (\Delta x^{-2} + \Delta y^{-2} + \Delta z^{-2})^{-1/2}\) keeps every Fourier component's growth factor at one. Above it the shortest grid waves grow exponentially. Below it waves still travel slightly too slowly: Dohlus and Zagorodnov's Eq. (10) gives the exact relation along an axis, and its expansion, Eq. (11), gives a relative phase error at most \((k\Delta x)^2/24\), about 0.4 % at 20 steps per wavelength in the material. The error accumulates linearly with length and depends on direction, largest along the axes. Long interference devices therefore need fine grids and a convergence check.`,
+summary: String.raw`The Courant condition \(c\Delta t \le (\Delta x^{-2} + \Delta y^{-2} + \Delta z^{-2})^{-1/2}\), \(\Delta x/\sqrt{3}\) on a cubic grid, keeps the growth factor of every Fourier component at one. Above it the shortest grid waves grow exponentially. Below it waves still travel slightly too slowly: Dohlus and Zagorodnov's Eq. (10) gives the exact relation along an axis, and its expansion, Eq. (11), gives a relative phase error of at most \((k\Delta x)^2/24\), about 0.4 % at 20 steps per wavelength in the material. The error accumulates linearly with length and is largest along the grid axes. Smooth shapes are staircased unless the permittivity is averaged in boundary cells, and the cost of a 3D run grows as \(N_\lambda^4\). A result is trusted after refining the grid, where the error of a second-order scheme falls as \(1/N^2\).`,
 sheet: [
 [String.raw`\[ c\,\Delta t \le \left(\Delta x^{-2} + \Delta y^{-2} + \Delta z^{-2}\right)^{-1/2} \]`, "Courant limit (Dohlus Eq. 8)"],
 [String.raw`\[ |g| = 2a^2 - 1 + 2a\sqrt{a^2 - 1}, \qquad a = S\sin(k\Delta x/2) \gt 1 \]`, "Growth factor above the limit"],
 [String.raw`\[ \frac{\sin(k\Delta x/2)}{\Delta x/2} = \frac{\sin(\omega\Delta t/2)}{c\,\Delta t/2} \]`, "1D numerical dispersion (Dohlus Eq. 10)"],
-[String.raw`\[ \frac{\delta n}{n} \le \frac{(k\Delta x)^2}{24} \]`, "Phase error bound (Ch. 2 Eq. 2.17, Dohlus Eq. 11)"],
-[String.raw`\[ \Delta\varphi \approx 2\pi\, \frac{L}{\lambda_m}\, \frac{\delta n}{n} \]`, "Accumulated phase error"]],
+[String.raw`\[ \frac{\delta n}{n} \le \frac{(k\Delta x)^2}{24} \]`, "Phase error bound along an axis (Dohlus Eq. 11)"],
+[String.raw`\[ \Delta\varphi \approx 2\pi\, \frac{L}{\lambda_m}\, \frac{\delta n}{n} \]`, "Accumulated phase error"],
+[String.raw`\[ \text{cost} \propto N_\lambda^4 \]`, "3D cost against resolution"],
+[String.raw`\[ Q_\infty \approx \frac{N_2^2\, Q(N_2) - N_1^2\, Q(N_1)}{N_2^2 - N_1^2} \]`, "Richardson extrapolation"]],
 consts: String.raw`Examples: \(\lambda_0 = 800\) nm, \(n = 3.5\).`,
-sources: ["Dohlus and Zagorodnov, J. Comput. Phys. 228, 2822 (2009), Sec. 3, Eqs. (8) to (12) (FDTD scheme for accelerator simulations, Yee dispersion and stability)", "Oskooi et al., Comput. Phys. Commun. 181, 687 (2010) (FDTD discretization)"]
+sources: ["Dohlus and Zagorodnov, J. Comput. Phys. 228, 2822 (2009), Sec. 3, Eqs. (8) to (12) (FDTD scheme for accelerator simulations, Yee dispersion and stability)", "Oskooi et al., Comput. Phys. Commun. 181, 687 (2010) (the MEEP FDTD package, subpixel averaging)"]
 });

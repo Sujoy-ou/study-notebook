@@ -1,19 +1,39 @@
+/* helpers for this lesson only (prefix C3L8_) */
+const C3L8_steps = (fig, ctl, n, dur, draw, idp) => {
+  ctl.insertAdjacentHTML("beforeend", `<div class="row"><button id="${idp}b">Back</button><button id="${idp}p">Pause</button><button id="${idp}n">Next step</button><span id="${idp}s" style="font-size:13px;color:var(--muted);margin-left:6px"></span></div>`);
+  const S = { k: 1, play: true, t: 0 };
+  let last = performance.now(), kd = 0;
+  const ui = () => { $(idp + "s").textContent = `step ${S.k} of ${n}`; $(idp + "b").disabled = S.k === 1; $(idp + "n").disabled = S.k === n; $(idp + "p").textContent = S.play ? "Pause" : "Play"; };
+  S.go = k => { S.k = Math.max(1, Math.min(n, k)); S.t = 0; ui(); draw(S); kd = S.k; };
+  $(idp + "b").onclick = () => { S.play = false; S.go(S.k - 1); };
+  $(idp + "n").onclick = () => { S.play = false; S.go(S.k + 1); };
+  $(idp + "p").onclick = () => { S.play = !S.play; if (S.play && S.k === n) S.go(1); ui(); };
+  ui();
+  /* the maps are static within a step, so redraw only when the step changes */
+  anim(() => {
+    if (!fig.isConnected) { stopAnim(); return; }
+    const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; S.t += dt;
+    if (S.play && S.t > dur) { if (S.k < n) { S.k++; S.t = 0; } else S.play = false; ui(); }
+    if (kd !== S.k) { kd = S.k; draw(S); }
+  });
+  return S;
+};
 addLesson("thesis", "ch3", {
 level: "Core",
 id: "thesis-ch3-l8", title: "Erosion, dilation, opening and closing", short: "8. Morphology",
 big: String.raw`Mathematical morphology describes shapes by what a small disk can do inside them. Erosion keeps only the points where the whole disk fits inside the GaAs, so every feature shrinks by the disk radius \(r\). Dilation adds every point within \(r\) of the GaAs, so every feature grows. Opening is erosion followed by dilation: whatever survived the shrinking grows back, but solid parts thinner than \(2r\) and sharp convex tips are gone for good. Closing is dilation followed by erosion: it fills gaps narrower than \(2r\), small holes and sharp concave notches. A layout that respects a minimum feature of \(2r\), with corner radii of at least \(r\), is unchanged by both. That single property is the basis of the erosion and dilation penalty (Lesson 9) and of the design rule check and repair (Lesson 11).`,
-bridge: "This is the background of Ch. 3 Sec. 3.5. Hammond et al. 2021 showed that differentiable morphological transforms can be used inside photonic topology optimization. Christiansen and Sigmund 2021 build eroded and dilated designs with thresholds above and below 0.5. Tidy3D builds erosion and dilation the same way, as a filter plus a projection with thresholds 0.99 and 0.01 (ErosionDilationPenalty). The binary operations below are exact on the pixel grid, computed with a Euclidean distance transform.",
+bridge: "This is the background of Ch. 3 Sec. 3.5, for the erosion and dilation penalty of Eq. (3.15) and the design rule check and repair of Eq. (3.17). Hammond et al. 2021 showed that differentiable morphological transforms can be used inside photonic topology optimization. Christiansen and Sigmund 2021 build eroded and dilated designs with thresholds above and below 0.5. Tidy3D builds erosion and dilation the same way, as a filter plus a projection with thresholds 0.99 and 0.01 (ErosionDilationPenalty). The binary operations below are exact on the pixel grid, computed with a Euclidean distance transform.",
 cards: [
 /* from old ch3 L8 card 1 */
 {s: "1. Erosion and dilation", t: "Shrinking and growing every feature by a disk",
-intu: String.raw`The test layout (dark is GaAs) has a big block, a second block separated by a narrow gap, a thin bar, a block with a small hole and a small island. Erosion removes everything within \(r\) of the air (red): the thin bar and the island disappear completely. Dilation adds everything within \(r\) of the GaAs (blue): the gap closes and the hole fills. Switch the operation and change \(r\).`,
+intu: String.raw`The test layout (dark is GaAs) has a big block, a second block separated by a narrow gap, a thin bar, a block with a small hole and a small island. Erosion removes everything within \(r\) of the air (red): the thin bar and the island disappear completely. Dilation adds everything within \(r\) of the GaAs (blue): the gap closes and the hole fills. Switch the operation and change \(r\), or press Play to grow \(r\) and watch the features disappear one after another.`,
 eq: String.raw`\[ \operatorname{erode}_r(X) = \{\, p : \operatorname{disk}(p, r) \subseteq X \,\} \]\[ \operatorname{dilate}_r(X) = \{\, p : \operatorname{disk}(p, r) \cap X \neq \emptyset \,\} \]`,
 sym: [[String.raw`\(X\)`, "the GaAs region of the layout"], [String.raw`\(\operatorname{disk}(p, r)\)`, String.raw`disk of radius \(r\) centered at point \(p\)`], ["red", "GaAs removed by erosion"], ["blue", "air turned into GaAs by dilation"]],
 how: [String.raw`Erosion: a point stays only if its distance to the nearest air is more than \(r\).`, String.raw`Dilation: a point is added if its distance to the nearest GaAs is at most \(r\).`, "Both are computed here from a Euclidean distance transform of the pixel map.", String.raw`Erosion of \(X\) is the same as dilation of the air, and the other way round.`],
 say: String.raw`Erosion shrinks every GaAs feature by \(r\) and dilation grows it by \(r\), as if the edges were moved by a uniform etch bias.`,
 num: String.raw`A bar of width \(w\) survives erosion only if \(w \gt 2r\). A gap of width \(g\) survives dilation only if \(g \gt 2r\).`,
 r(fig, ctl) {
-  let op = "e"; ctl.innerHTML = btns([["e", "Erode"], ["d", "Dilate"]], "o") + sl("r", "Disk radius r (pixels)", 1, 8, 0.5, 3) + '<div class="readout" id="ro"></div>';
+  let op = "e"; ctl.innerHTML = btns([["e", "Erode"], ["d", "Dilate"]], "o") + sl("r", "Disk radius r (pixels)", 1, 8, 0.5, 3) + '<div class="row"><button id="mp">Play: grow r</button></div><div class="readout" id="ro"></div>';
   const { X, W, H } = C3.pattern();
   const u = () => {
     pick(ctl, "o", op); const r = +$("r").value; $("rv").textContent = r;
@@ -22,7 +42,16 @@ r(fig, ctl) {
     const A = a => a.reduce((x, y) => x + y, 0);
     $("ro").innerHTML = `<div><span>GaAs area before</span><b>${A(X)} px</b></div><div><span>after</span><b>${A(Y)} px</b></div><div><span>islands after</span><b>${C3.components(Y, W, H, 1).length}</b></div>`;
   };
-  ctl.querySelectorAll("button").forEach(b => b.onclick = () => { op = b.dataset.o; u(); }); $("r").oninput = u; u();
+  let play = false, tt = 0, last = 0;
+  ctl.querySelectorAll("button[data-o]").forEach(b => b.onclick = () => { op = b.dataset.o; u(); });
+  $("r").oninput = () => { play = false; $("mp").textContent = "Play: grow r"; stopAnim(); u(); };
+  $("mp").onclick = () => {
+    play = !play; $("mp").textContent = play ? "Pause" : "Play: grow r";
+    if (!play) { stopAnim(); return; }
+    last = performance.now(); tt = 0; $("r").value = 1; u();
+    anim(() => { if (!fig.isConnected || !play) { stopAnim(); return; } const now = performance.now(); tt += (now - last) / 1000; last = now; if (tt > 0.7) { tt = 0; const r = +$("r").value; $("r").value = r >= 8 ? 1 : r + 0.5; u(); } });
+  };
+  u();
 }},
 
 /* from old ch3 L8 card 2 */
@@ -85,12 +114,12 @@ r(fig, ctl) {
 
 /* from old ch3 L8 card 5 */
 {s: "5. Differentiable version", t: "Erosion and dilation as a filter and a projection",
-intu: "The binary operations have no useful gradient. Tidy3D builds smooth versions from the tools of Lessons 6 and 7. Filter the density with the conic kernel, then project with a threshold near 1: only pixels whose whole neighborhood is GaAs stay, which is erosion. Project with a threshold near 0 instead: any GaAs in the neighborhood is enough, which is dilation. Combining them gives smooth opening and closing. Compare the smooth opening (middle) with the binary opening of the same radius (right). The readout measures how far a straight edge moves under the smooth erosion.",
+intu: "The binary operations have no useful gradient. Tidy3D builds smooth versions from the tools of Lessons 5 and 6. Filter the density with the conic kernel, then project with a threshold near 1: only pixels whose whole neighborhood is GaAs stay, which is erosion. Project with a threshold near 0 instead: any GaAs in the neighborhood is enough, which is dilation. Combining them gives smooth opening and closing. Compare the smooth opening (middle) with the binary opening of the same radius (right). The readout measures how far a straight edge moves under the smooth erosion.",
 eq: String.raw`\[ \operatorname{erode}(\hat\rho) = P_{\beta,\,0.99}\big(\operatorname{filter}_R(\hat\rho)\big) \qquad \operatorname{dilate}(\hat\rho) = P_{\beta,\,0.01}\big(\operatorname{filter}_R(\hat\rho)\big) \]\[ \mathcal{O} = \operatorname{dilate} \circ \operatorname{erode} \qquad \mathcal{C} = \operatorname{erode} \circ \operatorname{dilate} \]`,
-sym: [[String.raw`\(P_{\beta,\eta}\)`, "tanh projection of Lesson 7"], [String.raw`\(\operatorname{filter}_R\)`, String.raw`conic filter of radius \(R\) (Lesson 6)`], [String.raw`\(0.99,\ 0.01\)`, String.raw`Tidy3D's default thresholds, \(1 \mp \mathtt{delta\_eta}\) with \(\mathtt{delta\_eta} = 0.01\)`], ["edge shift", "distance a straight edge moves under the smooth erosion"]],
+sym: [[String.raw`\(P_{\beta,\eta}\)`, "tanh projection of Ch. 3 Eq. (3.9), Lesson 6"], [String.raw`\(\operatorname{filter}_R\)`, String.raw`conic filter of radius \(R\), Ch. 3 Eq. (3.8), Lesson 5`], [String.raw`\(0.99,\ 0.01\)`, String.raw`Tidy3D's default thresholds, \(1 \mp \mathtt{delta\_eta}\) with \(\mathtt{delta\_eta} = 0.01\)`], ["edge shift", "distance a straight edge moves under the smooth erosion"]],
 how: [String.raw`Near a straight edge the filtered value falls from 1 inside to 0 outside over a distance of about \(2R\).`, String.raw`A threshold of 0.99 keeps only pixels nearly \(R\) inside the edge.`, String.raw`A threshold of 0.01 adds pixels up to nearly \(R\) outside it.`, String.raw`So the smooth operations act like a disk of radius slightly below \(R\), and remain differentiable through the tanh.`],
 say: "Tidy3D makes erosion and dilation differentiable by filtering and then projecting with thresholds of 0.99 and 0.01, which moves edges by almost the filter radius.",
-num: String.raw`Each edge moves by about \(R\) minus one pixel, so the smooth opening removes bars narrower than about \(2R - \Delta\), roughly \(1.75R\). With this implementation the radius \(R\) therefore corresponds to a minimum feature just under \(2R\), like a disk of radius \(R\) in the binary operations.`,
+num: String.raw`Each edge moves by about \(R\) minus one pixel. So the smooth opening removes every bar narrower than \(R\), as Ch. 3 Sec. 3.5 states, and on this grid it removes bars up to about \(2R - \Delta\), roughly \(1.75R\), as well. In this implementation \(R\) plays the role of the disk radius \(r\) of the binary operations.`,
 r(fig, ctl) {
   ctl.innerHTML = sl("n", "Filter radius R (pixels)", 2, 7, 1, 3) + sl("b", "β inside the operations", 10, 100, 5, 100) + '<div class="readout" id="ro"></div>';
   const { X, W, H } = C3.pattern(), a = Float64Array.from(X);
@@ -125,10 +154,42 @@ r(fig, ctl) {
     const rg = C3.rng(17); for (let k = 0; k < Math.min(16, cs.length); k++) { const i = cs[Math.floor(rg() * cs.length)], x = i % W, y = (i - x) / W; ctx.beginPath(); ctx.arc(x + 0.5, y + 0.5, r, 0, 2 * Math.PI); ctx.stroke(); }
   };
   $("r").oninput = u; u();
+}},
+
+/* NEW CARD: opening and closing step by step */
+{s: "7. Open and close, step by step", t: "Opening and closing on the board, one operation at a time",
+intu: String.raw`Draw the two compound operations the way you would explain them at the board, one operation per step, on the same test layout. Opening: erode, and the thin bar and the island vanish while everything else shrinks. Then dilate by the same radius, and the survivors grow back, but what vanished cannot return. The red pixels are lost for good. Closing: dilate, and the narrow gap and the hole fill while everything grows. Then erode, and the outer edges return, but the bridged gap and the filled hole stay. The blue pixels are filled for good. The last step shows both at once, which is the picture behind the penalty of Eq. (3.15) and the check of Sec. 3.5. Step through and change the radius.`,
+eq: String.raw`\[ \operatorname{open}_r(X) = \operatorname{dilate}_r\big(\operatorname{erode}_r(X)\big) \qquad \operatorname{close}_r(X) = \operatorname{erode}_r\big(\operatorname{dilate}_r(X)\big) \]\[ X \setminus \operatorname{open}_r(X) \ \ (\text{red}), \qquad \operatorname{close}_r(X) \setminus X \ \ (\text{blue}) \]<div class="eqref">the two sets the design rule check of Ch. 3 Sec. 3.5 requires to have zero area</div>`,
+sym: [[String.raw`\(X\)`, "GaAs region of the layout"], ["grey outline", "the original layout, drawn under every step"], ["red", "GaAs removed by the opening"], ["blue", "air filled by the closing"]],
+how: [String.raw`Erode by \(r\): keep only points whose disk of radius \(r\) fits in the GaAs.`, String.raw`Dilate the result by \(r\): what survived grows back almost exactly, so only thin parts and sharp tips are missing.`, String.raw`Dilate the original by \(r\): gaps narrower than \(2r\) and small holes fill.`, String.raw`Erode that by \(r\): the outer edges return, the filled gaps stay filled.`, "A layout that loses no red and gains no blue obeys the length scale."],
+say: "Opening is erosion then dilation, and it removes solid parts thinner than 2r. Closing is dilation then erosion, and it fills gaps narrower than 2r. What changes under either one is a violation.",
+num: String.raw`Ch. 3 checks a 120 nm rule with \(r = 59\) nm and repairs with \(\operatorname{open}_r(\operatorname{close}_r(X))\) at \(r = 63\) nm (Lesson 11).`,
+r(fig, ctl) {
+  ctl.innerHTML = sl("r", "Disk radius r (pixels)", 1, 6, 0.5, 3) + '<div class="readout" id="ro"></div>';
+  fig.innerHTML = `<div id="m7m"></div><p class="note" id="m7c" style="font-size:14.5px;color:var(--fg);min-height:44px"></p>`;
+  const { X, W, H } = C3.pattern();
+  const CAP = ["", "Step 1. The layout X: blocks, a narrow gap, a thin bar, a hole and an island.", "Step 2. Opening, part 1: erode by r. The thin bar and the island vanish, everything shrinks.", "Step 3. Opening, part 2: dilate back by r. Survivors regrow, the red pixels are lost for good.", "Step 4. Closing, part 1: dilate X by r. The narrow gap and the hole fill, everything grows.", "Step 5. Closing, part 2: erode back by r. Outer edges return, the blue pixels stay filled.", "Step 6. Both at once: red is too thin, blue is too narrow. Zero of each means the layout obeys the length scale."];
+  let cache = { r: -1 };
+  const ops = r => { if (cache.r !== r) cache = { r, E: C3.bErode(X, W, H, r, 0), D: C3.bDilate(X, W, H, r, 0), O: C3.bOpen(X, W, H, r, 0), C: C3.bClose(X, W, H, r, 0) }; return cache; };
+  const draw = S => {
+    const k = S.k, r = +$("r").value; $("rv").textContent = r; const c = ops(r);
+    const edge = new Uint8Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, v = X[i]; if ((x > 0 && X[i - 1] !== v) || (y > 0 && X[i - W] !== v)) edge[i] = 1; }
+    const red = X.map((v, i) => v && !c.O[i] ? 1 : 0), blue = X.map((v, i) => !v && c.C[i] ? 1 : 0);
+    const show = [null, X, c.E, c.O, c.D, c.C, X][k], ov = [];
+    if (k === 3 || k === 6) ov.push([red, [216, 90, 48]]);
+    if (k === 5 || k === 6) ov.push([blue, [55, 138, 221]]);
+    ov.push([edge, [120, 120, 120]]);
+    C3.draw($("m7m"), show, W, H, 5.4, "", ov);
+    $("m7c").textContent = CAP[k];
+    const A = a => a.reduce((x, y) => x + y, 0);
+    $("ro").innerHTML = `<div><span>GaAs area shown</span><b>${A(show)} px</b></div><div><span>red: lost to opening</span><b>${k === 3 || k === 6 ? A(red) + " px" : "after step 3"}</b></div><div><span>blue: filled by closing</span><b>${k >= 5 ? A(blue) + " px" : "after step 5"}</b></div>`;
+  };
+  const S = C3L8_steps(fig, ctl, 6, 3, draw, "m7");
+  $("r").oninput = () => draw(S);
 }}
 
 ],
-summary: String.raw`Erosion keeps the points where a disk of radius \(r\) fits inside the GaAs, dilation adds the points within \(r\) of it. Opening, erosion then dilation, is the union of all disks that fit, so it removes solid features narrower than \(2r\) and rounds convex corners to radius \(r\). Closing, dilation then erosion, fills gaps narrower than \(2r\), small holes and concave notches. A layout with no feature or gap below \(2r\) and no corner sharper than \(r\) is unchanged by both. Tidy3D builds differentiable versions by filtering and projecting with thresholds 0.99 and 0.01, which move edges by nearly the filter radius \(R\), so the radius \(R\) corresponds to a minimum feature just under \(2R\).`,
+summary: String.raw`Erosion keeps the points where a disk of radius \(r\) fits inside the GaAs, dilation adds the points within \(r\) of it. Opening, erosion then dilation, is the union of all disks that fit, so it removes solid features narrower than \(2r\) and rounds convex corners to radius \(r\). Closing, dilation then erosion, fills gaps narrower than \(2r\), small holes and concave notches. A layout with no feature or gap below \(2r\) and no corner sharper than \(r\) is unchanged by both. Tidy3D builds differentiable versions by filtering and projecting with thresholds 0.99 and 0.01, which move edges by nearly the filter radius \(R\). They remove every feature narrower than \(R\), and on the grid also features up to just under \(2R\).`,
 sheet: [
 [String.raw`\[ \operatorname{erode}_r(X) = \{\, p : \operatorname{disk}(p, r) \subseteq X \,\} \]\[ \operatorname{dilate}_r(X) = \{\, p : \operatorname{disk}(p, r) \cap X \neq \emptyset \,\} \]`, "Erosion and dilation"],
 [String.raw`\[ \operatorname{open}_r = \operatorname{dilate}_r \circ \operatorname{erode}_r \qquad \operatorname{close}_r = \operatorname{erode}_r \circ \operatorname{dilate}_r \]`, "Opening and closing"],

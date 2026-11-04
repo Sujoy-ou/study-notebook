@@ -1,4 +1,23 @@
-/* TODO for this lesson: Thesis Sec. 3.6: Adam through optax, default decay rates 0.9 and 0.999, saved after every step. */
+/* Step-through controls: Back, Play or Pause, Next, a step counter and a caption per step.
+   draw(k, t) draws step k at time t (seconds). o.cont redraws every frame, o.loop restarts. */
+const C3L13_steps = (fig, ctl, caps, draw, o) => {
+  o = o || {}; const n = caps.length; let k = o.start || 0, play = !!o.play, tk = 0, tNow = 0, last = -1;
+  ctl.insertAdjacentHTML("beforeend", `<div class="row"><button data-sb="b">Back</button><button data-sb="p">Play</button><button data-sb="n">Next step</button><span data-sb="s" style="font-size:13px;color:var(--muted);margin-left:6px"></span></div><p data-sb="c" style="font-size:14.5px;line-height:1.5;color:var(--fg);min-height:46px;margin:2px 0 8px"></p>`);
+  const q = a => ctl.querySelector(`[data-sb="${a}"]`);
+  const show = () => { q("s").textContent = `step ${k + 1} of ${n}`; q("c").textContent = caps[k]; q("b").disabled = k === 0; q("n").disabled = k === n - 1; q("p").textContent = play ? "Pause" : "Play"; };
+  const redraw = () => { draw(k, tNow); last = k; show(); };
+  q("b").onclick = () => { k = Math.max(0, k - 1); tk = tNow; play = false; redraw(); };
+  q("n").onclick = () => { k = Math.min(n - 1, k + 1); tk = tNow; play = false; redraw(); };
+  q("p").onclick = () => { play = !play; if (play && k === n - 1) k = 0; tk = tNow; redraw(); };
+  anim(t => {
+    if (!fig.isConnected) { stopAnim(); return; }
+    tNow = t;
+    let ch = false;
+    if (play && t - tk > (o.dwell || 2.8)) { tk = t; ch = true; if (k < n - 1) k++; else if (o.loop) k = 0; else play = false; }
+    if (o.cont || ch || k !== last) redraw();
+  });
+  return { redraw, get k() { return k; } };
+};
 /* helpers for the Adam lesson: a stretched quadratic bowl f = (x - 1)^2 + S^2 (y - 0.5)^2 to MINIMIZE */
 const C3A = {
   grad: (p, S) => [2 * (p[0] - 1), 2 * S * S * (p[1] - 0.5)],
@@ -17,8 +36,8 @@ const C3A = {
 addLesson("thesis", "ch3", {
 level: "Core",
 id: "thesis-ch3-l13", title: "The optimizer: Adam", short: "13. Adam",
-big: String.raw`The adjoint method delivers a gradient. The optimizer decides how big a step to take along it. Plain gradient descent steps in proportion to the gradient, which fails when parameters differ greatly in sensitivity: a step small enough for the most sensitive parameter barely moves the others. Adam keeps, for every parameter, a running average of its gradient and of its squared gradient, and steps by the ratio of the two. Each parameter thus gets its own effective step size, about the learning rate \(\alpha\), whatever the scale of its gradient. Grating widths, DBR scales, taper points and pixel densities all have very different sensitivities, and Adam treats them on an equal footing.`,
-bridge: "This is Ch. 3 Sec. 3.6, the optimizer paragraph, which cites Algorithm 1 of Kingma and Ba 2015 (University of Amsterdam and University of Toronto). All thesis optimizations use Adam through the optax library with its default decay rates 0.9 and 0.999. Michaels and Yablonovitch used BFGS instead. The paths below are computed live on a stretched quadratic bowl.",
+big: String.raw`The adjoint method delivers a gradient. The optimizer decides how big a step to take along it. All optimizations in the thesis use the Adam algorithm through the optax library, with its default moment decay rates of 0.9 and 0.999. Plain gradient descent steps in proportion to the gradient, which fails when parameters differ greatly in sensitivity: a step small enough for the most sensitive parameter barely moves the others. Adam scales each update by running estimates of the first and second moments of the gradient, a running average of the gradient and of its square, and steps by the ratio of the two. Each parameter thus gets its own effective step size, about the learning rate \(\alpha\), whatever the scale of its gradient. Grating widths, DBR scales, taper points and pixel densities all have very different sensitivities, and Adam treats them on an equal footing. Each optimization was saved after every step so that it could be resumed.`,
+bridge: "This is the optimizer paragraph of Ch. 3 Sec. 3.6, which cites Algorithm 1 of Kingma and Ba 2015 (University of Amsterdam and University of Toronto). All thesis optimizations use Adam through the optax library with its default decay rates 0.9 and 0.999, and every optimization was saved after every step so that it could be resumed. Michaels and Yablonovitch used BFGS instead. The paths below are computed live on a stretched quadratic bowl.",
 cards: [
 /* from old ch3 L12 card 1 */
 {s: "1. Plain gradient descent", t: "Gradient descent in a stretched valley",
@@ -41,21 +60,26 @@ r(fig, ctl) {
 
 /* from old ch3 L12 card 2 */
 {s: "2. Adam", t: "Adam in the same valley",
-intu: String.raw`Same valley, now with Adam. Each coordinate is stepped by its own averaged gradient divided by the root of its own averaged squared gradient. The ratio is about ±1 in each direction, so both coordinates move by about \(\alpha\) per step regardless of \(S\). The path heads almost diagonally toward the optimum. Compare with gradient descent (grey) at the same \(\alpha\).`,
+intu: String.raw`Same valley, now with Adam. Each coordinate is stepped by its own averaged gradient divided by the root of its own averaged squared gradient. The ratio is about ±1 in each direction, so both coordinates move by about \(\alpha\) per step regardless of \(S\). The path heads almost diagonally toward the optimum. Compare with gradient descent (grey) at the same \(\alpha\), and press Play to watch both paths grow one step at a time.`,
 eq: String.raw`\[ m_t = \beta_1 m_{t-1} + (1 - \beta_1)\, g_t \qquad v_t = \beta_2 v_{t-1} + (1 - \beta_2)\, g_t^2 \]\[ \hat m_t = \frac{m_t}{1 - \beta_1^t} \qquad \hat v_t = \frac{v_t}{1 - \beta_2^t} \]\[ \theta_t = \theta_{t-1} - \alpha\, \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} \]<div class="eqref">Kingma and Ba, Alg. 1</div>`,
-sym: [[String.raw`\(g_t\)`, String.raw`gradient at step \(t\), per parameter`], [String.raw`\(m_t\)`, "first moment: running mean of the gradient"], [String.raw`\(v_t\)`, "second moment: running mean of the squared gradient"], [String.raw`\(\beta_1 = 0.9,\ \beta_2 = 0.999\)`, "decay rates, the optax defaults"], [String.raw`\(\epsilon = 10^{-8}\)`, "avoids division by zero"]],
+sym: [[String.raw`\(g_t\)`, String.raw`gradient at step \(t\), per parameter`], [String.raw`\(m_t\)`, "first moment: running mean of the gradient"], [String.raw`\(v_t\)`, "second moment: running mean of the squared gradient"], [String.raw`\(\beta_1 = 0.9,\ \beta_2 = 0.999\)`, "moment decay rates, the optax defaults used in the thesis"], [String.raw`\(\epsilon = 10^{-8}\)`, "avoids division by zero"]],
 how: [String.raw`Average the gradient over recent steps: \(m_t\).`, String.raw`Average its square: \(v_t\), a measure of its typical size.`, "Correct both for starting at zero (card 3).", String.raw`Step by \(\hat m/\sqrt{\hat v}\): a signed, size-free number of order one, times \(\alpha\).`],
 say: "Adam steps each parameter by its averaged gradient divided by the root of its averaged squared gradient, so every parameter moves by about the learning rate whatever its sensitivity.",
 num: String.raw`Kingma and Ba's defaults: \(\alpha = 0.001\), \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\epsilon = 10^{-8}\). In photonic inverse design \(\alpha\) is usually raised to between about 0.005 and 0.1.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("S", "Sensitivity ratio S", 1, 12, 0.5, 6) + sl("a", "Learning rate α", 0.01, 0.3, 0.005, 0.08) + '<div class="readout" id="ro"></div>';
-  const u = () => {
+  ctl.innerHTML = sl("S", "Sensitivity ratio S", 1, 12, 0.5, 6) + sl("a", "Learning rate α", 0.01, 0.3, 0.005, 0.08) + `<div class="row"><button id="pl">Play step by step</button></div><div class="readout" id="ro"></div>`;
+  let playing = false;
+  const u = (n) => {
+    n = n === undefined ? 60 : n;
     const S = +$("S").value, a = +$("a").value; $("Sv").textContent = S; $("av").textContent = a.toFixed(3);
-    const A = C3A.adam(S, a, 60), G = C3A.gd(S, a, 60), eA = A[A.length - 1], eG = G[G.length - 1], dG = G.length < 61 || Math.abs(eG[1]) > 5;
-    fig.innerHTML = svg(250, C3A.view([G, A], S, ["var(--b)", "#1D9E75"]));
-    $("ro").innerHTML = `<div><span>Adam, f after 60 steps</span><b>${C3A.f(eA, S).toExponential(2)}</b></div><div><span>gradient descent, same α</span><b>${dG ? "diverged" : C3A.f(eG, S).toExponential(2)}</b></div>`;
+    const A = C3A.adam(S, a, n), G = C3A.gd(S, a, n), eA = A[A.length - 1], eG = G[G.length - 1], dG = G.length < n + 1 || Math.abs(eG[1]) > 5;
+    fig.innerHTML = svg(250, C3A.view([G, A], S, ["var(--b)", "#1D9E75"]) + `<text class="ts" x="630" y="232" text-anchor="end">grey: gradient descent, green: Adam, step ${n}</text>`);
+    $("ro").innerHTML = `<div><span>Adam, f after ${n} steps</span><b>${C3A.f(eA, S).toExponential(2)}</b></div><div><span>gradient descent, same α</span><b>${dG ? "diverged" : C3A.f(eG, S).toExponential(2)}</b></div>`;
   };
-  $("S").oninput = u; $("a").oninput = u; u();
+  const stop = () => { playing = false; stopAnim(); $("pl").textContent = "Play step by step"; };
+  $("S").oninput = () => { stop(); u(); }; $("a").oninput = () => { stop(); u(); };
+  $("pl").onclick = () => { if (playing) { stop(); u(); return; } playing = true; $("pl").textContent = "Pause"; let last = -1; anim(t => { if (!fig.isConnected) { stopAnim(); return; } const n = Math.min(60, Math.floor(t * 8)); if (n === last) return; last = n; u(n); if (n >= 60) stop(); }); };
+  u();
 }},
 
 /* from old ch3 L12 card 3 */
@@ -127,16 +151,59 @@ r(fig, ctl) {
     $("ro").innerHTML = runs.map((r, k) => `<div><span>${["α/4", "α", "4α"][k]}: distance after ${T}</span><b>${r[T].toExponential(1)}</b></div>`).join("");
   };
   $("a").oninput = u; u();
+}},
+
+/* NEW: saved after every step so that it could be resumed (Sec. 3.6) */
+{s: "6. Saved after every step", t: "Saving the state after every step, and resuming",
+intu: String.raw`Each optimization in the thesis was saved after every step so that it could be resumed. A 3D run takes many hours, and a job can stop for reasons that have nothing to do with the physics, such as a time limit. Adam has a memory: besides the parameters it carries the moments \(m\) and \(v\) and the step count \(t\), which sets the bias correction. A save that holds all of them lets the run continue exactly where it stopped. Step through a run that stops at step 25 and is resumed. The green dashed path, resumed with the full state, lies exactly on the uninterrupted one. The orange path is resumed from the parameters alone, with Adam restarted at \(m = v = 0\) and \(t = 0\), and it takes a different route.`,
+eq: String.raw`\[ \text{state after step } t: \quad \big(\theta_t,\ m_t,\ v_t,\ t\big) \]\[ \theta_{t+1} = \theta_t - \alpha\, \frac{\hat m_{t+1}}{\sqrt{\hat v_{t+1}} + \epsilon}, \qquad \hat m_{t+1} = \frac{m_{t+1}}{1 - \beta_1^{\,t+1}}, \qquad \hat v_{t+1} = \frac{v_{t+1}}{1 - \beta_2^{\,t+1}} \]<div class="eqref">Ch. 3 Sec. 3.6, Kingma and Ba Alg. 1</div>`,
+sym: [[String.raw`\(\theta_t\)`, "the parameters after step t"], [String.raw`\(m_t, v_t\)`, "Adam's running averages of the gradient and of its square, one pair per parameter"], [String.raw`\(t\)`, "step count, which enters the bias correction"], ["save", "the state written to disk after each step"]],
+how: ["After each step, write the state to disk: parameters, moments and step count.", "If the run stops, read the last save back.", String.raw`With \(\theta\), \(m\), \(v\) and \(t\) restored, the next step is computed exactly as it would have been, so the resumed run is the same run.`, String.raw`With only \(\theta\) restored, Adam starts again from zero moments and \(t = 0\). The first steps after the restart again have the size \(\alpha\) in every direction, and the path changes.`],
+say: "Every optimization was saved after every step, so a run that stopped could be resumed from the last saved state instead of starting again.",
+num: String.raw`Test valley with \(S = 6\), \(\alpha = 0.08\), 60 steps, stop at step 25. The parameter count here is 2, while the PBS topology stage has 48 400 pixels, so a save holds three numbers per pixel plus the step count.`,
+note: "The thesis states that each optimization was saved after every step so it could be resumed. The comparison with a parameters-only restart on this card is a general property of Adam, shown here so you can explain why the moments matter if asked.",
+r(fig, ctl) {
+  const S = 6, a = 0.08, N = 60, stopAt = 25;
+  const run = (n, init) => { let p = init ? init.p.slice() : [-1.5, -0.7]; const A = new C3.Adam(2, a); if (init && init.full) { A.m = Float64Array.from(init.m); A.v = Float64Array.from(init.v); A.t = init.t; } const P = [p.slice()]; for (let i = 0; i < n; i++) { const g = C3A.grad(p, S), st = A.step([-g[0], -g[1]]); p = [p[0] + st[0], p[1] + st[1]]; P.push(p.slice()); } return { P, A, p }; };
+  const full = run(N), part = run(stopAt), save = { p: part.p, m: Array.from(part.A.m), v: Array.from(part.A.v), t: part.A.t };
+  const resF = run(N - stopAt, Object.assign({ full: true }, save)), resP = run(N - stopAt, { p: save.p });
+  const caps = ["Run Adam on the valley. Every step updates the parameters and the moments m and v.",
+    "After every step the state is saved: the parameters, the moments m and v, and the step count t.",
+    "The run stops at step 25, for example because the job reached its time limit.",
+    "Resume from the last save with the full state. The green dashed path continues exactly on the uninterrupted path.",
+    "Resume from the parameters alone, with Adam restarted at m = v = 0 and t = 0. The orange path takes a different route, so it is no longer the same run, for better or worse."];
+  ctl.innerHTML = '<div id="c6c"></div><div class="readout" id="ro"></div>';
+  let k0 = -1, te = 0;
+  C3L13_steps(fig, $("c6c"), caps, (k, t) => {
+    if (k !== k0) { k0 = k; te = t; }
+    const grow = Math.min(1, (t - te) / 2.5);
+    let paths = [], cols = [];
+    if (k === 0) { paths = [full.P.slice(0, 1 + Math.max(1, Math.round(stopAt * grow)))]; cols = ["#378ADD"]; }
+    else if (k <= 2) { paths = [full.P.slice(0, stopAt + 1)]; cols = ["#378ADD"]; }
+    else if (k === 3) { paths = [full.P, resF.P.slice(0, 1 + Math.max(1, Math.round((N - stopAt) * grow)))]; cols = ["var(--b)", "#1D9E75"]; }
+    else { paths = [full.P, resF.P, resP.P.slice(0, 1 + Math.max(1, Math.round((N - stopAt) * grow)))]; cols = ["var(--b)", "#1D9E75", "#D85A30"]; }
+    let s = C3A.view(paths, S, cols);
+    if (k >= 3) s = s.replace(/stroke="#1D9E75" stroke-width="1.8"/, 'stroke="#1D9E75" stroke-width="2.6" stroke-dasharray="6 4"');
+    const X = C3.X(40, 600, -2, 2), Y = C3.Y(10, 230, -1.3, 1.3), q = full.P[stopAt];
+    if (k === 1) for (let i = 1; i <= stopAt; i += 3) { const r = full.P[i]; s += `<rect x="${(X(r[0]) - 4).toFixed(1)}" y="${(Y(r[1]) - 14).toFixed(1)}" width="8" height="7" fill="#BA7517" opacity="0.8"/>`; }
+    if (k >= 2) s += `<circle cx="${X(q[0])}" cy="${Y(q[1])}" r="7" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="${X(q[0]) - 12}" y="${Y(q[1]) + 4}" text-anchor="end">stop at step 25</text>`;
+    if (k === 1 || k === 2) s += `<rect x="410" y="150" width="220" height="80" rx="6" fill="var(--sunk)" stroke="#BA7517"/><text class="ts" x="420" y="168">saved state, step ${stopAt}</text><text class="ts" x="420" y="186">θ = (${save.p[0].toFixed(3)}, ${save.p[1].toFixed(3)})</text><text class="ts" x="420" y="202">m = (${save.m[0].toFixed(3)}, ${save.m[1].toFixed(3)})</text><text class="ts" x="420" y="218">v = (${save.v[0].toFixed(3)}, ${save.v[1].toFixed(3)}), t = ${save.t}</text>`;
+    fig.innerHTML = svg(250, s);
+    const f = P => C3A.f(P[P.length - 1], S), dev = Math.max(...resF.P.map((r, i) => Math.hypot(r[0] - full.P[stopAt + i][0], r[1] - full.P[stopAt + i][1])));
+    $("ro").innerHTML = `<div><span>uninterrupted, f after 60</span><b>${f(full.P).toExponential(2)}</b></div><div><span>resumed with full state</span><b>${k >= 3 ? f(resF.P).toExponential(2) + (dev < 1e-12 ? ", identical path" : ", off by " + dev.toExponential(0)) : "not yet"}</b></div><div><span>resumed from θ only</span><b>${k >= 4 ? f(resP.P).toExponential(2) : "not yet"}</b></div>`;
+  }, { cont: true, dwell: 3.6 });
 }}
 
+
 ],
-summary: String.raw`Adam keeps per-parameter running averages of the gradient (decay 0.9) and of its square (decay 0.999), corrects them for starting at zero, and steps by \(\alpha \hat m/(\sqrt{\hat v} + \epsilon)\). The ratio \(\hat m/\sqrt{\hat v}\) is of order one and unchanged when a gradient is rescaled, so every parameter moves by about \(\alpha\) regardless of its sensitivity. That suits inverse design, where widths, layer scales, outline points and pixels differ greatly in sensitivity, and where plain gradient descent would need a step small enough for the most sensitive parameter. \(\alpha\) sets the step size, too large an \(\alpha\) makes the design jump, and like any gradient method Adam finds a local optimum.`,
+summary: String.raw`All thesis optimizations use Adam (Kingma and Ba, Algorithm 1) through the optax library, with the default moment decay rates 0.9 and 0.999. Adam keeps per-parameter running averages of the gradient and of its square, corrects them for starting at zero, and steps by \(\alpha \hat m/(\sqrt{\hat v} + \epsilon)\). The ratio \(\hat m/\sqrt{\hat v}\) is of order one and unchanged when a gradient is rescaled, so every parameter moves by about \(\alpha\) regardless of its sensitivity. That suits inverse design, where widths, layer scales, outline points and pixels differ greatly in sensitivity, and where plain gradient descent would need a step small enough for the most sensitive parameter. \(\alpha\) sets the step size, too large an \(\alpha\) makes the design jump, and like any gradient method Adam finds a local optimum. Each optimization was saved after every step so that it could be resumed.`,
 sheet: [
 [String.raw`\[ m_t = \beta_1 m_{t-1} + (1 - \beta_1)\, g_t \qquad v_t = \beta_2 v_{t-1} + (1 - \beta_2)\, g_t^2 \]`, "Moments (Kingma and Ba, Alg. 1)"],
 [String.raw`\[ \hat m_t = \frac{m_t}{1 - \beta_1^t} \qquad \hat v_t = \frac{v_t}{1 - \beta_2^t} \]`, "Bias correction"],
 [String.raw`\[ \theta_t = \theta_{t-1} - \alpha\, \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} \]`, String.raw`Update (gradient ascent: + for maximizing \(J\))`],
-[String.raw`\[ \beta_1 = 0.9 \qquad \beta_2 = 0.999 \qquad \epsilon = 10^{-8} \]`, "Defaults, also in optax"],
+[String.raw`\[ \beta_1 = 0.9 \qquad \beta_2 = 0.999 \]`, "optax default decay rates, used for all thesis optimizations (Sec. 3.6)"],
+[String.raw`\[ \big(\theta_t,\ m_t,\ v_t,\ t\big) \]`, "The state that lets a run be resumed exactly, saved after every step"],
 [String.raw`\[ \text{gradient descent stable for } \alpha \lt 1/S^2 \]`, "Why plain descent fails for ill-scaled parameters"]],
 consts: String.raw`Test function \(f = (x - 1)^2 + S^2(y - 0.5)^2\), start \((-1.5, -0.7)\). Thesis objectives are maximized, so the update adds the step.`,
-sources: ["Kingma and Ba, Adam: A method for stochastic optimization, ICLR 2015, arXiv:1412.6980 (Algorithm 1, bias correction, invariance to gradient rescaling)", "optax library documentation (adam with default b1 = 0.9, b2 = 0.999, eps = 1e-8)", "Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (used BFGS for their taper)"]
+sources: ["Kingma and Ba, Adam: A method for stochastic optimization, ICLR 2015, arXiv:1412.6980 (Algorithm 1, bias correction, invariance to gradient rescaling)", "optax library documentation (adam with default b1 = 0.9, b2 = 0.999, eps = 1e-8), as used for every thesis optimization", "Michaels and Yablonovitch, Opt. Express 26, 31717 (2018) (used BFGS for their taper)"]
 });

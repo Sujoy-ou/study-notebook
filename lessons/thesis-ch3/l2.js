@@ -84,7 +84,7 @@ eq: String.raw`\[ \frac{\partial F}{\partial \varepsilon_i} = -2\operatorname{Re
 sym: [[String.raw`\(\mathbf{E}_{\mathrm{fwd}} = \mathbf{x}\)`, "forward field, source on the left"], [String.raw`\(\mathbf{E}_{\mathrm{adj}} = \mathbf{y}\)`, "adjoint field, source at the output probe"], [String.raw`\(\mathbf{e}_{\mathrm{out}}\)`, "picks the probe point"], [String.raw`\(E_{\mathrm{out}}^{*}\)`, "complex conjugate of the forward field at the probe"]],
 how: [String.raw`\(F = |\mathbf{g}^{T}\mathbf{x}|^2/n_0\) with \(\mathbf{g} = \mathbf{e}_{\mathrm{out}}\), so \(\partial F/\partial\mathbf{x} = (\mathbf{g}^{T}\mathbf{x})^{*}\, \mathbf{g}^{T}/n_0\).`, "The adjoint source therefore sits at the probe, with the conjugated forward amplitude.", String.raw`Insert \(\partial A/\partial \varepsilon_i = k_0^2\, \mathbf{e}_i \mathbf{e}_i^{T}\) into the gradient formula.`, String.raw`Only the fields at pixel \(i\) survive: a local product of forward and adjoint fields.`],
 say: "For a permittivity pixel the adjoint gradient is a local product of the forward and adjoint fields, so one adjoint solve gives the sensitivity map of the whole design.",
-num: String.raw`This 1D device: 60 pixels of 10 nm between air (\(\varepsilon = 1\)) and GaAs (\(\varepsilon = 12.19\)). Two solves give all 60 derivatives. In Tidy3D the same product becomes \(\operatorname{Re} \sum_f \mathbf{E}_{\mathrm{fwd}} \cdot \mathbf{E}_{\mathrm{adj}}\) (Lesson 3).`,
+num: String.raw`This 1D device: 60 pixels of 10 nm between air (\(\varepsilon = 1\)) and GaAs (\(\varepsilon = 12.19\)). Two solves give all 60 derivatives. In Tidy3D the same product becomes \(\operatorname{Re} \sum_f \mathbf{E}_{\mathrm{fwd}} \cdot \mathbf{E}_{\mathrm{adj}}\), Ch. 3 Eq. (3.5) (Lesson 3).`,
 r(fig, ctl) {
   ctl.innerHTML = sl("l", "Wavelength (nm)", 650, 950, 5, 800) + `<div class="row"><button id="nd">New random design</button></div><div class="readout" id="ro"></div>`;
   const dev = new C3.Dev1D({ Nd: 60, pad: 30 }); let seed = 11, rho;
@@ -115,7 +115,7 @@ eq: String.raw`\[ \frac{\partial F}{\partial \varepsilon_i} \approx \frac{F(\var
 sym: [[String.raw`\(h\)`, "nudge of one pixel permittivity"], ["central difference", String.raw`error of order \(h^2\), two solves per pixel`], ["relative difference", "largest |adjoint − FD| divided by the largest |gradient|"]],
 how: ["Pick a design and wavelength.", "Adjoint: one forward and one adjoint solve, then the field product.", "Finite differences: two solves per pixel.", "Compare. Agreement to many digits shows the derivation and the code are consistent."],
 say: "A finite-difference check on a few parameters is the standard way to confirm that an adjoint gradient is correct.",
-num: "The Tidy3D study note for Ch. 3 records that a finite-difference check was not part of the thesis work. The optimizations converged and every final design was re-simulated without gradients. This toy shows what such a check looks like.",
+num: "Ch. 3 of the thesis does not report a finite-difference check of the gradient. Its reported numbers come from separate runs of the final designs (Sec. 3.7, Lesson 14). This toy shows what such a check looks like and why it is cheap only for a few parameters.",
 r(fig, ctl) {
   ctl.innerHTML = sl("l", "Wavelength (nm)", 650, 950, 5, 760) + `<div class="row"><button id="nd">New random design</button></div><div class="readout" id="ro"></div>`;
   const dev = new C3.Dev1D({ Nd: 60, pad: 30 }); let seed = 5, rho;

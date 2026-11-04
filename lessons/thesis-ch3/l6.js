@@ -1,15 +1,14 @@
-/* TODO for this lesson: Thesis Sec. 3.3/3.5: schedule beta 1 to 100 in 11 geometric levels of 7 steps, threshold at 0.5 at the end. */
 addLesson("thesis", "ch3", {
 level: "Core",
 id: "thesis-ch3-l6", title: "Projection and β continuation", short: "6. Projection and β",
-big: String.raw`After filtering, a smooth tanh step pushes each density toward 0 or 1. Its sharpness \(\beta\) decides how binary the design becomes, and its threshold \(\eta\) decides where the step sits. A large \(\beta\) gives a nearly black and white design but a badly conditioned problem, because the gradient survives only in the few pixels whose filtered value is close to \(\eta\). A small \(\beta\) gives a smooth problem whose best design is grey. The standard answer is continuation: start with a small \(\beta\) so the layout can form, raise it in stages so it becomes binary, and threshold the result at the end. Shifting \(\eta\) instead of \(\beta\) grows or shrinks every feature, which models over- and under-etching and leads directly to erosion and dilation.`,
-bridge: String.raw`This is Ch. 3 Sec. 3.3, Eq. (3.10), and the projection continuation of Sec. 3.5 with Fig. 3.2. The projection is Christiansen and Sigmund's Eq. (18), identical to Tidy3D's <code>tanh_projection</code>. Their tutorial explains why \(\beta\) is raised from a low to a high value and shows eroded, nominal and dilated designs for robustness, as do Hammond et al.`,
+big: String.raw`After filtering, a smooth tanh step pushes each density toward 0 or 1. Its sharpness \(\beta\) decides how binary the design becomes, and its threshold \(\eta\) decides where the step sits, \(\eta = 0.5\) in the thesis. A large \(\beta\) gives a nearly binary design but a poorly conditioned gradient, because the gradient survives only in the few pixels whose filtered value is close to \(\eta\). A small \(\beta\) gives a smooth problem whose optimum is grey. The answer is continuation: start with a small \(\beta\) so the layout can form, and raise it during the optimization so that the design becomes binary. For the PBS, \(\beta\) rises geometrically from 1 to 100 in 11 levels of 7 optimizer steps each, 77 steps in total. At \(\beta = 100\) the projection is close to a step function, and the final design is thresholded at \(\hat\rho = 0.5\).`,
+bridge: String.raw`This is the projection of Ch. 3 Sec. 3.3, Eq. (3.9), and the projection continuation of Sec. 3.5 with Fig. 3.2. The projection is Christiansen and Sigmund's Eq. (18), identical to Tidy3D's <code>tanh_projection</code>, and their tutorial explains why \(\beta\) is raised from a low to a high value during the optimization. The permittivity interpolation that follows the projection, Eq. (3.10), is in Lesson 5.`,
 cards: [
 /* from old ch3 L7 card 1 */
 {s: "1. The projection", t: "A smooth step with sharpness β and threshold η",
 intu: String.raw`The projection maps a filtered density \(\tilde\rho\) to \(\hat\rho\). For \(\beta\) near 1 it is almost the identity (dotted). As \(\beta\) grows, values above \(\eta\) are pushed toward 1 and values below toward 0, and the curve approaches a step at \(\eta\). The normalization keeps \(\hat\rho(0) = 0\) and \(\hat\rho(1) = 1\) for any \(\beta\) and \(\eta\). Move \(\beta\) and \(\eta\).`,
-eq: String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]<div class="eqref">Ch. 3 Eq. (3.10), Christiansen Eq. 18</div>`,
-sym: [[String.raw`\(\tilde\rho\)`, "filtered density, input"], [String.raw`\(\hat\rho\)`, String.raw`projected density, sets \(\varepsilon\) (Eq. 3.11)`], [String.raw`\(\beta\)`, "sharpness"], [String.raw`\(\eta\)`, "threshold, 0.5 for the nominal design"]],
+eq: String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]<div class="eqref">Ch. 3 Eq. (3.9), Christiansen Eq. (18)</div>`,
+sym: [[String.raw`\(\tilde\rho\)`, "filtered density, input"], [String.raw`\(\hat\rho\)`, String.raw`projected density, sets \(\varepsilon\) (Eq. 3.10)`], [String.raw`\(\beta\)`, "sharpness, raised from 1 to 100 during the PBS optimization"], [String.raw`\(\eta\)`, "threshold, 0.5 in the thesis"]],
 how: [String.raw`\(\tanh(\beta(\tilde\rho - \eta))\) is a smooth step centered at \(\eta\).`, String.raw`Adding \(\tanh(\beta\eta)\) makes it zero at \(\tilde\rho = 0\).`, String.raw`Dividing by its value at \(\tilde\rho = 1\) makes it one there.`, String.raw`For \(\beta \to \infty\) it becomes the hard threshold at \(\eta\).`],
 say: String.raw`The tanh projection is a smooth threshold whose sharpness \(\beta\) is raised during the optimization, pushing the filtered densities toward 0 or 1.`,
 num: String.raw`Christiansen and Sigmund: at \(\beta = 1\) the thresholding has little effect. At \(\beta = 100\) and \(\eta = 0.5\), \(\tilde\rho = 0.52\) already gives \(\hat\rho = 0.98\).`,
@@ -33,7 +32,7 @@ r(fig, ctl) {
 intu: String.raw`The full density chain is raw \(\rho\) → filter → \(\tilde\rho\) → projection → \(\hat\rho\) → \(\varepsilon\). The filter sets the shapes, the projection decides how sharp they are. At small \(\beta\) the projected map is still grey. Raise \(\beta\) and the same shapes become black and white, with a thin grey edge that shrinks as \(\beta\) grows. The readouts measure how binary the design is.`,
 eq: String.raw`\[ \rho \to \tilde\rho = \mathrm{filter}(\rho) \to \hat\rho = P_{\beta,\eta}(\tilde\rho) \to \varepsilon(\hat\rho) \]<div class="eqnote">binarization:</div>\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`,
 sym: [[String.raw`\(M\)`, "0 for a perfectly binary design, 1 if every pixel is 0.5"], ["grey fraction", String.raw`share of pixels with \(0.05 \lt \hat\rho \lt 0.95\)`]],
-how: ["The raw map is the same random design as in Lesson 6.", "The filter makes it smooth and grey.", String.raw`The projection sharpens it again, now with smooth outlines of size about \(R\).`, String.raw`Only the edge pixels stay grey at large \(\beta\).`],
+how: ["The raw map is a random design, as in Lesson 5.", "The filter makes it smooth and grey.", String.raw`The projection sharpens it again, now with smooth outlines of size about \(R\).`, String.raw`Only the edge pixels stay grey at large \(\beta\).`],
 say: String.raw`Filtering sets the feature shapes and projection makes them binary, with only the edges left grey at large \(\beta\).`,
 num: String.raw`The grey edge is about one pixel wide once \(\beta\) is large enough that the filtered value crosses from 0.05 to 0.95 within one pixel.`,
 r(fig, ctl) {
@@ -74,28 +73,54 @@ r(fig, ctl) {
   $("b").oninput = u; u();
 }},
 
-/* from old ch3 L7 card 4 */
-{s: "4. Continuation", t: "Raising β in stages: a geometric schedule",
-intu: String.raw`Continuation runs the optimizer at a fixed \(\beta\) for a number of steps, then raises \(\beta\) and continues. A geometric schedule multiplies \(\beta\) by the same factor at every level, so it spends equal effort on each decade from 1 to \(\beta_{\mathrm{max}}\). Early levels shape the layout while the problem is smooth, late levels make it binary. Change the schedule.`,
-eq: String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L - 1)}, \qquad k = 0, \dots, L - 1 \]\[ \text{each held for } s \text{ steps, total } L \cdot s \text{ steps} \]`,
-sym: [[String.raw`\(L\)`, "number of levels"], [String.raw`\(s\)`, "optimizer steps per level"], [String.raw`\(\beta_{\mathrm{max}}\)`, "final sharpness"], ["ratio", String.raw`\(\beta_{k+1}/\beta_k = \beta_{\mathrm{max}}^{1/(L-1)}\)`]],
-how: [String.raw`Start at \(\beta = 1\), where the projection is nearly the identity.`, String.raw`Multiply \(\beta\) by a fixed ratio at each level.`, String.raw`Stop at \(\beta_{\mathrm{max}}\), where the projection is close to a step.`, String.raw`Threshold the final design at \(\hat\rho = 0.5\) to make it exactly binary.`],
-say: String.raw`\(\beta\) is raised geometrically during the optimization, so the layout forms while the problem is smooth and becomes binary at the end.`,
-num: String.raw`Example: \(\beta\) from 1 to 100 in 11 levels of 7 steps gives 77 steps, a ratio of 1.585 per level, and the eighth level is \(\beta = 25.1\). Hammond et al. used three stages, \(\beta = 8\), 16 and 32, with 70 iterations each.`,
+/* from old ch3 L7 card 4, now the exact PBS schedule, animated */
+{s: "4. Continuation", t: "The PBS schedule: β from 1 to 100 in 11 levels of 7 steps",
+intu: String.raw`Continuation runs the optimizer at a fixed \(\beta\) for 7 steps, then raises \(\beta\) and continues. The schedule is geometric: every level multiplies \(\beta\) by the same factor, \(100^{1/10} = 1.585\), so the 11 levels run from \(\beta = 1\) to \(\beta = 100\) and spend equal effort on each decade. Early levels shape the layout while the problem is smooth, late levels make it binary. After the last level the design is thresholded at \(\hat\rho = 0.5\). Press Play, or drag the step, and watch the projection (right) steepen and the same filtered map (bottom) turn black and white.`,
+eq: String.raw`\[ \beta_k = 100^{\,k/10}, \qquad k = 0, 1, \dots, 10, \qquad \text{each level held for 7 steps} \]\[ \text{after step 77:} \quad \hat\rho \to \begin{cases} 1, & \hat\rho \ge 0.5 \\ 0, & \hat\rho \lt 0.5 \end{cases} \]<div class="eqref">Ch. 3 Sec. 3.5, projection continuation, Fig. 3.2</div>`,
+sym: [[String.raw`\(k\)`, "level index, 0 to 10, so 11 levels"], [String.raw`\(\beta_k\)`, String.raw`sharpness at level \(k\): 1, 1.58, 2.51, 3.98, 6.31, 10, 15.8, 25.1, 39.8, 63.1, 100`], ["7 steps", "optimizer steps per level, 77 in total"], ["threshold", String.raw`the final design is made exactly binary at \(\hat\rho = 0.5\)`]],
+how: [String.raw`Start at \(\beta = 1\), where the projection is nearly the identity.`, String.raw`Multiply \(\beta\) by \(100^{1/10} = 1.585\) at each new level, every 7 steps.`, String.raw`Stop at \(\beta = 100\), where the projection is close to a step function.`, String.raw`Threshold the final design at \(\hat\rho = 0.5\) to make it exactly binary, ready to be turned into a polygon.`],
+say: String.raw`For the PBS, \(\beta\) rises geometrically from 1 to 100 in 11 levels of 7 optimizer steps, 77 steps in total, and the final design is thresholded at 0.5.`,
+num: String.raw`The eighth level, \(k = 7\), is \(\beta = 25.1\), the first level at which the erosion and dilation penalty has full weight (Lesson 9). For comparison, Hammond et al. used three stages, \(\beta = 8\), 16 and 32, with 70 iterations each.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("m", "β_max", 10, 200, 5, 100) + sl("L", "Levels L", 2, 15, 1, 11) + sl("s", "Steps per level", 1, 15, 1, 7) + '<div class="readout" id="ro"></div>';
+  let k = 0, playing = false;
+  ctl.innerHTML = sl("k", "Optimizer step", 0, 77, 1, 0) + `<div class="row"><button id="pl">Play</button><button id="rs">Back to step 0</button></div><div class="readout" id="ro"></div>`;
+  fig.innerHTML = `<div id="c4s"></div><div id="c4m"></div>`;
+  const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), xs = range(0, 1, 201);
+  const bOf = k => k >= 77 ? Infinity : Math.pow(100, Math.floor(k / 7) / 10);
+  let lastMap = -2;
   const u = () => {
-    const bm = +$("m").value, L = +$("L").value, st = +$("s").value; $("mv").textContent = bm; $("Lv").textContent = L; $("sv").textContent = st;
-    const bs = Array.from({ length: L }, (_, k) => Math.pow(bm, k / (L - 1))), T = L * st;
-    const X = C3.X(70, 560, 0, T), Y = v => 210 - Math.log10(v) / Math.log10(250) * 180;
-    let s = `<rect x="70" y="30" width="560" height="180" fill="none" stroke="var(--b)"/>`;
-    [1, 10, 100].forEach(v => s += `<line x1="66" x2="70" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--p)"/><text class="ts" x="62" y="${Y(v) + 4}" text-anchor="end">${v}</text><line x1="70" x2="630" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--b)" stroke-dasharray="2 4"/>`);
-    let d = ""; bs.forEach((b, k) => d += `${k ? "L" : "M"}${X(k * st)} ${Y(b)} L${X((k + 1) * st)} ${Y(b)}`);
-    s += `<path d="${d}" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="350" y="236" text-anchor="middle">optimizer step (total ${T})</text><text class="ts" x="30" y="120" transform="rotate(-90 30 120)" text-anchor="middle">β (log)</text>`;
-    fig.innerHTML = svg(245, s);
-    $("ro").innerHTML = `<div><span>ratio per level</span><b>${Math.pow(bm, 1 / (L - 1)).toFixed(3)}</b></div><div><span>levels</span><b>${bs.map(b => b < 10 ? b.toFixed(1) : b.toFixed(0)).join(", ")}</b></div>`;
+    $("kv").textContent = k === 77 ? "77, threshold" : k;
+    const b = bOf(k), lev = Math.min(10, Math.floor(k / 7));
+    const X = C3.X(60, 280, 0, 77), Y = v => 190 - Math.log10(v) / 2 * 160;
+    let s = `<text class="ts" x="200" y="16" text-anchor="middle">β schedule (log scale)</text><rect x="60" y="30" width="280" height="160" fill="none" stroke="var(--b)"/>`;
+    [1, 10, 100].forEach(v => s += `<text class="ts" x="54" y="${Y(v) + 4}" text-anchor="end">${v}</text><line x1="60" x2="340" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--b)" stroke-dasharray="2 4"/>`);
+    [0, 35, 77].forEach(v => s += `<text class="ts" x="${X(v)}" y="206" text-anchor="middle">${v}</text>`);
+    let d = ""; for (let L = 0; L < 11; L++) { const yb = Y(Math.pow(100, L / 10)); d += `${L ? "L" : "M"}${X(L * 7).toFixed(1)} ${yb.toFixed(1)}L${X((L + 1) * 7).toFixed(1)} ${yb.toFixed(1)}`; }
+    s += `<path d="${d}" fill="none" stroke="#D85A30" stroke-width="2.5"/><text class="ts" x="200" y="222" text-anchor="middle">optimizer step</text>`;
+    s += `<line x1="${X(Math.min(k, 77))}" x2="${X(Math.min(k, 77))}" y1="30" y2="190" stroke="#7F77DD" stroke-width="2"/>`;
+    if (k < 77) s += `<circle cx="${X(k)}" cy="${Y(b)}" r="5" fill="#7F77DD"/>`;
+    s += C3.frame(420, 30, 220, 160, 0, 1, 0, 1, [0, 0.5, 1], [0, 0.5, 1], "filtered ρ̃", "") + `<text class="ts" x="530" y="16" text-anchor="middle">projection at this step, η = 0.5</text>`;
+    s += plot(420, 30, 220, 160, xs, xs, 0, 1, 0, 1, "var(--p)", 1, "2 3");
+    s += plot(420, 30, 220, 160, xs, xs.map(x => k >= 77 ? (x >= 0.5 ? 1 : 0) : C3.proj(x, b, 0.5)), 0, 1, 0, 1, "#D85A30", 2.5);
+    $("c4s").innerHTML = svg(232, s);
+    const key = k >= 77 ? -1 : lev;
+    if (key !== lastMap) {
+      lastMap = key;
+      const p = f.map(v => k >= 77 ? (C3.proj(v, 100, 0.5) >= 0.5 ? 1 : 0) : C3.proj(v, b, 0.5));
+      C3.drawRow($("c4m"), [{ a: f }, { a: p }], W, H, 3.6, k >= 77 ? "Right: after the last level, thresholded at ρ̂ = 0.5." : `Right: the same filtered map projected with β = ${b < 10 ? b.toFixed(2) : b.toFixed(1)}.`, ["filtered ρ̃", "projected ρ̂"]);
+    }
+    let g = 0; if (k < 77) f.forEach(v => { const q = C3.proj(v, b, 0.5); if (q > 0.05 && q < 0.95) g++; });
+    $("ro").innerHTML = `<div><span>level</span><b>${k >= 77 ? "done" : (lev + 1) + " of 11"}</b></div><div><span>β</span><b>${k >= 77 ? "threshold" : b < 10 ? b.toFixed(2) : b.toFixed(1)}</b></div><div><span>grey pixels</span><b>${(100 * g / f.length).toFixed(1)} %</b></div>`;
   };
-  ["m", "L", "s"].forEach(k => $(k).oninput = u); u();
+  const stop = () => { playing = false; stopAnim(); $("pl").textContent = "Play"; };
+  $("k").oninput = () => { stop(); k = +$("k").value; u(); };
+  $("rs").onclick = () => { stop(); k = 0; $("k").value = 0; u(); };
+  $("pl").onclick = () => {
+    if (playing) { stop(); return; }
+    playing = true; $("pl").textContent = "Pause"; if (k >= 77) k = 0; let last = -1;
+    anim(t => { if (!fig.isConnected) { stopAnim(); return; } const n = Math.floor(t * 5); if (n === last) return; last = n; if (k < 77) k++; else { stop(); } $("k").value = k; u(); });
+  };
+  u();
 }},
 
 /* from old ch3 L7 card 5 */
@@ -107,7 +132,7 @@ how: ["Use the slope formula of card 3.", "Evaluate it for every pixel of the fi
 say: String.raw`As \(\beta\) grows, fewer pixels receive a useful gradient, so the topology freezes, which is why \(\beta\) is raised gradually.`,
 num: "Christiansen and Sigmund: a sharp threshold early makes the problem badly conditioned and freezes the design too soon.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + '<div class="readout" id="ro"></div>';
+  ctl.innerHTML = sl("b", "β (log scale)", 0, 2.3, 0.01, 1) + `<div class="row"><button id="pl">Play the 11 levels</button></div><div class="readout" id="ro"></div>`;
   const W = 72, H = 50, f = C3.filter2D(C3.noise(W, H, 5), W, H, 3), lb = range(0, 2.3, 70);
   const share = b => { const pk = C3.dproj(0.5, b, 0.5); let a = 0; f.forEach(v => { if (C3.dproj(v, b, 0.5) >= 0.1 * pk) a++; }); return a / f.length; };
   const curve = lb.map(l => share(Math.pow(10, l)));
@@ -116,20 +141,25 @@ r(fig, ctl) {
     const X = C3.X(70, 560, 0, 2.3), Y = C3.Y(20, 180, 0, 1);
     let s = C3.frame(70, 20, 560, 180, 0, 2.3, 0, 1, [0, 1, 2], [0, 0.5, 1], "β", "active share", v => ["1", "10", "100"][v], v => (100 * v).toFixed(0) + " %") + plot(70, 20, 560, 180, lb, curve, 0, 2.3, 0, 1, "#1D9E75", 2.5);
     const sh = share(b); s += `<circle cx="${X(l)}" cy="${Y(sh)}" r="6" fill="#D85A30"/>`;
-    fig.innerHTML = svg(240, s);
+    for (let L = 0; L < 11; L++) s += `<circle cx="${X(L / 5)}" cy="${Y(share(Math.pow(10, L / 5)))}" r="2.5" fill="#7F77DD"/>`;
+    fig.innerHTML = svg(240, s + `<text class="ts" x="80" y="180">purple dots: the 11 levels of the PBS schedule</text>`);
     $("ro").innerHTML = `<div><span>β</span><b>${b.toFixed(b < 10 ? 2 : 0)}</b></div><div><span>pixels still active</span><b>${(100 * sh).toFixed(1)} %</b></div>`;
   };
-  $("b").oninput = u; u();
+  let playing = false;
+  const stop = () => { playing = false; stopAnim(); $("pl").textContent = "Play the 11 levels"; };
+  $("b").oninput = () => { stop(); u(); };
+  $("pl").onclick = () => { if (playing) { stop(); return; } playing = true; $("pl").textContent = "Pause"; let last = -1; anim(t => { if (!fig.isConnected) { stopAnim(); return; } const L = Math.floor(t / 0.8); if (L === last) return; last = L; if (L > 10) { stop(); return; } $("b").value = (L / 5).toFixed(2); u(); }); };
+  u();
 }}
 
 ],
-summary: String.raw`The tanh projection \(\hat\rho = [\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))]/[\tanh(\beta\eta) + \tanh(\beta(1 - \eta))]\) pushes filtered densities toward 0 or 1, with sharpness \(\beta\) and threshold \(\eta\). Large \(\beta\) gives a binary design but concentrates the gradient on the edges and freezes the topology, small \(\beta\) keeps the problem smooth but grey. So \(\beta\) is raised geometrically during the optimization, for example from 1 to 100 in 11 levels, and the result is thresholded at 0.5. Shifting \(\eta\) above or below 0.5 erodes or dilates every feature, which models etch bias and leads to the morphological operations of the next lesson.`,
+summary: String.raw`The tanh projection \(\hat\rho = [\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))]/[\tanh(\beta\eta) + \tanh(\beta(1 - \eta))]\), Eq. (3.9), pushes filtered densities toward 0 or 1, with sharpness \(\beta\) and threshold \(\eta = 0.5\). Large \(\beta\) gives a binary design but concentrates the gradient on the edges and freezes the topology, small \(\beta\) keeps the problem smooth but grey. So \(\beta\) is raised during the optimization. For the PBS it rises geometrically from 1 to 100 in 11 levels of 7 optimizer steps, 77 steps in total, and the final design is thresholded at \(\hat\rho = 0.5\).`,
 sheet: [
-[String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, "Projection (Ch. 3 Eq. 3.10, Christiansen Eq. 18)"],
+[String.raw`\[ \hat\rho = \frac{\tanh(\beta\eta) + \tanh(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, String.raw`Projection, \(\eta = 0.5\) (Ch. 3 Eq. 3.9, Christiansen Eq. 18)`],
 [String.raw`\[ \frac{d\hat\rho}{d\tilde\rho} = \frac{\beta \operatorname{sech}^2(\beta(\tilde\rho - \eta))}{\tanh(\beta\eta) + \tanh(\beta(1 - \eta))} \]`, String.raw`Slope, peak \(\approx \beta/2\) at \(\eta = 0.5\)`],
-[String.raw`\[ \beta_k = \beta_{\mathrm{max}}^{k/(L-1)} \]`, "Geometric continuation"],
-[String.raw`\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`, "Binarization measure (0 = binary)"],
-[String.raw`\[ \eta = 0.5 \pm \delta \]`, "Eroded and dilated designs"]],
+[String.raw`\[ \beta_k = 100^{\,k/10}, \qquad k = 0, \dots, 10 \]`, "PBS continuation: 11 levels of 7 steps, 77 steps (Sec. 3.5)"],
+[String.raw`\[ \hat\rho \ge 0.5 \;\to\; 1, \qquad \hat\rho \lt 0.5 \;\to\; 0 \]`, "Final threshold after the last level"],
+[String.raw`\[ M = \frac{1}{N} \sum 4\hat\rho\, (1 - \hat\rho) \]`, "Binarization measure used in card 2 (0 = binary)"]],
 consts: "Maps: 72 × 50 pixels of uniform random values, conic filter radius 3 pixels.",
-sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eq. (18), continuation, eroded, nominal and dilated designs", "Hammond et al., Opt. Express 29, 23916 (2021) (β stages 8, 16, 32 and robustness to ±20 nm etch bias)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/projections.py (tanh_projection)"]
+sources: ["Christiansen and Sigmund, J. Opt. Soc. Am. B 38, 496 (2021), Eq. (18) and the continuation of the projection sharpness", "Hammond et al., Opt. Express 29, 23916 (2021) (β stages 8, 16 and 32, quoted for comparison)", "Flexcompute, Tidy3D 2.11.2 source: plugins/autograd/invdes/projections.py (tanh_projection)"]
 });
