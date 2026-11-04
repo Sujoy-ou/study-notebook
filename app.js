@@ -46,6 +46,42 @@ const LIBRARY = [
     ]
   },
   {
+    id: "ml", title: "Machine Learning",
+    desc: "Machine learning from the first line of Python to transformers, following AME 5970 and the best open courses (Stanford CS229 and CS231n, Andrew Ng's specializations, Dive into Deep Learning, the Raschka textbook). Every lesson has visuals you control, a card on doing the work with the Claude agent in VS Code, and a 12-question test. Each part ends with a part test.",
+    groups: [
+      { id: "start", title: "Part 1: Start here",
+        desc: "How to work on an ML project with VS Code, the Claude agent and GitHub, and what machine learning actually is.",
+        lessons: [], planned: ["1. What machine learning is"] },
+      { id: "py", title: "Part 2: Python for ML, basics to pro",
+        desc: "Python from values and names to classes, generators and decorators, then NumPy, pandas and Matplotlib. Each code card runs line by line with a memory diagram of names and objects.",
+        lessons: [], planned: ["3. Control flow", "4. Data structures", "5. Functions, modules and errors", "6. Classes and objects", "7. Pythonic tools", "8. NumPy arrays", "9. NumPy for ML", "10. pandas and Matplotlib", "11. Part 2 test"] },
+      { id: "math", title: "Part 3: Math for ML",
+        desc: "The linear algebra, calculus and probability that the rest of the shelf uses, each with live pictures.",
+        lessons: [], planned: ["12. Linear algebra", "13. Calculus and gradients", "14. Probability"] },
+      { id: "linear", title: "Part 4: Linear models and how they learn",
+        desc: "Linear regression, gradient descent, scaling, losses from probability, overfitting and regularization.",
+        lessons: [], planned: ["15. Linear regression", "16. Gradient descent", "17. Feature scaling", "18. Losses from probability", "19. Overfitting and regularization", "20. Part 4 test"] },
+      { id: "torch", title: "Part 5: PyTorch, basics to pro",
+        desc: "Tensors, autograd, nn.Module, the training loop, data pipelines, pro habits and PyTorch Lightning.",
+        lessons: [], planned: ["21. Tensors", "22. Autograd", "23. nn.Module", "24. The training loop", "25. Data in PyTorch", "26. Pro PyTorch", "27. Lightning with the agent", "28. Part 5 test"] },
+      { id: "class", title: "Part 6: Classification",
+        desc: "Logistic regression, softmax and cross-entropy, and how to judge a classifier.",
+        lessons: [], planned: ["29. Logistic regression", "30. Softmax and multiclass", "31. Evaluating classifiers"] },
+      { id: "deep", title: "Part 7: Deep neural networks",
+        desc: "MLPs, backpropagation by hand, activations, optimizers, CNNs and residual networks.",
+        lessons: [], planned: ["32. The multilayer perceptron", "33. Backpropagation by hand", "34. Activations and initialization", "35. Optimizers and training tricks", "36. Convolutional networks", "37. ResNets and transfer learning", "38. Part 6 and 7 test"] },
+      { id: "seq", title: "Part 8: Sequences, attention and transformers",
+        desc: "RNNs, LSTMs, attention and the transformer.",
+        lessons: [], planned: ["39. Recurrent networks", "40. LSTM and GRU", "41. Attention", "42. Transformers", "43. Part 8 test"] },
+      { id: "proj", title: "Part 9: The project",
+        desc: "Running experiments honestly, reading results, and finishing the code and the presentation.",
+        lessons: [], planned: ["44. Experiments and reading results", "45. Finishing the project"] },
+      { id: "exam", title: "Part 10: Exam practice",
+        desc: "Midterm and final style problems with worked board solutions, and a full mock final.",
+        lessons: [], planned: ["E1. Midterm-style practice", "E2. Final-style practice", "E3. Full mock final"] }
+    ]
+  },
+  {
     id: "jc", title: "Journal Club",
     desc: "Papers read for journal club. Each paper gets its own lecture series, from the basic ideas to a full understanding of every figure, with visuals you control.",
     groups: [
@@ -191,7 +227,7 @@ function lesson(id) {
   const { s, g, l } = f, rd = getRead();
   const all = g.lessons, ix = all.indexOf(l), prev = all[ix - 1], next = all[ix + 1], base = all[0] && all[0].zero ? 0 : 1;
   $("view").innerHTML = `<p class="crumb"><a href="#">Library</a> / ${s.title} / ${g.title}</p>
-  <h1>Lesson ${ix + base}: ${l.title}</h1>
+  <h1>${l.num != null ? l.num : "Lesson " + (ix + base)}: ${l.title}</h1>
   <p class="sec">Big picture</p><p class="big">${l.big}</p>
   ${l.bridge ? `<p class="src" style="max-width:80ch">${l.bridge}</p>` : ""}
   <div class="meta"><label><input type="checkbox" id="rd" ${rd[l.id] ? "checked" : ""}> I've read this lesson</label><span>${l.cards.length} cards, then summary and equation sheet</span></div>
