@@ -60,7 +60,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "linear", title: "Part 4: Linear models and how they learn",
         desc: "Linear regression, gradient descent, scaling, losses from probability, overfitting and regularization.",
-        lessons: [], planned: ["20. Part 4 test"] },
+        lessons: [], planned: [] },
       { id: "torch", title: "Part 5: PyTorch, basics to pro",
         desc: "Tensors, autograd, nn.Module, the training loop, data pipelines, pro habits and PyTorch Lightning.",
         lessons: [], planned: ["21. Tensors", "22. Autograd", "23. nn.Module", "24. The training loop", "25. Data in PyTorch", "26. Pro PyTorch", "27. Lightning with the agent", "28. Part 5 test"] },
