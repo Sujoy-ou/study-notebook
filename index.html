@@ -188,7 +188,8 @@ span.st{font-family:var(--display);font-size:22px;font-weight:650}
 </div>
 <script>
 window.MathJax = {
-  tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]], processEscapes: false },
+  loader: { load: ["[tex]/textmacros"] },
+  tex: { packages: { "[+]": ["textmacros"] }, inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]], processEscapes: false },
   svg: { fontCache: "global" },
   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code", "svg"] },
   startup: { typeset: false, ready: () => { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => { if (window.typesetMath) typesetMath(document.getElementById("view")); }); } }
@@ -278,6 +279,10 @@ window.MathJax = {
 <script src="lessons/ml-py/l7.js"></script>
 <script src="lessons/ml-py/l8.js"></script>
 <script src="lessons/ml-py/l9.js"></script>
+<script src="lessons/ml-py/l10.js"></script>
+<script src="lessons/ml-py/l11.js"></script>
+<script src="lessons/ml-math/l12.js"></script>
+<script src="lessons/ml-math/l13.js"></script>
 <script src="lessons/jc-weber/common.js"></script>
 <script src="lessons/jc-weber/l1.js"></script>
 <script src="lessons/jc-weber/l2.js"></script>
