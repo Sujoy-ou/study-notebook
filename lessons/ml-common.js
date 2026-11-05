@@ -72,6 +72,25 @@ ML.readout = items => `<div class="readout">${items.map(([k, v]) => `<div><span>
 ML.box = (x, y, w, h, cls, lines, big) => `<g class="${cls}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" stroke-width="0.8"/></g>` +
   lines.map((t, i) => `<text class="${i === 0 && big !== false ? "th" : "ts"}" x="${x + w / 2}" y="${y + h / 2 + (i - (lines.length - 1) / 2) * 17 + 5}" text-anchor="middle">${t}</text>`).join("");
 
+
+/* ---------- array grid ----------
+   Draw a 1D or 2D array as cells. a: array of numbers (1D) or array of rows (2D).
+   o: {x, y, cell, hl: Set of "i,j" keys to highlight, hl2: second highlight set, fmt, rowLab, colLab, title, dim}. Returns SVG string and height. */
+ML.grid = function (a, o) {
+  o = o || {}; const cell = o.cell || 44, x0 = o.x || 60, y0 = o.y || 30, fmt = o.fmt || (v => Number.isInteger(v) ? v : (+v).toFixed(o.dec == null ? 2 : o.dec));
+  const rows = Array.isArray(a[0]) ? a : [a], R = rows.length, Cc = rows[0].length, hl = o.hl || new Set(), hl2 = o.hl2 || new Set(), dim = o.dim || new Set();
+  let s = o.title ? `<text class="th" x="${x0}" y="${y0 - 10}">${o.title}</text>` : "";
+  for (let i = 0; i < R; i++) for (let j = 0; j < Cc; j++) {
+    const k = i + "," + j, on = hl.has(k), on2 = hl2.has(k), dm = dim.has(k);
+    s += `<rect x="${x0 + j * cell}" y="${y0 + i * cell}" width="${cell - 3}" height="${cell - 3}" rx="5" fill="${on ? "var(--teal-bg)" : on2 ? "var(--coral-bg)" : "var(--sunk)"}" stroke="${on ? ML.C.teal : on2 ? ML.C.coral : "var(--line)"}" stroke-width="${on || on2 ? 2 : 1}" opacity="${dm ? 0.35 : 1}"/>`;
+    s += `<text class="t" x="${x0 + j * cell + (cell - 3) / 2}" y="${y0 + i * cell + cell / 2 + 3}" text-anchor="middle" style="font-family:var(--mono);font-size:${cell > 40 ? 13 : 11}px" opacity="${dm ? 0.4 : 1}">${fmt(rows[i][j])}</text>`;
+  }
+  if (o.rowLab !== false && R > 1) for (let i = 0; i < R; i++) s += `<text class="ts" x="${x0 - 8}" y="${y0 + i * cell + cell / 2 + 3}" text-anchor="end">${o.rowLab ? o.rowLab[i] : i}</text>`;
+  if (o.colLab !== false) for (let j = 0; j < Cc; j++) s += `<text class="ts" x="${x0 + j * cell + (cell - 3) / 2}" y="${y0 + R * cell + 10}" text-anchor="middle">${o.colLab ? o.colLab[j] : j}</text>`;
+  if (o.axes && R > 1) { s += `<text class="ts" x="${x0 - 30}" y="${y0 + R * cell / 2}" text-anchor="middle" transform="rotate(-90 ${x0 - 30} ${y0 + R * cell / 2})">axis 0</text><text class="ts" x="${x0 + Cc * cell / 2}" y="${y0 + R * cell + 26}" text-anchor="middle">axis 1</text>`; }
+  return { s, h: y0 + R * cell + 32, w: x0 + Cc * cell };
+};
+
 /* ---------- Back / Next stepper ---------- */
 ML.stepper = function (ctl, n, draw, names) {
   const id = ML.uid("st");

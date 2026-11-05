@@ -54,7 +54,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "py", title: "Part 2: Python for ML, basics to pro",
         desc: "Python from values and names to classes, generators and decorators, then NumPy, pandas and Matplotlib. Each code card runs line by line with a memory diagram of names and objects.",
-        lessons: [], planned: ["6. Classes and objects", "7. Pythonic tools", "8. NumPy arrays", "9. NumPy for ML", "10. pandas and Matplotlib", "11. Part 2 test"] },
+        lessons: [], planned: ["10. pandas and Matplotlib", "11. Part 2 test"] },
       { id: "math", title: "Part 3: Math for ML",
         desc: "The linear algebra, calculus and probability that the rest of the shelf uses, each with live pictures.",
         lessons: [], planned: ["12. Linear algebra", "13. Calculus and gradients", "14. Probability"] },
