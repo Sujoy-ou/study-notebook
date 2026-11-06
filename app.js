@@ -63,7 +63,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "torch", title: "Part 5: PyTorch, basics to pro",
         desc: "Tensors, autograd, nn.Module, the training loop, data pipelines, pro habits and PyTorch Lightning.",
-        lessons: [], planned: ["28. Part 5 test"] },
+        lessons: [], planned: [] },
       { id: "class", title: "Part 6: Classification",
         desc: "Logistic regression, softmax and cross-entropy, and how to judge a classifier.",
         lessons: [], planned: ["29. Logistic regression", "30. Softmax and multiclass", "31. Evaluating classifiers"] },
