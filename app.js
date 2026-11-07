@@ -66,7 +66,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "class", title: "Part 6: Classification",
         desc: "Logistic regression, softmax and cross-entropy, and how to judge a classifier.",
-        lessons: [], planned: ["30. Softmax and multiclass", "31. Evaluating classifiers"] },
+        lessons: [], planned: ["31. Evaluating classifiers"] },
       { id: "deep", title: "Part 7: Deep neural networks",
         desc: "MLPs, backpropagation by hand, activations, optimizers, CNNs and residual networks.",
         lessons: [], planned: ["32. The multilayer perceptron", "33. Backpropagation by hand", "34. Activations and initialization", "35. Optimizers and training tricks", "36. Convolutional networks", "37. ResNets and transfer learning", "38. Part 6 and 7 test"] },
