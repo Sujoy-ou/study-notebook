@@ -69,7 +69,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "deep", title: "Part 7: Deep neural networks",
         desc: "MLPs, backpropagation by hand, activations, optimizers, CNNs and residual networks.",
-        lessons: [], planned: ["32. The multilayer perceptron", "33. Backpropagation by hand", "34. Activations and initialization", "35. Optimizers and training tricks", "36. Convolutional networks", "37. ResNets and transfer learning", "38. Part 6 and 7 test"] },
+        lessons: [], planned: ["33. Backpropagation by hand", "34. Activations and initialization", "35. Optimizers and training tricks", "36. Convolutional networks", "37. ResNets and transfer learning", "38. Part 6 and 7 test"] },
       { id: "seq", title: "Part 8: Sequences, attention and transformers",
         desc: "RNNs, LSTMs, attention and the transformer.",
         lessons: [], planned: ["39. Recurrent networks", "40. LSTM and GRU", "41. Attention", "42. Transformers", "43. Part 8 test"] },
