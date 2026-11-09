@@ -72,7 +72,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "seq", title: "Part 8: Sequences, attention and transformers",
         desc: "RNNs, LSTMs, attention and the transformer.",
-        lessons: [], planned: ["39. Recurrent networks", "40. LSTM and GRU", "41. Attention", "42. Transformers", "43. Part 8 test"] },
+        lessons: [], planned: ["40. LSTM and GRU", "41. Attention", "42. Transformers", "43. Part 8 test"] },
       { id: "proj", title: "Part 9: The project",
         desc: "Running experiments honestly, reading results, and finishing the code and the presentation.",
         lessons: [], planned: ["44. Experiments and reading results", "45. Finishing the project"] },
