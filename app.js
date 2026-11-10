@@ -75,7 +75,7 @@ const LIBRARY = [
         lessons: [], planned: [] },
       { id: "proj", title: "Part 9: The project",
         desc: "Running experiments honestly, reading results, and finishing the code and the presentation.",
-        lessons: [], planned: ["45. Finishing the project"] },
+        lessons: [], planned: [] },
       { id: "exam", title: "Part 10: Exam practice",
         desc: "Midterm and final style problems with worked board solutions, and a full mock final.",
         lessons: [], planned: ["E1. Midterm-style practice", "E2. Final-style practice", "E3. Full mock final"] }
