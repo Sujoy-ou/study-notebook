@@ -22,6 +22,9 @@ const LIBRARY = [
       { id: "ch3x", title: "Chapter 3: Beyond the thesis",
         desc: "Methods that are not used in the final Chapter 3 but are close relatives of it.",
         lessons: [], planned: [] },
+      { id: "lec", title: "Lecture series: From Maxwell to the adjoint method",
+        desc: "The whole method from the beginning, one question at a time: Maxwell's equations, time and frequency, why FDTD, the Yee grid, one simulation built piece by piece, and the adjoint loop. Plain words first, then only the equations that are needed. Lessons are added as they are learned, and the questions asked along the way have their own lesson.",
+        lessons: [], planned: ["4. The Yee grid", "5. The leapfrog", "6. Mesh size", "7. Structures and materials", "8. The source in space", "9. The source in time", "10. Boundaries: PML", "11. Monitors and the Fourier transform", "12. Run time and shutoff", "13. Symmetry planes", "14. Design parameters and figure of merit", "15. Maxwell as A x = b", "16. The adjoint method and its source", "17. Gradient, Adam and the full loop"] },
       { id: "def", title: "Committee questions: Chapters 2 and 3",
         desc: "Questions the committee may ask about the theory and methods of Chapters 2 and 3, each with a short answer, a step-by-step board explanation with a visual, and the follow-up that may come next.",
         lessons: [], planned: [] }
