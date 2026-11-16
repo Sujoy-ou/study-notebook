@@ -1,133 +1,83 @@
 addLesson("thesis", "lec", {
-level: "Part A", num: "Lesson 2",
-id: "thesis-lec-l2", title: "From time to frequency, and why no source means modes", short: "2. Time to frequency",
-big: String.raw`A short pulse is a mix of many colours. Because the materials are linear and \(\varepsilon_r\) does not change in time, every colour travels through the device on its own. At one colour the time dependence is a simple rotation \(e^{-i\omega t}\), so every time derivative becomes \(-i\omega\). With a source this gives the driven frequency-domain equation, the one that later becomes \(A\mathbf{x} = \mathbf{b}\). Without a source, a nonzero field is possible only for special values of the propagation constant: these are the waveguide modes that the mode solver finds before every simulation.`,
-bridge: String.raw`Only three equations to remember here: the replacement \(\partial/\partial t \to -i\omega\), the driven wave equation, and the mode form \(\mathbf{E}_m(x,y)e^{i\beta z}\). The mode solver itself is Ch. 2 Sec. 2.3 and Chapter 2 Lesson 3 of this shelf.`,
+level: "Set up", num: "Lesson 2",
+id: "thesis-lec-l2", title: "Wavelengths and the Gaussian pulse", short: "2. Wavelengths and pulse",
+big: String.raw`The first thing the code fixes is which wavelengths matter: 101 of them, from 735 to 835 nm, centred at 795 nm. Then it chooses the time shape of the source: a Gaussian pulse, a few femtoseconds long, oscillating at the centre frequency \(f_0 = c/\lambda_0 \approx 377\) THz. A short pulse contains a wide band of frequencies, wide enough to cover all 101 wavelengths at once. The pulse is only the time part of the source. Its shape in space comes from the waveguide mode (Lesson 3).`,
+bridge: String.raw`In Tidy3D this is a GaussianPulse with a centre frequency freq0 and a width fwidth. Do not confuse fwidth with the \(\sigma = 8\) nm of the thesis, which is the width of the wavelength weights in the figure of merit (Lesson 9).`,
 cards: [
-{s: "1. Many colours", t: "A pulse is many colours, and each one travels alone",
-intu: String.raw`Move the slider. A short pulse in time (left) contains a wide range of frequencies (right). A long pulse contains only a narrow range. Because the materials are linear and do not change in time, the device treats each frequency separately: what happens to one colour does not depend on the others. So we can study one frequency at a time and add them up afterwards.`,
-eq: String.raw`\[ \mathbf{E}(\mathbf{r},t) = \sum_{\omega} \mathrm{Re}\left\{\mathbf{E}_\omega(\mathbf{r})\, e^{-i\omega t}\right\} \]`,
-sym: [[String.raw`\(\mathbf{E}_\omega(\mathbf{r})\)`, "complex field pattern of one colour"], [String.raw`\(\omega = 2\pi f\)`, "angular frequency"], [String.raw`\(\tau\)`, "pulse length (slider)"]],
-how: ["Linear: the response to a sum of inputs is the sum of the responses.", String.raw`Time-invariant: \(\varepsilon_r(\mathbf{r})\) is the same at every moment, so a colour cannot turn into another colour.`, "So each frequency in the pulse is an independent problem.", "Shorter pulse, wider spectrum: the width in frequency is about 1/(2πτ)."],
-say: "Because the materials are linear and do not change in time, each frequency in a pulse propagates independently, so the problem can be solved one frequency at a time.",
-num: String.raw`A band from 735 to 835 nm is about 359 to 408 THz. A pulse a few femtoseconds long covers it (Lesson 9).`,
+{s: "1. 101 wavelengths", t: "The band: 101 wavelengths from 735 to 835 nm",
+intu: String.raw`Move the slider through the 101 wavelengths. Each wavelength is also a frequency, \(f = c/\lambda\). The band runs from about 359 to 408 THz. Every result later (fields, transmission, figure of merit, gradient) is computed at each of these 101 frequencies.`,
+eq: String.raw`\[ \lambda_j = 735, 736, \ldots, 835 \text{ nm}, \qquad f_j = \frac{c}{\lambda_j}, \qquad f_0 = \frac{c}{795 \text{ nm}} \approx 377 \text{ THz} \]`,
+sym: [[String.raw`\(\lambda_j\)`, "wavelength number j, 1 nm apart"], [String.raw`\(f_j\)`, "the same point as a frequency"]],
+how: ["Choose the band that must work (it contains the quantum dot emission near 795 nm).", "Sample it every 1 nm: 101 points.", "Convert to frequencies, which is what the solver uses."],
+say: "The design is evaluated at 101 wavelengths from 735 to 835 nm, which is 359 to 408 THz, centred at 795 nm or 377 THz.",
+num: "c = 299,792,458 m/s. 735 nm: 407.9 THz. 795 nm: 377.1 THz. 835 nm: 359.0 THz.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("tau", "Pulse length τ", 0.03, 0.3, 0.01, 0.08) + `<div class="readout" id="ro"></div>`;
+  ctl.innerHTML = sl("jj", "Wavelength number j", 1, 101, 1, 61) + `<div class="readout" id="ro"></div>`;
   const u = () => {
-    const tau = +$("tau").value, f0 = 10; $("tauv").textContent = tau.toFixed(2);
-    const ts = range(0, 1.2, 600), g = ts.map(t => LC.gauss(t, 0.6, tau) * Math.cos(2 * Math.PI * f0 * (t - 0.6)));
-    const fs = range(0, 20, 300), S = fs.map(f => Math.exp(-Math.pow(2 * Math.PI * (f - f0) * tau, 2) / 2));
-    let s = `<text class="th" x="170" y="22" text-anchor="middle">in time</text><text class="th" x="510" y="22" text-anchor="middle">in frequency</text>`;
-    s += C3.frame(30, 35, 280, 150, 0, 1.2, -1.1, 1.1, [], [], "time", "") + plot(30, 35, 280, 150, ts, g, 0, 1.2, -1.1, 1.1, "var(--blue)", 1.6);
-    s += C3.frame(370, 35, 280, 150, 0, 20, 0, 1.1, [], [], "frequency", "") + plot(370, 35, 280, 150, fs, S, 0, 20, 0, 1.1, "var(--coral)", 2);
-    fig.innerHTML = svg(225, s);
-    $("ro").innerHTML = `<div><span>pulse length</span><b>${tau.toFixed(2)}</b></div><div><span>spectral width ≈ 1/(2πτ)</span><b>${(1 / (2 * Math.PI * tau)).toFixed(2)}</b></div>`;
+    const j = +$("jj").value, lam = 734 + j, f = 299792.458 / lam; $("jjv").textContent = j;
+    const X = C3.X(60, 560, 730, 840);
+    let s = `<line x1="60" x2="620" y1="70" y2="70" stroke="var(--b)"/><text class="ts" x="20" y="74">λ</text>`;
+    for (let k = 735; k <= 835; k++) s += `<line x1="${X(k)}" x2="${X(k)}" y1="62" y2="78" stroke="${k === lam ? "var(--coral)" : "var(--blue)"}" stroke-width="${k === lam ? 3 : 1}"/>`;
+    for (const k of [735, 795, 835]) s += `<text class="ts" x="${X(k)}" y="96" text-anchor="middle">${k} nm</text>`;
+    const F = C3.X(60, 560, 355, 412);
+    s += `<line x1="60" x2="620" y1="150" y2="150" stroke="var(--b)"/><text class="ts" x="20" y="154">f</text>`;
+    for (let k = 735; k <= 835; k++) { const ff = 299792.458 / k; s += `<line x1="${F(ff)}" x2="${F(ff)}" y1="142" y2="158" stroke="${k === lam ? "var(--coral)" : "var(--teal)"}" stroke-width="${k === lam ? 3 : 1}"/>`; }
+    for (const ff of [359, 377.1, 407.9]) s += `<text class="ts" x="${F(ff)}" y="176" text-anchor="middle">${ff} THz</text>`;
+    s += `<line x1="${X(lam)}" x2="${F(f)}" y1="80" y2="140" stroke="var(--coral)" stroke-dasharray="3 3"/>`;
+    fig.innerHTML = svg(190, s);
+    $("ro").innerHTML = `<div><span>wavelength</span><b>${lam} nm</b></div><div><span>frequency</span><b>${f.toFixed(1)} THz</b></div><div><span>period</span><b>${(1000 / f).toFixed(2)} fs</b></div>`;
   };
-  $("tau").oninput = u; u();
+  $("jj").oninput = u; u();
 }},
-
-{s: "2. d/dt becomes −iω", t: "At one frequency, a time derivative is just a multiplication",
-intu: String.raw`At one frequency the field is a fixed complex number times a rotation \(e^{-i\omega t}\). The blue arrow is that rotating number, and what we measure is its shadow on the real axis (the trace on the right). The coral arrow is the time derivative: the same arrow turned by a quarter turn and stretched by \(\omega\). So taking \(\partial/\partial t\) is the same as multiplying by \(-i\omega\). The time part is known, and only the spatial pattern \(\mathbf{E}(\mathbf{r})\) is left to find.`,
-eq: String.raw`\[ \mathbf{E}(\mathbf{r},t) = \mathrm{Re}\left\{\mathbf{E}(\mathbf{r})\,e^{-i\omega t}\right\} \quad\Rightarrow\quad \frac{\partial}{\partial t} \;\rightarrow\; -i\omega \]`,
-sym: [[String.raw`\(e^{-i\omega t}\)`, "rotation in the complex plane, once per period"], [String.raw`\(-i\omega\)`, "quarter turn times ω"]],
-how: [String.raw`Differentiate: \(\partial_t\, e^{-i\omega t} = -i\omega\, e^{-i\omega t}\).`, String.raw`Put \(-i\omega\) for every \(\partial/\partial t\) in the curl equations of Lesson 1.`, String.raw`Faraday becomes \(\nabla\times\mathbf{E} = i\omega\mu_0\mathbf{H}\). Ampère becomes \(\nabla\times\mathbf{H} = -i\omega\varepsilon_0\varepsilon_r\mathbf{E} + \mathbf{J}\).`],
-say: String.raw`At a single frequency the time dependence is \(e^{-i\omega t}\), so each time derivative becomes a multiplication by \(-i\omega\) and only the spatial field pattern remains unknown.`,
-num: String.raw`Sign convention: this series uses \(e^{-i\omega t}\), the physics convention. Engineering texts use \(e^{j\omega t}\), which flips the sign of \(i\) in every formula but not the physics.`,
+{s: "2. The pulse", t: "A short pulse covers the whole band",
+intu: String.raw`The source switches on and off as a Gaussian pulse that oscillates at 377 THz. Change its spectral width. A short pulse in time (left) is wide in frequency (right). The shaded band is 359 to 408 THz. The pulse must put energy into every frequency of the band, so it cannot be too long. Tidy3D later divides every result by the spectrum of the pulse, so the exact shape does not matter as long as the band is covered.`,
+eq: String.raw`\[ s(t) = e^{-(t-t_0)^2/2\tau^2}\cos\big(2\pi f_0 (t-t_0)\big), \qquad \tau = \frac{1}{2\pi f_\mathrm{width}} \]`,
+sym: [[String.raw`\(f_0\)`, "centre frequency, 377 THz"], [String.raw`\(\tau\)`, "pulse length in time"], [String.raw`\(f_\mathrm{width}\)`, "spectral width (Tidy3D fwidth)"], [String.raw`\(t_0\)`, "delay so the pulse starts smoothly from zero"]],
+how: ["Pick the centre frequency of the band.", "Pick a width so the spectrum covers the band.", "The time length follows: wide spectrum, short pulse.", "Delay the peak so the pulse starts from almost zero."],
+say: "The source is a Gaussian pulse at 377 THz, short enough that its spectrum covers 359 to 408 THz, so one run contains all 101 wavelengths.",
+num: String.raw`With \(f_\mathrm{width} = 25\) THz the pulse lasts about \(\tau = 6.4\) fs, a few optical periods of 2.65 fs.`,
 r(fig, ctl) {
-  ctl.innerHTML = sl("w", "ω (turns per second)", 0.2, 1.2, 0.05, 0.5);
-  const hist = [];
-  anim(t => {
-    const w = +$("w").value; $("wv").textContent = w.toFixed(2);
-    const th = -2 * Math.PI * w * t, cx = 140, cy = 130, R = 80, ex = cx + R * Math.cos(th), ey = cy - R * Math.sin(th);
-    const dx = cx + 0.45 * R * w * 2 * Math.PI * Math.cos(th - Math.PI / 2) / 3, dy = cy - 0.45 * R * w * 2 * Math.PI * Math.sin(th - Math.PI / 2) / 3;
-    hist.push(Math.cos(th)); if (hist.length > 360) hist.shift();
-    let s = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--b)"/><line x1="${cx - 100}" x2="${cx + 100}" y1="${cy}" y2="${cy}" stroke="var(--b)"/><line x1="${cx}" x2="${cx}" y1="${cy - 100}" y2="${cy + 100}" stroke="var(--b)"/><text class="ts" x="${cx + 104}" y="${cy + 4}">Re</text><text class="ts" x="${cx + 4}" y="${cy - 104}">Im</text>`;
-    s += arrow(cx, cy, ex, ey, "var(--blue)", 2.5) + arrow(ex, ey, ex + (dx - cx), ey + (dy - cy), "var(--coral)", 2.2);
-    s += `<line x1="${ex}" x2="${ex}" y1="${ey}" y2="${cy}" stroke="var(--blue)" stroke-dasharray="3 3"/><circle cx="${ex}" cy="${cy}" r="4" fill="var(--blue)"/>`;
-    s += `<text class="ts" x="20" y="250">blue: E e^(−iωt)   coral: ∂/∂t of it = −iω times blue</text>`;
-    s += C3.frame(300, 50, 350, 160, 0, 360, -1.2, 1.2, [], [], "time (newest on the left)", "") + plot(300, 50, 350, 160, hist.map((_, i) => i), hist.map((_, i) => hist[hist.length - 1 - i]), 0, 360, -1.2, 1.2, "var(--blue)", 2);
-    fig.innerHTML = svg(262, s);
-  });
-}},
-
-{s: "3. The driven equation", t: "With a source: the frequency-domain equation",
-intu: String.raw`Put \(-i\omega\) into both curl equations and eliminate \(\mathbf{H}\). The result has the device on the left and the source on the right. Here it is solved directly in 1D for a GaAs-like slab (shaded) with a source on the left. Change the wavelength: the pattern changes because the slab is more or less resonant. Change the source strength: the whole field scales with it, because the equation is linear. Set the source to zero and the field is zero everywhere.`,
-eq: String.raw`\[ \underbrace{\nabla\times\nabla\times\mathbf{E} - k_0^2\,\varepsilon_r(\mathbf{r})\,\mathbf{E}}_{\text{device}} = \underbrace{i\omega\mu_0\,\mathbf{J}}_{\text{source}}, \qquad k_0 = \frac{2\pi}{\lambda_0} \]`,
-sym: [[String.raw`\(k_0\)`, "wavenumber in vacuum"], [String.raw`\(\varepsilon_r(\mathbf{r})\)`, "the device"], [String.raw`\(\mathbf{J}\)`, "the source, zero except on the source plane"]],
-how: [String.raw`From Faraday at one frequency: \(\mathbf{H} = \nabla\times\mathbf{E}/(i\omega\mu_0)\).`, "Insert this into Ampère at one frequency.", String.raw`Multiply by \(i\omega\mu_0\) and use \(\omega^2\mu_0\varepsilon_0 = k_0^2\).`, String.raw`On a grid this one equation becomes the matrix system \(A\mathbf{x} = \mathbf{b}\) (Lesson 15).`],
-say: String.raw`At one frequency the curl equations combine into one driven equation, with the device on the left through \(\varepsilon_r\) and the source current on the right.`,
-num: String.raw`This 1D solve: 10 nm cells, a 600 nm slab with \(n = 3.5\) in air, exact one-way boundaries at both ends.`,
-r(fig, ctl) {
-  ctl.innerHTML = sl("lm", "Wavelength (nm)", 700, 900, 2, 800) + sl("am", "Source strength", 0, 1, 0.05, 1) + `<div class="readout" id="ro"></div>`;
-  const N = 300, src = 30, eps = new Float64Array(N).fill(1); for (let i = 120; i < 180; i++) eps[i] = 12.25;
+  ctl.innerHTML = sl("fw", "Spectral width (THz)", 5, 60, 1, 25) + `<div class="readout" id="ro"></div>`;
   const u = () => {
-    const lam = +$("lm").value, A = +$("am").value; $("lmv").textContent = lam; $("amv").textContent = A.toFixed(2);
-    const b = new Float64Array(N); b[src] = A / 10; const f = C3.helm(eps, lam, 10, b);
-    const b1 = new Float64Array(N); b1[src] = 1 / 10; const v = C3.helm(new Float64Array(N).fill(1), lam, 10, b1), sc = Math.hypot(v.re[N - 10], v.im[N - 10]) || 1;
-    const xs = [...Array(N).keys()], ab = xs.map(i => Math.hypot(f.re[i], f.im[i]) / sc), re = xs.map(i => f.re[i] / sc);
-    let s = `<rect x="${50 + 120 / (N - 1) * 600}" y="30" width="${60 / (N - 1) * 600}" height="160" fill="var(--blue-bg)"/><line x1="50" x2="650" y1="110" y2="110" stroke="var(--b)"/>`;
-    s += plot(50, 30, 600, 160, xs, re, 0, N - 1, -2.2, 2.2, "var(--blue)", 1.6) + plot(50, 30, 600, 160, xs, ab, 0, N - 1, -2.2, 2.2, "var(--coral)", 2);
-    const X = 50 + src / (N - 1) * 600; s += `<line x1="${X}" x2="${X}" y1="30" y2="190" stroke="var(--purple)" stroke-dasharray="4 3"/><text class="ts" x="${X}" y="24" text-anchor="middle">source J</text><text class="ts" x="${50 + 150 / (N - 1) * 600}" y="24" text-anchor="middle">slab (device)</text>`;
-    s += C3.legend(60, 212, [["Re E", "var(--blue)"], ["|E|", "var(--coral)"]]);
-    fig.innerHTML = svg(222, s);
-    $("ro").innerHTML = `<div><span>source strength</span><b>${A.toFixed(2)}</b></div><div><span>largest |E| (1 = empty space at full source)</span><b>${Math.max(...ab).toFixed(2)}</b></div>`;
+    const fw = +$("fw").value, tau = 1000 / (2 * Math.PI * fw), f0 = 377.1, t0 = 4 * tau, T = 8 * tau; $("fwv").textContent = fw;
+    const ts = range(0, T, 700), g = ts.map(t => LC.gauss(t, t0, tau) * Math.cos(2 * Math.PI * f0 * (t - t0) / 1000));
+    const fs = range(300, 460, 300), S = fs.map(f => Math.exp(-Math.pow(f - f0, 2) / (2 * fw * fw)));
+    const F = C3.X(370, 280, 300, 460);
+    let s = `<text class="th" x="170" y="20" text-anchor="middle">in time (fs)</text><text class="th" x="510" y="20" text-anchor="middle">in frequency (THz)</text>`;
+    s += C3.frame(30, 30, 280, 150, 0, T, -1.1, 1.1, [0, Math.round(T / 2), Math.round(T)], [], "", "", v => Math.round(v)) + plot(30, 30, 280, 150, ts, g, 0, T, -1.1, 1.1, "var(--blue)", 1.4);
+    s += `<rect x="${F(359)}" y="30" width="${F(407.9) - F(359)}" height="150" fill="var(--teal-bg)"/>` + C3.frame(370, 30, 280, 150, 300, 460, 0, 1.1, [300, 359, 408, 460], [], "", "") + plot(370, 30, 280, 150, fs, S, 300, 460, 0, 1.1, "var(--coral)", 2);
+    fig.innerHTML = svg(215, s);
+    const lo = Math.exp(-Math.pow(359 - f0, 2) / (2 * fw * fw)), hi = Math.exp(-Math.pow(407.9 - f0, 2) / (2 * fw * fw));
+    $("ro").innerHTML = `<div><span>pulse length τ</span><b>${tau.toFixed(1)} fs</b></div><div><span>spectrum at 835 nm / 735 nm</span><b>${lo.toFixed(2)} / ${hi.toFixed(2)}</b></div><div><span>band covered?</span><b>${Math.min(lo, hi) > 0.1 ? "yes" : "weakly"}</b></div>`;
   };
-  $("lm").oninput = u; $("am").oninput = u; u();
+  $("fw").oninput = u; u();
 }},
-
-{s: "4. No source: modes", t: "Without a source, only special fields can exist: the modes",
-intu: String.raw`Now ask a different question: in a straight slab waveguide, which field shapes can travel by themselves, with no source? Try a value of \(n_\mathrm{eff}\) with the slider. Inside the core the field is a cosine, outside it must decay. For most values the two pieces meet with a kink at the edge (orange), which Maxwell's equations do not allow. Only at one special \(n_\mathrm{eff}\) do they join smoothly. That smooth shape is the mode. Finding it is an eigenvalue problem, which is what the mode solver does.`,
-eq: String.raw`\[ \mathbf{E}(x,y,z) = \mathbf{E}_m(x,y)\,e^{i\beta z}, \qquad \beta = k_0\,n_\mathrm{eff} \]<div class="eqnote">a nonzero solution with \(\mathbf{J} = 0\) exists only for special \(\beta\)</div>`,
-sym: [[String.raw`\(\mathbf{E}_m(x,y)\)`, "mode profile in the cross-section"], [String.raw`\(\beta\)`, "propagation constant"], [String.raw`\(n_\mathrm{eff}\)`, "effective index of the mode"]],
-how: [String.raw`Look for a field with a fixed cross-section that only gains phase along \(z\).`, String.raw`Put it in the driven equation with \(\mathbf{J} = 0\).`, String.raw`Inside the core it oscillates, outside it decays. Both value and slope must match at the edge.`, String.raw`That matching works only for special \(n_\mathrm{eff}\): an eigenvalue problem.`],
-say: String.raw`Without a source the frequency-domain equation is an eigenvalue problem: a nonzero field exists only for special propagation constants, and those solutions are the waveguide modes.`,
-num: String.raw`Round example: symmetric slab, core \(n = 3.5\), air cladding, \(\lambda_0 = 800\) nm, fundamental TE mode.`,
+{s: "3. Space times time", t: "The source is a mode shape times the pulse",
+intu: String.raw`Step through. The pulse only says how the source changes in time. Where the current flows on the input plane, and in which direction, comes from the waveguide mode (next lesson). The source is the product of the two: a sheet of current shaped like the TE\(_0\) or TM\(_0\) mode, switched on and off by the pulse.`,
+eq: String.raw`\[ \mathbf{J}(\mathbf{r},t) = \mathbf{J}_m(y,z)\; s(t) \]`,
+sym: [[String.raw`\(\mathbf{J}_m(y,z)\)`, "current pattern on the input plane, from the mode"], [String.raw`\(s(t)\)`, "Gaussian pulse in time"]],
+how: ["Time part: the Gaussian pulse of card 2.", "Space part: the mode profile on the input plane (Lesson 3).", "Multiply: the source current the solver adds every time step."],
+say: "The source current is the mode profile on the input plane times the Gaussian pulse in time.",
+num: "Only the input plane carries this current. Everywhere else the equations are source-free.",
 r(fig, ctl) {
-  ctl.innerHTML = sl("tk", "Core thickness (nm)", 100, 400, 10, 200) + sl("ne", "Trial n_eff", 1.02, 3.48, 0.002, 2.4) + `<div class="row"><button id="snap">Jump to the mode</button></div><div class="readout" id="ro"></div>`;
-  const n = 3.5, lam = 800, k0 = 2 * Math.PI / lam;
-  const u = () => {
-    const t = +$("tk").value, ne = +$("ne").value; $("tkv").textContent = t; $("nev").textContent = ne.toFixed(3);
-    const ka = k0 * Math.sqrt(n * n - ne * ne), ga = k0 * Math.sqrt(ne * ne - 1), c = Math.cos(ka * t / 2);
-    const zs = range(-1.6 * t, 1.6 * t, 500), E = zs.map(z => Math.abs(z) <= t / 2 ? Math.cos(ka * z) : c * Math.exp(-ga * (Math.abs(z) - t / 2)));
-    const sIn = -ka * Math.sin(ka * t / 2), sOut = -ga * c, mis = (sIn - sOut) / k0, mode = C2.slabN(n, 1, t, lam, 0, "TE");
-    const X = C3.X(60, 580, -1.6 * t, 1.6 * t);
-    let s = `<rect x="${X(-t / 2)}" y="20" width="${X(t / 2) - X(-t / 2)}" height="180" fill="var(--blue-bg)"/><text class="ts" x="${X(0)}" y="214" text-anchor="middle">core n = 3.5</text><text class="ts" x="${X(-t)}" y="214" text-anchor="middle">air</text><text class="ts" x="${X(t)}" y="214" text-anchor="middle">air</text>`;
-    s += `<line x1="60" x2="640" y1="${20 + 180 * 1.2 / 2.4}" y2="${20 + 180 * 1.2 / 2.4}" stroke="var(--b)"/>` + plot(60, 20, 580, 180, zs, E, -1.6 * t, 1.6 * t, -1.2, 1.2, Math.abs(mis) < 0.02 ? "var(--teal)" : "var(--blue)", 2.2);
-    if (Math.abs(mis) >= 0.02) for (const zz of [-t / 2, t / 2]) s += `<circle cx="${X(zz)}" cy="${20 + 180 * (1.2 - c) / 2.4}" r="9" fill="none" stroke="var(--coral)" stroke-width="2.5"/>`;
-    fig.innerHTML = svg(226, s);
-    $("ro").innerHTML = `<div><span>kink at the edge (slope mismatch)</span><b>${mis.toFixed(3)}</b></div><div><span>mode n_eff for this core</span><b>${mode ? mode.toFixed(3) : "none"}</b></div><div><span>trial is a mode?</span><b>${Math.abs(mis) < 0.02 ? "yes" : "no"}</b></div>`;
-  };
-  $("tk").oninput = u; $("ne").oninput = u;
-  $("snap").onclick = () => { const m = C2.slabN(n, 1, +$("tk").value, lam, 0, "TE"); if (m) $("ne").value = m; u(); };
-  u();
-}},
-
-{s: "5. Two jobs", t: "The mode solver runs first, then the driven simulation",
-intu: String.raw`Step through one simulation. First the source-free problem is solved on the input cross-section: the mode solver finds the TE or TM mode and its \(n_\mathrm{eff}\). That mode shape is then used twice. It shapes the source current that launches light into the input waveguide. And at the output, the mode monitor compares the field with the same kind of mode shape to measure how much power arrived in it. The driven simulation in between solves the equation with the source.`,
-eq: String.raw`\[ \text{mode solver: } \mathbf{J} = 0 \;\Rightarrow\; \mathbf{E}_m,\ n_\mathrm{eff} \qquad\quad \text{simulation: } \mathbf{J} \neq 0 \;\Rightarrow\; \mathbf{E}(\mathbf{r}) \]`,
-sym: [["mode solver", "source-free eigenproblem on one cross-section"], ["mode source", "source current shaped like the mode (Lesson 8)"], ["mode monitor", "measures the power in a mode (Lesson 11)"]],
-how: ["Solve the source-free problem on the input plane: the mode.", "Build the source from that mode shape.", "Run the driven simulation.", "Project the output field onto the output mode to get the transmission."],
-say: "The same frequency-domain equation is used twice: without a source it gives the modes, and with a mode-shaped source it gives how much light the device sends where.",
-num: "In inverse design the mode solver runs once per waveguide and frequency set. The driven simulation runs twice per optimization step (forward and adjoint).",
-r(fig, ctl) {
-  const cap = [String.raw`Mode solver on the input cross-section, no source. Result: the mode profile and \(n_\mathrm{eff}\).`, "That profile becomes the source current on the input plane: the mode source.", "The driven simulation carries the light through the device.", "At the output, the mode monitor projects the field onto the output mode. The squared amplitude is the transmission."];
-  LC.steps(ctl, 4, k => {
-    let s = `<rect x="40" y="120" width="160" height="22" fill="var(--blue-bg)" stroke="var(--blue)"/><rect x="200" y="85" width="260" height="92" rx="6" fill="var(--gray-bg)" stroke="var(--p)"/><text class="ts" x="330" y="135" text-anchor="middle">design region</text><rect x="460" y="120" width="180" height="22" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
-    s += LC.box(20, 10, 170, 56, ["1. mode solver", "J = 0, gives Em, n_eff"], "teal", k !== 0);
-    s += `<g opacity="${k >= 1 ? 1 : 0.25}"><line x1="90" x2="90" y1="100" y2="162" stroke="var(--purple)" stroke-width="3"/><text class="ts" x="90" y="180" text-anchor="middle">2. mode source</text>${arrow(96, 131, 150, 131, "var(--purple)", 2)}</g>`;
-    s += `<g opacity="${k >= 2 ? 1 : 0.25}"><path d="M 150 131 C 260 131, 300 100, 330 110 S 420 131, 540 131" fill="none" stroke="var(--coral)" stroke-width="2.5" marker-end="url(#ar)"/><text class="ts" x="330" y="200" text-anchor="middle">3. driven simulation, J on</text></g>`;
-    s += `<g opacity="${k >= 3 ? 1 : 0.25}"><line x1="590" x2="590" y1="100" y2="162" stroke="var(--teal)" stroke-width="3"/><text class="ts" x="590" y="180" text-anchor="middle">4. mode monitor</text><text class="ts" x="590" y="198" text-anchor="middle">T = |a|²</text></g>`;
-    if (k === 0) s += arrow(105, 66, 92, 98, "var(--teal)", 1.6);
-    fig.innerHTML = svg(214, s);
+  const cap = ["Time part: the pulse s(t), the same at every point of the source plane.", "Space part: the mode profile across the 200 nm input waveguide.", "The source: the profile, switched on and off by the pulse. It lives only on the input plane."];
+  LC.steps(ctl, 3, k => {
+    let s = "";
+    const ts = range(0, 1, 300), p = ts.map(t => LC.gauss(t, 0.5, 0.1) * Math.cos(2 * Math.PI * 12 * (t - 0.5)));
+    const ys = range(-1, 1, 200), m = ys.map(y => Math.abs(y) < 0.25 ? Math.cos(y * 4.2) : Math.cos(1.05) * Math.exp(-6 * (Math.abs(y) - 0.25)));
+    s += `<g opacity="${k === 1 ? 0.3 : 1}"><text class="th" x="150" y="22" text-anchor="middle">s(t)</text>` + C3.frame(30, 30, 240, 120, 0, 1, -1.1, 1.1, [], [], "time", "") + plot(30, 30, 240, 120, ts, p, 0, 1, -1.1, 1.1, "var(--blue)", 1.6) + `</g>`;
+    s += `<g opacity="${k === 0 ? 0.3 : 1}"><text class="th" x="430" y="22" text-anchor="middle">J_m across the waveguide</text><rect x="${430 - 30}" y="30" width="60" height="120" fill="var(--blue-bg)"/>` + plot(310, 30, 240, 120, ys, m, -1, 1, -0.1, 1.1, "var(--coral)", 2) + `<text class="ts" x="430" y="168" text-anchor="middle">y across the strip</text></g>`;
+    if (k === 2) s += `<text class="t" x="340" y="200" text-anchor="middle">J(r, t) = J_m(y, z) × s(t), on the input plane only</text>`;
+    fig.innerHTML = svg(215, s);
     return cap[k];
   });
 }}
 ],
-summary: String.raw`Linear materials that do not change in time treat every frequency separately. At one frequency \(\partial/\partial t \to -i\omega\), and the two curl equations combine into one driven equation with the device on the left and the source on the right. With no source, a nonzero field exists only for special \(\beta = k_0 n_\mathrm{eff}\): the modes. The mode solver finds them first, and their shape is used for the mode source and the mode monitor.`,
+summary: String.raw`The band is 101 wavelengths from 735 to 835 nm (359 to 408 THz), centred at 795 nm (377 THz). The source is a Gaussian pulse at 377 THz, short enough (a few fs) that its spectrum covers the band, so one run holds every wavelength. The pulse is the time part. The space part is the mode profile on the input plane.`,
 sheet: [
-[String.raw`\[ \frac{\partial}{\partial t} \rightarrow -i\omega \]`, String.raw`At one frequency, with \(e^{-i\omega t}\)`],
-[String.raw`\[ \nabla\times\nabla\times\mathbf{E} - k_0^2\varepsilon_r\mathbf{E} = i\omega\mu_0\mathbf{J} \]`, "Driven frequency-domain equation"],
-[String.raw`\[ \mathbf{E} = \mathbf{E}_m(x,y)\,e^{i\beta z}, \quad \beta = k_0 n_\mathrm{eff} \]`, String.raw`Mode: a solution with \(\mathbf{J} = 0\)`]],
-consts: String.raw`Worked examples: \(n = 3.5\), air cladding, \(\lambda_0 = 800\) nm, 10 nm grid for the 1D solve.`,
-sources: ["Jackson, Classical Electrodynamics, 3rd ed., Wiley (1999), Sec. 7.1 and Ch. 8 (time-harmonic fields and waveguide modes)", "Andreani and Gerace, Phys. Rev. B 73, 235114 (2006), App. C (slab mode equation used for the n_eff readout)", "Ch. 2 Sec. 2.3 of the thesis (mode solver)"]
+[String.raw`\[ f = c/\lambda, \qquad f_0 \approx 377 \text{ THz} \]`, "Wavelength and frequency"],
+[String.raw`\[ s(t) = e^{-(t-t_0)^2/2\tau^2}\cos\big(2\pi f_0(t-t_0)\big), \quad \tau = 1/(2\pi f_\mathrm{width}) \]`, "Gaussian pulse"],
+[String.raw`\[ \mathbf{J}(\mathbf{r},t) = \mathbf{J}_m(y,z)\,s(t) \]`, "Source = space part times time part"]],
+consts: "c = 299,792,458 m/s. Band 735 to 835 nm, 1 nm steps.",
+sources: ["Tidy3D documentation, GaussianPulse (freq0, fwidth), Flexcompute", "Ch. 3 Sec. 3.4 of the thesis (101 wavelengths, 735 to 835 nm for the PBS)"]
 });
