@@ -85,6 +85,18 @@ const LIBRARY = [
     ]
   },
   {
+    id: "qlm", title: "Quantum Light and Matter",
+    desc: "The quantum theory behind light meeting matter, studied one chapter at a time from two books: Griffiths, Introduction to Quantum Mechanics, for the tools, and Gerry and Knight, Introductory Quantum Optics, for quantized light and its interaction with atoms. Visuals first, then the chapter in the book. Every wave function is computed live in the page.",
+    groups: [
+      { id: "gr", title: "Part A: Griffiths, Introduction to Quantum Mechanics",
+        desc: "D. J. Griffiths, Introduction to Quantum Mechanics (Prentice Hall, 1995). Chapters 1 to 5 and 6 and 9 in full, Chapters 7, 8, 10 and 11 as short concept lessons. One chapter per lesson, each card follows a section of the book.",
+        lessons: [], planned: ["Ch 2. The time-independent Schrödinger equation", "Ch 3. Formalism", "Ch 4. Quantum mechanics in three dimensions", "Ch 5. Identical particles", "Ch 6. Time-independent perturbation theory", "Ch 7. The variational principle (short)", "Ch 8. The WKB approximation (short)", "Ch 9. Time-dependent perturbation theory", "Ch 10. The adiabatic approximation (short)", "Ch 11. Scattering (short)"] },
+      { id: "gk", title: "Part B: Gerry and Knight, Introductory Quantum Optics",
+        desc: "C. C. Gerry and P. L. Knight, Introductory Quantum Optics (Cambridge, 2005). Chapters 2 to 7 in full, key sections of Chapters 8 and 9 and Appendix A, and an overview of Chapters 10 and 11.",
+        lessons: [], planned: ["Ch 2. Field quantization", "Ch 3. Coherent states", "Ch 4. Emission and absorption of radiation by atoms", "Ch 5. Quantum coherence functions", "Ch 6. Beam splitters and interferometers", "Ch 7. Nonclassical light", "Ch 8 and App. A. Dissipation, decoherence and the density operator", "Ch 9. Optical tests of quantum mechanics", "Ch 10 and 11. Cavity QED and quantum information (overview)"] }
+    ]
+  },
+  {
     id: "jc", title: "Journal Club",
     desc: "Papers read for journal club. Each paper gets its own lecture series, from the basic ideas to a full understanding of every figure, with visuals you control.",
     groups: [
