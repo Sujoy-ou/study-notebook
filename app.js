@@ -86,14 +86,14 @@ const LIBRARY = [
   },
   {
     id: "qlm", title: "Quantum Light and Matter",
-    desc: "The quantum theory behind light meeting matter, studied one chapter at a time from two books: Griffiths, Introduction to Quantum Mechanics, for the tools, and Gerry and Knight, Introductory Quantum Optics, for quantized light and its interaction with atoms. Visuals first, then the chapter in the book. Every wave function is computed live in the page.",
+    desc: "The quantum theory behind light meeting matter, aimed at quantum photonics research. An 8-week plan with Gerry and Knight, Introductory Quantum Optics, as the main book and Griffiths, Introduction to Quantum Mechanics, only for the foundations it assumes. Visuals first, then the chapter in the book. Week 1: Start here and Griffiths 1 to 3. Week 2: G&K 2. Week 3: G&K 3. Weeks 4 and 5: G&K 4 (with a primer on spin, Rabi oscillations and emission) and G&K 5. Week 6: G&K 6 and Appendix A. Week 7: G&K 7. Week 8: G&K 8 and 9.",
     groups: [
-      { id: "gr", title: "Part A: Griffiths, Introduction to Quantum Mechanics",
-        desc: "D. J. Griffiths, Introduction to Quantum Mechanics (Prentice Hall, 1995). Chapters 1 to 5 and 6 and 9 in full, Chapters 7, 8, 10 and 11 as short concept lessons. One chapter per lesson, each card follows a section of the book.",
-        lessons: [], planned: ["Ch 4. Quantum mechanics in three dimensions", "Ch 5. Identical particles", "Ch 6. Time-independent perturbation theory", "Ch 7. The variational principle (short)", "Ch 8. The WKB approximation (short)", "Ch 9. Time-dependent perturbation theory", "Ch 10. The adiabatic approximation (short)", "Ch 11. Scattering (short)"] },
-      { id: "gk", title: "Part B: Gerry and Knight, Introductory Quantum Optics",
-        desc: "C. C. Gerry and P. L. Knight, Introductory Quantum Optics (Cambridge, 2005). Chapters 2 to 7 in full, key sections of Chapters 8 and 9 and Appendix A, and an overview of Chapters 10 and 11.",
-        lessons: [], planned: ["Ch 2. Field quantization", "Ch 3. Coherent states", "Ch 4. Emission and absorption of radiation by atoms", "Ch 5. Quantum coherence functions", "Ch 6. Beam splitters and interferometers", "Ch 7. Nonclassical light", "Ch 8 and App. A. Dissipation, decoherence and the density operator", "Ch 9. Optical tests of quantum mechanics", "Ch 10 and 11. Cavity QED and quantum information (overview)"] }
+      { id: "gr", title: "Part A: Foundations from Griffiths",
+        desc: "D. J. Griffiths, Introduction to Quantum Mechanics (Prentice Hall, 1995). Only what Gerry and Knight assumes: the Start here lesson and Chapters 1 to 3 (week 1). Spin (Section 4.4) and light absorption and emission (Chapter 9) come as a short primer inside the G&K Chapter 4 lesson.",
+        lessons: [], planned: ["Optional later: Ch 4.1 to 4.3 hydrogen, Ch 5 identical particles, Ch 6 perturbation theory"] },
+      { id: "gk", title: "Part B: Gerry and Knight, Introductory Quantum Optics (main book)",
+        desc: "C. C. Gerry and P. L. Knight, Introductory Quantum Optics (Cambridge, 2005). Weeks 2 to 8 of the plan. Each card explains the idea in plain words, gives an everyday picture, and tells you what to try in the visual.",
+        lessons: [], planned: ["Ch 3. Coherent states (week 3)", "Ch 4. Atom meets field, with a primer on spin, Rabi oscillations and emission (weeks 4 and 5)", "Ch 5. Coherence functions, g(2) and antibunching (week 5)", "Ch 6 and App. A. Beam splitters, HOM interference and the density matrix (week 6)", "Ch 7. Squeezed and other nonclassical light (week 7)", "Ch 8 and 9. Decoherence, entanglement and Bell tests (week 8)"] }
     ]
   },
   {
