@@ -177,3 +177,34 @@ FD.ckpt = function (o) {
 /* Study order of Part A. lessons/fdtd/order.js turns it into the Previous and Next links. */
 FD.ORDER_A = ["fdtd-p1", "fdtd-1-1", "fdtd-1-2", "fdtd-1-3", "fdtd-1-4", "fdtd-2-1", "fdtd-2-2", "fdtd-2-3", "fdtd-2-4", "fdtd-3-1", "fdtd-3-2",
   "fdtd-6-1", "fdtd-6-2", "fdtd-6-3", "fdtd-3-4", "fdtd-4-1", "fdtd-4-2", "fdtd-4-3", "fdtd-3-3", "fdtd-4-4", "fdtd-4-5", "fdtd-5-1", "fdtd-5-2", "fdtd-5-3"];
+
+/* ---------- 1D slab spectra at a chosen resolution (Chapter 2) ----------
+   r: cells per vacuum wavelength lambda0 = 1. n, d: slab index and thickness (in lambda0). lams: wavelengths (in lambda0).
+   sub: average the permittivity of the cells the slab faces cut through (arithmetic mean, E is parallel to the faces).
+   S: Courant number. Returns |E_slab|^2 / |E_ref|^2 at the probe, from two runs (with and without the slab). */
+FD.slab1D = function (o) {
+  const r = o.r, n = o.n || 2, d = o.d || 0.6, S = o.S || 0.5, pml = 30, pad = Math.round(2.5 * r);
+  const a = pml + pad, b = a + d * r, N = Math.ceil(b + pad + pml + 2), src = pml + 5, probe = N - pml - 5;
+  const lamc = o.lamc || 1, w0 = 2 * Math.PI * S / (lamc * r), tau = (o.tauW || 0.5) * lamc * r / S, t0 = 5 * tau;
+  const steps = Math.ceil(t0 + 2 * tau + (N / S) * (o.slow || 3.2));
+  const ws = o.lams.map(l => 2 * Math.PI * S / (l * r));
+  const one = slab => {
+    const eps = new Float64Array(N).fill(1);
+    if (slab) for (let i = 0; i < N; i++) {
+      const lo = i - 0.5, hi = i + 0.5, f = Math.max(0, Math.min(hi, b) - Math.max(lo, a));
+      if (o.sub) eps[i] = 1 + f * (n * n - 1); else eps[i] = (i >= Math.round(a) && i < Math.round(b)) ? n * n : 1;
+    }
+    const sim = new FD.Yee1(N, S, eps, { bc: "pml", pml });
+    const re = new Float64Array(ws.length), im = new Float64Array(ws.length);
+    for (let t = 0; t < steps; t++) {
+      sim.step({ i: src, v: FD.pulse(t, t0, tau, w0) });
+      const e = sim.ez[probe];
+      for (let k = 0; k < ws.length; k++) { re[k] += e * Math.cos(ws[k] * t); im[k] += e * Math.sin(ws[k] * t); }
+    }
+    return ws.map((_, k) => re[k] * re[k] + im[k] * im[k]);
+  };
+  const p1 = one(true), p0 = one(false);
+  return p1.map((v, k) => v / p0[k]);
+};
+/* Exact transmission of a lossless slab (index n, thickness d) in air at normal incidence. */
+FD.slabT = (n, d, lam) => LC.slabT(n, d, lam);

@@ -8,7 +8,7 @@ cards: [
 intu: String.raw`Switch between the top view and the side view. From the top, the fixed parts are the 200 nm input strip and the two output strips at \(\pm 0.6\) µm. From the side, everything is one 160 nm GaAs layer with air above and below. For the solver, all of this is only a map of \(\varepsilon_r(\mathbf{r})\): 12.19 where there is GaAs and 1 where there is air.`,
 eq: String.raw`\[ \varepsilon_r(\mathbf{r}) = n(\mathbf{r})^2, \qquad \varepsilon_\mathrm{GaAs} = 3.492^2 \approx 12.19, \qquad \varepsilon_\mathrm{air} = 1 \]`,
 sym: [[String.raw`\(\varepsilon_r(\mathbf{r})\)`, "permittivity map, the only thing the solver knows about the device"]],
-how: ["Draw each structure as a shape with a material.", "The material gives its permittivity.", "The solver turns the shapes into a permittivity value on every grid cell (Lesson 5)."],
+how: ["Draw each structure as a shape with a material.", "The material gives its permittivity.", "The solver turns the shapes into a permittivity value on every grid cell (Lesson 2.3 of Part A)."],
 say: String.raw`For the solver the device is only a permittivity map: \(n^2\) of GaAs inside the structures and 1 in the air around.`,
 num: "Membrane 160 nm thick. Strips 200 nm wide. Ports at y = ±0.6 µm.",
 r(fig, ctl) {
@@ -26,7 +26,7 @@ eq: String.raw`\[ \varepsilon = \varepsilon_\mathrm{air} + \hat\rho\,\big(\varep
 sym: [[String.raw`\(\rho\)`, "density of a pixel, what the optimizer changes"], [String.raw`\(\hat\rho\)`, "the density after filter and projection (card 3)"]],
 how: ["Divide the 2.5 µm square into 220 × 220 pixels.", "Give each pixel a density between 0 and 1.", "Map the (processed) density linearly to permittivity."],
 say: "Each of the 48,400 pixels has a density between 0 and 1, and after filtering and projection it sets the pixel's permittivity between air and GaAs.",
-num: "2.5 µm / 220 = 11.38 nm per pixel, the same size as the solver cell (Lesson 5).",
+num: "2.5 µm / 220 = 11.38 nm per pixel, the same size as the solver cell (Lesson 2.3 of Part A).",
 r(fig, ctl) {
   ctl.innerHTML = sl("rh", "Density of one pixel", 0, 1, 0.01, 0.9) + `<div class="readout" id="ro"></div>`;
   const u = () => {
