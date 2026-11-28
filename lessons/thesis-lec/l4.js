@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Set up", num: "Lesson 4",
 id: "thesis-lec-l4", title: "Geometry and the design region", short: "4. Geometry and pixels",
 big: String.raw`Next the code places the structures. The fixed ones never change: the GaAs membrane, the input strip and the two output strips. Each material is just a permittivity, \(\varepsilon_r = n^2\). Then comes the design region, \(2.5 \times 2.5\) µm, cut into \(220 \times 220\) pixels. Every pixel has a density \(\rho\) between 0 (air) and 1 (GaAs). Before the densities become permittivity they are smoothed (filter) and pushed toward 0 or 1 (projection), so the design stays makeable. The densities are what the optimizer changes.`,

@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Update", num: "Lesson 13",
 id: "thesis-lec-l13", title: "Adam and the full loop", short: "13. Adam and the loop",
 big: String.raw`With the gradient in hand, Adam moves every pixel density a little uphill. Adam keeps a running average of each pixel's gradient and of its size, so pixels with tiny or noisy slopes still move at a sensible rate. Then the loop starts again: new densities, new permittivity, new forward runs, new figure of merit, new adjoint runs, new gradient. For the PBS this repeats 77 times while the projection sharpness rises from 1 to 100, so the grey start ends as an almost binary GaAs pattern.`,

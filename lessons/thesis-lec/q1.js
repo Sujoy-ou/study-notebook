@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "qs", {
 level: "Questions", num: "Your questions",
 id: "thesis-lec-q1", title: "Questions asked along the way", short: "Your questions",
 labels: { intu: "The answer, in plain words", how: "Step by step", note: "Short answer for the committee" },

@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Gradient", num: "Lesson 10",
 id: "thesis-lec-l10", title: "The gradient we want", short: "10. The gradient we want",
 big: String.raw`To improve the PBS, the optimizer needs to know, for every one of the 48,400 pixels, whether adding a little GaAs there raises or lowers the figure of merit, and how strongly. That list of slopes is the gradient \(\partial J/\partial \rho_i\). The obvious way to get it, nudging each pixel and rerunning the simulation, would take about 100,000 FDTD runs per step. The adjoint method gets all 48,400 slopes from one extra run per input.`,

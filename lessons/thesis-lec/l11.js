@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Gradient", num: "Lesson 11",
 id: "thesis-lec-l11", title: "The adjoint source", short: "11. The adjoint source",
 big: String.raw`On paper, Maxwell's equations at one frequency on the grid are a linear system \(A(\mathbf{p})\mathbf{x} = \mathbf{b}\): \(\mathbf{x}\) is the field everywhere, \(\mathbf{b}\) the source, and \(A\) holds the curls and the permittivity of every cell. FDTD never builds \(A\), but its Fourier-transformed fields solve it (Lesson 8). Writing the gradient with \(A\) and regrouping one product gives a second system, the adjoint problem, whose source is \((\partial J/\partial\mathbf{x})^T\), the sensitivity of the figure of merit to the fields. For the PBS that source is the port mode, sent backwards from the port monitor, with amplitude \(w_j a_j^{*}\) at each wavelength.`,

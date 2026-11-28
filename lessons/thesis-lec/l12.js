@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Gradient", num: "Lesson 12",
 id: "thesis-lec-l12", title: "The adjoint run and the gradient", short: "12. Adjoint run and gradient",
 big: String.raw`The adjoint run is an ordinary FDTD run of the same device, with the adjoint source at the port instead of the mode source at the input. It stores the adjoint field in the design region. At every pixel, the product of the forward field and the adjoint field, summed over the 101 frequencies, is the slope of the figure of merit with respect to that pixel's permittivity. The chain rule then carries it back through the projection and the filter to each density. Both input polarizations contribute. The result is one gradient map of 220 by 220 values.`,

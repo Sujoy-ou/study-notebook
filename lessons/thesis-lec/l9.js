@@ -1,4 +1,4 @@
-addLesson("thesis", "lec", {
+addLesson("fdtd", "lec", {
 level: "Forward", num: "Lesson 9",
 id: "thesis-lec-l9", title: "Mode overlap and the figure of merit", short: "9. Overlap and FOM",
 big: String.raw`At each wavelength, the mode monitor compares the field on the port with the port's own mode. The overlap gives a complex amplitude \(a\), and because modes and sources are normalized to 1 W, \(T = |a|^2\) is the fraction of the input power that arrived in that mode. The PBS needs two such numbers: TE\(_0\) in, how much reaches the TE port, and TM\(_0\) in, how much reaches the TM port. Each is averaged over the 101 wavelengths with Gaussian weights centred at 795 nm, and the two averages are added. The figure of merit is at most 2.`,

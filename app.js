@@ -22,11 +22,41 @@ const LIBRARY = [
       { id: "ch3x", title: "Chapter 3: Beyond the thesis",
         desc: "Methods that are not used in the final Chapter 3 but are close relatives of it.",
         lessons: [], planned: [] },
-      { id: "lec", title: "Lecture series: Inverse design of the PBS, step by step",
-        desc: "The whole method on one example, the polarization beam splitter, in the order the code and the solver do it: Maxwell's equations, the pulse and the 101 wavelengths, the mode source, the geometry and the pixels, the Yee grid, PML and monitors, the forward run in time, the Fourier transform, the mode overlap and the figure of merit, the adjoint source, the adjoint run and the gradient, and Adam. Plain words first, only the needed equations, and a live 2D toy splitter that runs the full loop in the page. The questions asked along the way have their own lesson.",
-        lessons: [], planned: [] },
       { id: "def", title: "Committee questions: Chapters 2 and 3",
         desc: "Questions the committee may ask about the theory and methods of Chapters 2 and 3, each with a short answer, a step-by-step board explanation with a visual, and the follow-up that may come next.",
+        lessons: [], planned: [] }
+    ]
+  },
+  {
+    id: "fdtd", title: "FDTD and Tidy3D, from Maxwell to my devices",
+    desc: "Everything behind an FDTD inverse design, taught so it can be explained to anyone and defended in front of a committee. Part A is the theory of FDTD: Maxwell to the Yee grid, stability and resolution, boundaries, modes, sources and monitors, and materials. Part B (next) is Tidy3D and Python line by line, the adjoint method, autograd and fabrication-aware design. One example runs through every lesson: the polarization beam splitter, and each lesson ends with a PBS checkpoint card that says where the idea sits in that run. Every lesson ends with Teach it in 5 minutes, Questions people will ask you, Common mistakes and matched videos. Study order: Prologue, Chapters 1, 2, Lessons 3.1 and 3.2, Chapter 6, Lesson 3.4, Lessons 4.1 to 4.3, Lesson 3.3, Lessons 4.4 and 4.5, Chapter 5. The Next button at the end of each lesson follows this order.",
+    groups: [
+      { id: "pro", title: "Prologue: the PBS in one picture",
+        desc: "The whole procedure on one page, before any equation: what the device must do and the nine steps from the pulse to Adam. Each step links to the lesson that teaches it.",
+        lessons: [], planned: [] },
+      { id: "a1", title: "Chapter 1: From Maxwell to the Yee grid",
+        desc: "Maxwell's curl equations as a time-stepping problem, finite differences and their error, the 1D Yee leapfrog derived line by line, and the 2D and 3D Yee cell.",
+        lessons: [], planned: [] },
+      { id: "a2", title: "Chapter 2: Stability, numerical dispersion, resolution and convergence",
+        desc: "The Courant condition, why waves on a grid travel at the wrong speed, how many cells per wavelength are enough, and how to show a result is converged.",
+        lessons: [], planned: [] },
+      { id: "a3", title: "Chapter 3: Boundaries",
+        desc: "Why the edge of the box is a problem, PEC and PMC walls, the perfectly matched layer, periodic and Bloch boundaries, and symmetry planes. Study 3.1 and 3.2 after Chapter 2, 3.4 after Chapter 6, and 3.3 after Lesson 4.3.",
+        lessons: [], planned: [] },
+      { id: "a4", title: "Chapter 4: Sources and monitors",
+        desc: "The Gaussian pulse, the mode source, Gaussian beams and plane waves, the running Fourier transform behind every frequency monitor, and flux and mode decomposition. Study after Chapter 6.",
+        lessons: [], planned: [] },
+      { id: "a5", title: "Chapter 5: Materials",
+        desc: "Dispersive models in FDTD, GaAs and CeO2 near 795 nm from measured data, and subpixel averaging.",
+        lessons: [], planned: [] },
+      { id: "a6", title: "Chapter 6: Modes",
+        desc: "The eigenmode solver, n_eff, group index and birefringence, and overlap integrals. Study before Chapter 4.",
+        lessons: [], planned: [] },
+      { id: "lec", title: "Part B, early version: inverse design of the PBS",
+        desc: "The design-region, figure of merit, adjoint and Adam lessons of the first lecture series. They stay here until Part B (Chapters 9 and 10) replaces them. The setup and forward-run lessons of that series are now inside Part A.",
+        lessons: [], planned: ["Part B: Ch 7 Anatomy of a Tidy3D simulation", "Part B: Ch 8 Running jobs, cost and data", "Part B: Ch 9 Inverse design theory", "Part B: Ch 10 Tidy3D autograd", "Part B: Ch 11 Fabrication-aware design"] },
+      { id: "qs", title: "Your questions",
+        desc: "Questions asked while learning, each with a plain answer, a visual and a short version for a committee. New questions are added as they come.",
         lessons: [], planned: [] }
     ]
   },
@@ -240,7 +270,7 @@ function lesson(id) {
   const f = findLesson(id); if (!f) { home(); return; }
   document.body.classList.add("wide");
   const { s, g, l } = f, rd = getRead();
-  const all = g.lessons, ix = all.indexOf(l), prev = all[ix - 1], next = all[ix + 1], base = all[0] && all[0].zero ? 0 : 1;
+  const all = g.lessons, ix = all.indexOf(l), prev = l.prevId ? (findLesson(l.prevId) || {}).l : all[ix - 1], next = l.nextId ? (findLesson(l.nextId) || {}).l : all[ix + 1], base = all[0] && all[0].zero ? 0 : 1;
   $("view").innerHTML = `<p class="crumb"><a href="#">Library</a> / ${s.title} / ${g.title}</p>
   <h1>${l.num != null ? l.num : "Lesson " + (ix + base)}: ${l.title}</h1>
   <p class="sec">Big picture</p><p class="big">${l.big}</p>
@@ -262,6 +292,10 @@ function lesson(id) {
   <h2>30-second summary</h2><p class="big">${l.summary}</p>
   <h2>Equation sheet</h2><div class="sheet">${l.sheet.map((r, i) => `<div class="r"><span>${i + 1}</span><div><div class="e">${r[0]}</div><div class="c">${r[1]}</div></div></div>`).join("")}</div>
   ${l.consts ? `<p class="src" style="margin-top:10px"><b>Constants:</b> ${l.consts}</p>` : ""}
+  ${l.teach ? `<h2>Teach it in 5 minutes</h2><p class="src">The whiteboard version. Say each step out loud while you draw it.</p><ol class="teach">${l.teach.map(x => `<li>${x}</li>`).join("")}</ol>` : ""}
+  ${l.qa ? `<h2>Questions people will ask you</h2><div class="qa">${l.qa.map(([q, a]) => `<details><summary>${q}</summary><div>${a}</div></details>`).join("")}</div>` : ""}
+  ${l.mistakes ? `<h2>Common mistakes</h2><ul class="mist">${l.mistakes.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
+  ${l.videos ? `<h2>Videos</h2><ul class="src vids">${l.videos.map(([t, u, n]) => `<li><a href="${u}" target="_blank" rel="noopener">${t}</a>${n ? `. ${n}` : ""}</li>`).join("")}</ul>` : ""}
   <h2>Sources</h2><ul class="src">${l.sources.map(x => `<li>${x}</li>`).join("")}</ul>
   <div class="nav2" style="margin-top:28px">${prev ? `<a href="#${prev.id}">← ${prev.short}</a>` : "<span></span>"}${next ? `<a href="#${next.id}">${next.short} →</a>` : `<span class="src">End of this chapter</span>`}</div>`;
   $("rd").onchange = e => { setRead(l.id, e.target.checked); tree(l.id); };
@@ -281,7 +315,7 @@ function lesson(id) {
     c.r($("fig"), $("ctl"));
     $("cp").disabled = cardIdx === 0; $("cn").disabled = cardIdx === l.cards.length - 1;
   };
-  typesetMath(...document.querySelectorAll("#view .big, #view .sheet, #view .src"));
+  typesetMath(...document.querySelectorAll("#view .big, #view .sheet, #view .src, #view .teach, #view .qa, #view .mist"));
   const jump = d => { cardIdx += d; draw(); const t = $("tabs"); if (t.getBoundingClientRect().top < 0) t.scrollIntoView({ block: "start" }); };
   $("cp").onclick = () => jump(-1); $("cn").onclick = () => jump(1);
   draw();
